@@ -35,7 +35,7 @@ export function Header() {
                 variant="outline"
                 className="rounded-md border-brand-navy/30 bg-transparent px-6 py-3 text-sm font-bold text-brand-navy shadow-sm hover:bg-brand-navy/5 hover:text-brand-red hover:border-brand-red/50 transition-all duration-300"
               >
-                <Link href="/specialists">For Specialists</Link>
+                <Link href="/specialists">Specialists: Apply to The League →</Link>
               </Button>
               <Button
                 onClick={handleRequestInvitation}
@@ -67,7 +67,7 @@ export function Header() {
                 className="w-full rounded-md border-brand-navy/30 bg-transparent px-6 py-3 text-sm font-bold text-brand-navy shadow-sm hover:bg-brand-navy/5 hover:text-brand-red transition-all duration-300"
               >
                 <Link href="/specialists" onClick={() => setMobileMenuOpen(false)}>
-                  For Specialists
+                  Specialists: Apply to The League →
                 </Link>
               </Button>
               <Button
