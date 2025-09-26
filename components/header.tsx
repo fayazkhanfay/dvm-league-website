@@ -29,13 +29,14 @@ export function Header() {
           </Link>
 
           <div className="flex items-center gap-4">
-            <nav className="hidden md:flex items-center gap-6">
-              <Link
-                href="/specialists"
-                className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
+            <nav className="hidden md:flex items-center gap-4">
+              <Button
+                asChild
+                variant="outline"
+                className="rounded-md border-brand-navy/30 bg-transparent px-6 py-3 text-sm font-bold text-brand-navy shadow-sm hover:bg-brand-navy/5 hover:text-brand-red hover:border-brand-red/50 transition-all duration-300"
               >
-                For Specialists
-              </Link>
+                <Link href="/specialists">For Specialists</Link>
+              </Button>
               <Button
                 onClick={handleRequestInvitation}
                 className="rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
@@ -60,13 +61,15 @@ export function Header() {
               <p className="text-sm font-semibold text-brand-navy/70 tracking-wide sm:hidden">
                 American Specialists. American Standards.
               </p>
-              <Link
-                href="/specialists"
-                className="block w-full py-3 text-md font-semibold text-brand-navy hover:text-brand-red transition-colors"
-                onClick={() => setMobileMenuOpen(false)}
+              <Button
+                asChild
+                variant="outline"
+                className="w-full rounded-md border-brand-navy/30 bg-transparent px-6 py-3 text-sm font-bold text-brand-navy shadow-sm hover:bg-brand-navy/5 hover:text-brand-red transition-all duration-300"
               >
-                For Specialists
-              </Link>
+                <Link href="/specialists" onClick={() => setMobileMenuOpen(false)}>
+                  For Specialists
+                </Link>
+              </Button>
               <Button
                 onClick={handleRequestInvitation}
                 className="w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
@@ -82,3 +85,4 @@ export function Header() {
     </>
   )
 }
+
