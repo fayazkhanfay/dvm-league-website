@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { InvitationModal } from "@/components/invitation-modal"
 import { Menu, X } from "lucide-react"
@@ -18,22 +19,30 @@ export function Header() {
     <>
       <header className="absolute top-0 left-0 w-full z-50 p-4 sm:p-6">
         <div className="mx-auto max-w-7xl flex justify-between items-center">
-          <a href="/" className="flex-shrink-0">
+          <Link href="/" className="flex-shrink-0">
             <div>
               <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy">DVM League</span>
               <p className="text-xs sm:text-sm font-semibold text-brand-navy/70 tracking-wide -mt-1 hidden sm:block">
                 American Specialists. American Standards.
               </p>
             </div>
-          </a>
+          </Link>
 
           <div className="flex items-center gap-4">
-            <Button
-              onClick={handleRequestInvitation}
-              className="hidden md:inline-flex rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
-            >
-              Request an Invitation
-            </Button>
+            <nav className="hidden md:flex items-center gap-6">
+              <Link
+                href="/specialists"
+                className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
+              >
+                For Specialists
+              </Link>
+              <Button
+                onClick={handleRequestInvitation}
+                className="rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
+              >
+                Request an Invitation
+              </Button>
+            </nav>
 
             <Button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -47,10 +56,17 @@ export function Header() {
 
         {mobileMenuOpen && (
           <div className="md:hidden absolute top-full left-0 w-full bg-brand-offwhite border-t border-brand-stone shadow-lg">
-            <div className="p-6 text-center">
-              <p className="text-sm font-semibold text-brand-navy/70 tracking-wide mb-4">
+            <div className="p-6 text-center space-y-4">
+              <p className="text-sm font-semibold text-brand-navy/70 tracking-wide sm:hidden">
                 American Specialists. American Standards.
               </p>
+              <Link
+                href="/specialists"
+                className="block w-full py-3 text-md font-semibold text-brand-navy hover:text-brand-red transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                For Specialists
+              </Link>
               <Button
                 onClick={handleRequestInvitation}
                 className="w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
