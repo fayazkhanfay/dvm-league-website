@@ -1,14 +1,24 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { InvitationModal } from "@/components/invitation-modal"
 import { Menu, X } from "lucide-react"
+import { cn } from "@/lib/utils"
 
 export function Header() {
   const [modalOpen, setModalOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 10)
+    }
+    window.addEventListener("scroll", handleScroll)
+    return () => window.removeEventListener("scroll", handleScroll)
+  }, [])
 
   const handleRequestInvitation = () => {
     setModalOpen(true)
@@ -17,7 +27,12 @@ export function Header() {
 
   return (
     <>
-      <header className="absolute top-0 left-0 w-full z-50 p-4 sm:p-6">
+      <header
+        className={cn(
+          "fixed top-0 left-0 w-full z-50 p-4 sm:p-6 transition-all duration-300 ease-in-out",
+          isScrolled ? "bg-brand-offwhite/80 backdrop-blur-sm shadow-md" : "bg-transparent",
+        )}
+      >
         <div className="mx-auto max-w-7xl flex justify-between items-center">
           <Link href="/" className="flex-shrink-0">
             <div>
