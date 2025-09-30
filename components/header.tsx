@@ -2,18 +2,11 @@
 
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { InvitationModal } from "@/components/invitation-modal"
 import { Menu, X } from "lucide-react"
 import Link from "next/link"
 
 export function Header() {
-  const [modalOpen, setModalOpen] = useState(false)
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-
-  const handleRequestInvitation = () => {
-    setModalOpen(true)
-    setMobileMenuOpen(false)
-  }
 
   return (
     <>
@@ -36,12 +29,12 @@ export function Header() {
               Are you a Specialist?
             </Link>
 
-            <Button
-              onClick={handleRequestInvitation}
+            <Link
+              href="/request-invitation"
               className="hidden md:inline-flex rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
             >
               Request an Invitation
-            </Button>
+            </Link>
 
             <Button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -66,18 +59,17 @@ export function Header() {
               >
                 Are you a Specialist?
               </Link>
-              <Button
-                onClick={handleRequestInvitation}
-                className="w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
+              <Link
+                href="/request-invitation"
+                className="block w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
+                onClick={() => setMobileMenuOpen(false)}
               >
                 Request an Invitation
-              </Button>
+              </Link>
             </div>
           </div>
         )}
       </header>
-
-      <InvitationModal open={modalOpen} onOpenChange={setModalOpen} />
     </>
   )
 }
