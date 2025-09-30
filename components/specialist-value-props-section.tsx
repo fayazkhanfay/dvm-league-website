@@ -1,8 +1,50 @@
 "use client"
 
 import { Check } from "lucide-react"
+import { useState, useEffect, useRef } from "react"
 
 export function SpecialistValuePropsSection() {
+  const [payoutCount, setPayoutCount] = useState(0)
+  const [hasAnimated, setHasAnimated] = useState(false)
+  const payoutRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && !hasAnimated) {
+          setHasAnimated(true)
+
+          const duration = 2000
+          const targetValue = 276.5
+          const startTime = Date.now()
+
+          const animate = () => {
+            const elapsed = Date.now() - startTime
+            const progress = Math.min(elapsed / duration, 1)
+
+            const easeOutQuart = 1 - Math.pow(1 - progress, 4)
+            const currentValue = targetValue * easeOutQuart
+
+            setPayoutCount(currentValue)
+
+            if (progress < 1) {
+              requestAnimationFrame(animate)
+            }
+          }
+
+          animate()
+        }
+      },
+      { threshold: 0.5 },
+    )
+
+    if (payoutRef.current) {
+      observer.observe(payoutRef.current)
+    }
+
+    return () => observer.disconnect()
+  }, [hasAnimated])
+
   return (
     <section className="py-24 sm:py-32 bg-white border-y border-brand-stone">
       <div className="mx-auto max-w-7xl px-6 lg:px-8 space-y-24">
@@ -33,7 +75,7 @@ export function SpecialistValuePropsSection() {
               </li>
             </ul>
           </div>
-          <div className="bg-brand-offwhite p-8 rounded-xl shadow-xl border-2 border-brand-navy/10">
+          <div className="bg-brand-offwhite p-8 rounded-xl shadow-xl border-2 border-brand-navy/10" ref={payoutRef}>
             <p className="text-sm font-semibold text-brand-navy/70 text-center">
               Example Payout: Complete Case Consult
             </p>
@@ -49,7 +91,7 @@ export function SpecialistValuePropsSection() {
                 </div>
                 <div>
                   <p className="text-sm font-semibold text-brand-gold">Your Payout (70%)</p>
-                  <p className="font-serif text-5xl font-bold text-brand-gold">$276.50</p>
+                  <p className="font-serif text-5xl font-bold text-brand-gold">${payoutCount.toFixed(2)}</p>
                 </div>
               </div>
             </div>
