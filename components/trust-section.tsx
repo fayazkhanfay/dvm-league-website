@@ -59,7 +59,7 @@ export function TrustSection() {
         </div>
         <div className="mt-12 text-center">
           <a
-            href="/specialist-portal"
+            href="/specialists"
             className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
           >
             Specialists: Apply to The League →

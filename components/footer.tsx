@@ -5,7 +5,7 @@ export function Footer() {
         <p>&copy; 2025 DVM League, LLC. All Rights Reserved.</p>
         <p className="mt-2 space-x-4">
           <a href="/specialists" className="hover:text-white transition-colors">
-            For Specialists
+            For Specialists: Join The League
           </a>
           <span className="text-white/20">|</span>
           <a href="/privacy-policy.html" className="hover:text-white transition-colors">

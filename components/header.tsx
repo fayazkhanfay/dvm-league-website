@@ -4,6 +4,7 @@ import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { InvitationModal } from "@/components/invitation-modal"
 import { Menu, X } from "lucide-react"
+import Link from "next/link"
 
 export function Header() {
   const [modalOpen, setModalOpen] = useState(false)
@@ -28,6 +29,13 @@ export function Header() {
           </a>
 
           <div className="flex items-center gap-4">
+            <Link
+              href="/specialists"
+              className="hidden md:inline-flex text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
+            >
+              Are you a Specialist?
+            </Link>
+
             <Button
               onClick={handleRequestInvitation}
               className="hidden md:inline-flex rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
@@ -51,6 +59,13 @@ export function Header() {
               <p className="text-sm font-semibold text-brand-navy/70 tracking-wide mb-4">
                 American Specialists. American Standards.
               </p>
+              <Link
+                href="/specialists"
+                className="block mb-4 text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Are you a Specialist?
+              </Link>
               <Button
                 onClick={handleRequestInvitation}
                 className="w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
