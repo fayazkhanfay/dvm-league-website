@@ -14,6 +14,15 @@ export function HeroSection() {
   return (
     <>
       <section className="relative pt-32 sm:pt-48 pb-16 sm:pb-24 flex items-center overflow-hidden bg-brand-offwhite min-h-screen">
+        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+          <div
+            className="w-[1200px] h-[1200px] rounded-full animate-pulse-slow"
+            style={{
+              background: "radial-gradient(circle, var(--brand-gold) 0%, transparent 60%)",
+            }}
+          />
+        </div>
+
         <div className="mx-auto max-w-4xl w-full px-4 sm:px-6 lg:px-8 relative z-10 text-center">
           <div className="animate-fade-in-rise">
             <h1 className="font-serif text-4xl sm:text-6xl lg:text-8xl font-bold tracking-tight text-brand-navy leading-tight text-balance">

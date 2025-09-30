@@ -188,6 +188,19 @@
   }
 }
 
+/* Adding slow breathing animation for hero gradient */
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.3;
+    transform: scale(1.1);
+  }
+}
+
 .animate-fade-in-rise {
   opacity: 0;
   animation: fadeInRise 1s ease-out forwards;
@@ -230,6 +243,11 @@
 
 .animate-delay-800 {
   animation-delay: 800ms;
+}
+
+/* Adding pulse-slow animation class */
+.animate-pulse-slow {
+  animation: pulse-slow 10s ease-in-out infinite;
 }
 
 /* Scroll-triggered animations */
