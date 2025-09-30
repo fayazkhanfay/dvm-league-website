@@ -32,7 +32,7 @@ export function ProblemSection() {
             </h3>
             <p className="mt-2 text-sm text-brand-offwhite/70">
               {
-                "The client's anxiety grows, the pet's condition worsens, and you're left managing the fallout from a process you don't control."
+                "The client's anxiety grows, the patient's condition can worsen, and your reputation is on the line for a delay you can't control."
               }
             </p>
           </div>
@@ -58,8 +58,7 @@ export function ProblemSection() {
               The Loss of Continuity
             </h3>
             <p className="mt-2 text-sm text-brand-offwhite/70">
-              You risk the client becoming permanently bonded to the specialty practice, turning your clinic into a
-              satellite for vaccines.
+              The specialty hospital becomes the hero, and your practice risks becoming a simple satellite for vaccines and routine care in the client's mind.
             </p>
           </div>
         </div>
