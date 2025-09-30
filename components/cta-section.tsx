@@ -16,7 +16,7 @@ export function CTASection() {
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-6 items-center text-left">
           <div className="sm:col-span-1 flex justify-center">
             <img
-              src="/fayaz-khan-profile.png?height=150&width=150&text=Fayaz+Khan"
+              src="/fayaz-khan-profile.png"
               alt="Fayaz Khan, Founder of DVM League"
               className="rounded-full w-32 h-32 sm:w-36 sm:h-36 border-4 border-brand-gold/50 shadow-lg"
             />

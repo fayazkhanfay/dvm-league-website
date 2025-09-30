@@ -18,7 +18,7 @@ export function SpecialistFounderSection() {
           {/* Founder Headshot */}
           <div className="text-center flex-shrink-0">
             <img
-              src="/fayaz-khan-profile.png?height=192&width=192"
+              src="/fayaz-khan-profile.png"
               alt="Headshot of Fayaz Khan, Founder of DVM League"
               className="rounded-full w-48 h-48 mx-auto shadow-xl border-4 border-white"
             />
