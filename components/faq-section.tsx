@@ -23,7 +23,7 @@ export function FAQSection() {
     {
       question: "What happens after the Founder's Circle is full?",
       answer:
-        'The "Grand Slam Offer"—the free $395 Complete Case Consult—is an exclusive opportunity for our founding members. Once the pilot program is complete, the platform will transition to its standard paid model. This is a limited-time opportunity to experience the full value of the DVM League at zero risk.',
+        'The Founder\'s Circle Offer—the free $395 Complete Case Consult—is an exclusive opportunity for our founding members. Once the pilot program is complete, the platform will transition to its standard paid model. This is a limited-time opportunity to experience the full value of the DVM League at zero risk.',
     },
   ]
 
