@@ -18,11 +18,11 @@ export function SpecialistFounderSection() {
           {/* Founder Headshot */}
           <div className="text-center flex-shrink-0">
             <img
-              src="/placeholder.svg?height=192&width=192"
-              alt="Headshot of Khan, Founder of DVM League"
+              src="/fayaz-khan-profile.png?height=192&width=192"
+              alt="Headshot of Fayaz Khan, Founder of DVM League"
               className="rounded-full w-48 h-48 mx-auto shadow-xl border-4 border-white"
             />
-            <h3 className="mt-4 text-xl font-bold text-brand-navy">Khan</h3>
+            <h3 className="mt-4 text-xl font-bold text-brand-navy">Fayaz Khan</h3>
             <p className="text-sm font-semibold text-brand-navy/80">Founder, DVM League</p>
           </div>
           {/* The Offer Card */}

@@ -16,15 +16,15 @@ export function CTASection() {
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-6 items-center text-left">
           <div className="sm:col-span-1 flex justify-center">
             <img
-              src="/placeholder.svg?height=150&width=150&text=Khan"
-              alt="Khan, Founder of DVM League"
+              src="/fayaz-khan-profile.png?height=150&width=150&text=Fayaz+Khan"
+              alt="Fayaz Khan, Founder of DVM League"
               className="rounded-full w-32 h-32 sm:w-36 sm:h-36 border-4 border-brand-gold/50 shadow-lg"
             />
           </div>
           <div className="sm:col-span-3 text-center sm:text-left">
             <p className="text-lg text-brand-offwhite/80 leading-relaxed text-pretty">
               {
-                "\"We don't need to tell you our value; we will prove it. I'm Khan, the founder, and I am so confident that this service will be a profit engine for your practice that I will personally pay the specialist's fee for your first Complete Case Consult.\""
+                "\"We don't need to tell you our value; we will prove it. I'm Fayaz Khan, the founder, and I am so confident that this service will be a profit engine for your practice that I will personally pay the specialist's fee for your first Complete Case Consult.\""
               }
             </p>
           </div>
