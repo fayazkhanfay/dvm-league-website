@@ -4,7 +4,7 @@ export function Footer() {
       <div className="mx-auto max-w-7xl text-center text-sm">
         <p>&copy; 2025 DVM League, LLC. All Rights Reserved.</p>
         <p className="mt-2 space-x-4">
-          <a href="/specialist-landing-page.html" className="hover:text-white transition-colors">
+          <a href="/specialists" className="hover:text-white transition-colors">
             For Specialists
           </a>
           <span className="text-white/20">|</span>
