@@ -63,7 +63,7 @@ export function SolutionSection() {
           </div>
           <div className="hidden lg:block scroll-animate" style={{ animationDelay: "1000ms" }}>
             <img
-              src="/advanced-care-in-house.png"
+              src="/probe.png"
               alt="A general practice veterinarian confidently performing an ultrasound in their own clinic, empowered by specialist guidance."
               className="rounded-lg shadow-xl border-4 border-white w-full h-auto hover-lift transition-all duration-500"
             />
