@@ -24,8 +24,7 @@ export function HeroSection() {
         </div>
         <div className="animate-fade-in-rise animate-delay-200">
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl leading-relaxed text-brand-navy/90 max-w-3xl mx-auto text-pretty px-2">
-            The DVM League provides a dedicated, board-certified specialist to guide you through your most complex
-            cases—from the initial diagnostic plan to the final treatment strategy—for one all-inclusive price.
+            DVM League is a text-based platform that gives you a dedicated, board-certified specialist to guide you through your most complex cases, empowering you to keep them 100% in-house.
           </p>
         </div>
         <div className="animate-fade-in-rise animate-delay-500">

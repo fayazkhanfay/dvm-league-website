@@ -14,7 +14,7 @@ export function SolutionSection() {
           </h2>
           <p className="mt-6 text-lg text-brand-navy/90 leading-relaxed max-w-3xl mx-auto text-pretty">
             {
-              "We've eliminated the confusion of multiple services. We offer one premium, all-inclusive consult that provides a dedicated specialist for the entire journey of your case."
+              "We offer one premium, all-inclusive consult that provides a dedicated specialist for the entire journey of your case. All communication is text-based, with no live calls to schedule. It's designed to fit into the quiet pockets of your day, not create new demands on your time."
             }
           </p>
         </div>

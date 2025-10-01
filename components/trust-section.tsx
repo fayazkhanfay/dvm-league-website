@@ -47,7 +47,7 @@ export function TrustSection() {
           <div className="bg-white p-6 rounded-lg shadow-md border border-brand-stone">
             <h3 className="font-bold text-brand-navy">GP is Doctor of Record</h3>
             <p className="mt-2 text-sm text-brand-navy/80">
-              You always maintain the VCPR. Our service is a documented, expert consultation to support your decisions.
+            You always maintain the VCPR and the case never leaves your building. Our service is a documented, expert consultation that empowers your in-house decisions.
             </p>
           </div>
           <div className="bg-white p-6 rounded-lg shadow-md border border-brand-stone">
