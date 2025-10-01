@@ -26,8 +26,8 @@ export function TrustSection() {
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
-            src="/placeholder.svg?height=400&width=400&text=Collaborative+Care"
-            alt="A veterinarian performing an ultrasound on a canine patient."
+            src="/dvm-experience.png"
+            alt="A professional seal verifying 5-7+ Years Post-Residency Experience' for DVM League specialists."
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
         </div>
