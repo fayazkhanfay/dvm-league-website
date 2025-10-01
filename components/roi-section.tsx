@@ -88,7 +88,7 @@ export function ROISection() {
             >
               <img
                 className="rounded-full w-48 h-48 mx-auto object-cover border-4 border-white shadow-lg transition-transform duration-300 hover:scale-105"
-                src="/placeholder.svg?height=400&width=400&text=Healthy+Patient"
+                src="/golden-retriever.png"
                 alt="A healthy and happy golden retriever, representing a successful medical outcome."
               />
               <p
