@@ -156,8 +156,8 @@ export function SpecialistValuePropsSection() {
           </div>
           <div className="md:order-1">
             <img
-              src="/placeholder.svg?height=800&width=600"
-              alt="A confident, board-certified veterinary specialist working in a clean, modern office environment."
+              src="/vet-on-couch.png"
+              alt="A veterinary specialist enjoying a flexible work-life balance, working comfortably from her quiet home office with her pet nearby."
               className="rounded-lg shadow-xl w-full h-auto object-cover"
             />
           </div>
