@@ -8,7 +8,7 @@ export function FAQSection() {
     {
       question: "What are the specific turnaround times (SLAs) for the two phases of the consult?",
       answer:
-        "For our founding partners, we are guaranteeing a professional and reliable timeline. Phase 1 (The Diagnostic Plan) will be delivered within 1-2 business days. Phase 2 (The Complete Treatment Plan) will be delivered by 9:00 AM ET the next business morning after you upload your follow-up results. Our internal goal is always to over-deliver on this promise.",
+        "For our founding partners, **our commitment is** a professional and reliable timeline. Phase 1 (The Diagnostic Plan) will be delivered within 1-2 business days. Phase 2 (The Complete Treatment Plan) will be delivered by 9:00 AM ET the next business morning after you upload your follow-up results. Our internal goal is always to over-deliver on this promise.",
     },
     {
       question: "How do you handle the VCPR and liability?",
