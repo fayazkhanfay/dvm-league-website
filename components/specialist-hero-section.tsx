@@ -11,9 +11,7 @@ export function SpecialistHeroSection() {
         </div>
         <div className="animate-fade-in-rise animate-delay-200">
           <p className="mt-6 text-xl leading-relaxed text-brand-navy/90 max-w-3xl mx-auto text-pretty">
-            Join an exclusive, professional network of elite specialists who are escaping the burnout of traditional
-            practice. The DVM League offers a truly asynchronous, high-payout, and low-stress way to utilize your
-            expertise.
+          We connect America's best specialists with independent clinics through a simple, text-based platform, giving you the freedom to practice from anywhere and earn over $275 per consult—all with zero on-call, zero emergencies, and zero administrative friction.
           </p>
         </div>
         <div className="mt-10 flex justify-center animate-fade-in-rise animate-delay-400">
