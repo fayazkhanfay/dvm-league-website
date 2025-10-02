@@ -11,8 +11,8 @@ export function TrustSection() {
         </p>
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
           <img
-            src="/vet-lab-coat.png"
-            alt="A veterinarian looking intently at a microscope."
+            src="/board-certified.png"
+            alt="A professional seal verifying that DVM League specialists are board-certified diplomates."
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
