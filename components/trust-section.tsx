@@ -21,7 +21,7 @@ export function TrustSection() {
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
-            src="/insurance-badge.png"
+            src="/insurance-badge-v2.png"
             alt="A modern shield icon verifying that DVM League specialists are professionally insured."
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
