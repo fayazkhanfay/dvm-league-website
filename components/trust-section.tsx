@@ -16,8 +16,8 @@ export function TrustSection() {
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
-            src="/placeholder.svg?height=400&width=400&text=Surgical+Precision"
-            alt="A close-up of a surgeon's gloved hands in a sterile environment."
+            src="/us-map-badge.png"
+            alt="A professional seal verifying that all DVM League specialists are based in the United States."
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
