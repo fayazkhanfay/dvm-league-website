@@ -19,7 +19,7 @@ export function SpecialistHeroSection() {
             href="#apply"
             className="inline-block rounded-md bg-brand-gold px-12 py-4 text-lg font-bold text-brand-navy shadow-lg hover:bg-brand-navy hover:text-white transition-all transform hover:scale-105"
           >
-            Apply for the Paid Advisory Role
+            Learn More & See The Offer
           </a>
         </div>
       </div>
