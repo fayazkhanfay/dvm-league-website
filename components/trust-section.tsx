@@ -21,8 +21,8 @@ export function TrustSection() {
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
-            src="/placeholder.svg?height=400&width=400&text=Diagnostic+Clarity"
-            alt="Two veterinarians reviewing medical imagery on a tablet."
+            src="/insurance-badge.png"
+            alt="A modern shield icon verifying that DVM League specialists are professionally insured."
             className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
           />
           <img
