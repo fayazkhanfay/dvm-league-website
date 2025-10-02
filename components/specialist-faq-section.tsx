@@ -8,6 +8,25 @@ export function SpecialistFAQSection() {
           Your Questions, Answered
         </h2>
         <div className="mt-12 space-y-4">
+        <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
+            <h3 className="font-bold text-brand-navy">What exactly is the "Paid Advisory Role" and what is expected of me?</h3>
+            <p className="mt-2 text-sm text-brand-navy/90">
+            This is a real, paid, professional consultation. We are a founder-led company, and we believe the only way to 
+            build a world-class platform is to get direct feedback from the experts who will use it. The 30-minute call is 
+            a structured conversation with our founder to get your expert opinion on our workflow and business model. 
+            There is no sales pitch. At the end of the call, you will be invited to join the DVM League as a founding specialist, 
+            but there is absolutely no obligation to do so.
+            </p>
+          </div>
+          <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
+            <h3 className="font-bold text-brand-navy">What is the purpose of the initial questionnaire?</h3>
+            <p className="mt-2 text-sm text-brand-navy/90">
+            Our questionnaire is designed to do one thing: respect your time. It is a tool to ensure we are only speaking with 
+            board-certified specialists whose professional goals (flexibility, autonomy, high-value work) are a perfect match 
+            for the unique model we have built. It allows us to have a highly productive, relevant conversation with the right 
+            group of experts from the very start.
+            </p>
+          </div>
           <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
             <h3 className="font-bold text-brand-navy">What is the typical case volume I can expect?</h3>
             <p className="mt-2 text-sm text-brand-navy/90">
