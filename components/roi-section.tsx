@@ -80,6 +80,9 @@ export function ROISection() {
                 <p className="text-3xl font-bold text-brand-navy">$3,000+ (Chronic Meds & Rechecks)</p>
               </div>
             </div>
+            <p className="mt-8 text-xs text-brand-navy/60 text-pretty">
+              Note: Financials are based on a real case study. Your actual ROI will vary depending on your clinic's specific procedures and pricing.
+            </p>
           </div>
           <div className="text-center">
             <div
