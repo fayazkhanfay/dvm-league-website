@@ -288,9 +288,25 @@ export default function TermsOfServicePage() {
                 </div>
               </section>
   
-              {/* Section 13 - Contact */}
+              {/* Section 13 - Intellectual Property */}
+              <section className="rounded-lg border-2 border-brand-stone bg-white p-8 shadow-lg hover-lift sm:p-10">
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">
+                  13. Intellectual Property Rights
+                </h2>
+                <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
+                  <p>
+                    All rights, title, and interest in and to the Services, including our website, branding, logos,
+                    and software, are and will remain the exclusive property of DVM League, LLC. The Services are
+                    protected by copyright, trademark, and other laws of the United States. You may not use our name
+                    or trademarks without our prior written consent. We grant you a limited, non-exclusive, non-transferable,
+                    revocable license to use the Services for their intended professional purpose.
+                  </p>
+                </div>
+              </section>
+  
+              {/* Section 14 - Contact */}
               <section className="rounded-lg border-2 border-brand-gold bg-brand-gold/10 p-8 shadow-lg hover-glow sm:p-10">
-                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">13. Contact Us</h2>
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">14. Contact Us</h2>
                 <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
                   <p>If you have any questions about these Terms, please contact us at khan@dvmleague.com.</p>
                 </div>
