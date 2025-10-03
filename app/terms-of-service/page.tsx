@@ -318,7 +318,7 @@ export default function TermsOfServicePage() {
                 </div>
               </section>
   
-              {/* NEW Section 15 - Severability */}
+              {/* Section 15 - Severability */}
               <section className="rounded-lg border-2 border-brand-stone bg-white p-8 shadow-lg hover-lift sm:p-10">
                 <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">
                   15. Severability
@@ -332,9 +332,24 @@ export default function TermsOfServicePage() {
                 </div>
               </section>
   
-              {/* Section 16 - Contact */}
+              {/* Section 16 - Force Majeure */}
+              <section className="rounded-lg border-2 border-brand-stone bg-white p-8 shadow-lg hover-lift sm:p-10">
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">
+                  16. Force Majeure
+                </h2>
+                <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
+                  <p>
+                    DVM League shall not be liable for any delay or failure to perform resulting from causes outside its
+                    reasonable control, including, but not limited to, acts of God, war, terrorism, riots, embargos, acts
+                    of civil or military authorities, fire, floods, accidents, or failures of telecommunications or
+                    internet service providers.
+                  </p>
+                </div>
+              </section>
+  
+              {/* Section 17 - Contact */}
               <section className="rounded-lg border-2 border-brand-gold bg-brand-gold/10 p-8 shadow-lg hover-glow sm:p-10">
-                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">16. Contact Us</h2>
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">17. Contact Us</h2>
                 <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
                   <p>If you have any questions about these Terms, please contact us at khan@dvmleague.com.</p>
                 </div>
