@@ -33,7 +33,9 @@ export function CTASection() {
         <div className="mt-10 border-t border-brand-gold/20 pt-10">
           <h3 className="font-serif text-2xl text-brand-offwhite/90">An Exclusive Offer for our Founding Members.</h3>
           <p className="mt-4 text-sm font-semibold text-brand-offwhite/80">The DVM League Complete Case Consult</p>
-          <p className="mt-2 font-serif text-7xl font-bold text-brand-gold">$395</p>
+          <h3 className="mt-2 text-4xl font-serif text-brand-offwhite/70"><s>$395</s></h3>
+          <h2 className="mt-1 text-8xl font-serif font-bold text-brand-gold">FREE</h2>
+          <p className="mt-2 text-lg font-semibold text-brand-offwhite/80">(Your Founder's Circle Offer)</p>
         </div>
 
         <div className="mt-12 flex flex-col items-center gap-4">
