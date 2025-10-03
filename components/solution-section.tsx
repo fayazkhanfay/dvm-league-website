@@ -10,7 +10,7 @@ export function SolutionSection() {
       <div className="mx-auto max-w-5xl px-6 lg:px-8 text-center">
         <div className="scroll-animate">
           <h2 className="font-serif text-5xl font-bold tracking-tight text-brand-navy sm:text-6xl text-balance">
-            One Product. A Complete Solution.
+            One Consult. An End-to-End Strategy.
           </h2>
           <p className="mt-6 text-lg text-brand-navy/90 leading-relaxed max-w-3xl mx-auto text-pretty">
             {

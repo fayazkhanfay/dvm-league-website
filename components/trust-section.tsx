@@ -3,7 +3,7 @@ export function TrustSection() {
     <section id="specialists" className="py-24 sm:py-32 bg-brand-offwhite">
       <div className="mx-auto max-w-4xl px-6 lg:px-8 text-center">
         <h2 className="font-serif text-5xl font-bold tracking-tight sm:text-6xl text-brand-navy text-balance">
-          The American Standard of Care.
+          American Specialists. American Standards.
         </h2>
         <p className="mt-6 text-lg text-brand-navy/90 leading-relaxed text-pretty">
           Our entire model is built on professional trust and legal clarity. We only partner with seasoned, U.S.-based,
