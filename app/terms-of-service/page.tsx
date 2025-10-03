@@ -303,10 +303,24 @@ export default function TermsOfServicePage() {
                   </p>
                 </div>
               </section>
+              
+              {/* Section 14 - Entire Agreement */}
+              <section className="rounded-lg border-2 border-brand-stone bg-white p-8 shadow-lg hover-lift sm:p-10">
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">
+                  14. Entire Agreement
+                </h2>
+                <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
+                  <p>
+                    These Terms constitute the entire and exclusive understanding and agreement between DVM League and
+                    you regarding the Services, and these Terms supersede and replace any and all prior oral or written
+                    understandings or agreements between DVM League and you regarding the Services.
+                  </p>
+                </div>
+              </section>
   
-              {/* Section 14 - Contact */}
+              {/* Section 15 - Contact */}
               <section className="rounded-lg border-2 border-brand-gold bg-brand-gold/10 p-8 shadow-lg hover-glow sm:p-10">
-                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">14. Contact Us</h2>
+                <h2 className="font-serif text-3xl font-bold text-brand-navy sm:text-4xl">15. Contact Us</h2>
                 <div className="mt-6 text-lg leading-relaxed text-brand-navy/90">
                   <p>If you have any questions about these Terms, please contact us at khan@dvmleague.com.</p>
                 </div>
