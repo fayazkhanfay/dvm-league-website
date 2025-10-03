@@ -8,11 +8,11 @@ export function Footer() {
             For Specialists: Join The League
           </a>
           <span className="text-white/20">|</span>
-          <a href="/privacy-policy.html" className="hover:text-white transition-colors">
+          <a href="/privacy-policy" className="hover:text-white transition-colors">
             Privacy Policy
           </a>
           <span className="text-white/20">|</span>
-          <a href="/terms-of-service.html" className="hover:text-white transition-colors">
+          <a href="/terms-of-service" className="hover:text-white transition-colors">
             Terms of Service
           </a>
           <span className="text-white/20">|</span>
