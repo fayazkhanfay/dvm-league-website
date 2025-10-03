@@ -13,7 +13,7 @@ export function FAQSection() {
     {
       question: "How do you handle the VCPR and liability?",
       answer:
-        "You are always in control. You, the GP, maintain the Veterinarian-Client-Patient Relationship (VCPR) at all times and are the ultimate clinical authority. Our platform is a B2B consultation tool designed to support your decisions and reduce your liability by adding a board-certified specialist's documented guidance to your medical record.",
+        "You are always in control. You, the GP, maintain the Veterinarian-Client-Patient Relationship (VCPR) at all times and are the ultimate clinical authority. Our platform is a B2B consultation tool designed to help you meet the standard of care by adding a board-certified specialist's documented guidance to your medical record.",
     },
     {
       question: "What are the qualifications of your specialists?",
