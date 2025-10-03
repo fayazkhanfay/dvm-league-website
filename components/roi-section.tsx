@@ -50,11 +50,10 @@ export function ROISection() {
           <div>
             <div className="scroll-animate">
               <h2 className="font-serif text-5xl font-bold tracking-tight text-brand-navy text-balance">
-                How a $395 Consult Unlocked a $4,200 Case.
+                The In-House Profit Model: How a $395 Consult Unlocks a $4,000+ Revenue Opportunity.
               </h2>
               <p className="mt-6 text-lg text-brand-navy/90 leading-relaxed text-pretty">
-                This is not a cost center; it is a profit engine. See how one practice used our Complete Case Consult to
-                turn a complex referral into a profitable, in-house success story.
+                This is not a cost center; it is a profit engine. Here is a realistic model of how our Complete Case Consult turns a complex referral into a profitable, in-house revenue stream.
               </p>
             </div>
             <div className="mt-8 space-y-6">
@@ -81,7 +80,7 @@ export function ROISection() {
               </div>
             </div>
             <p className="mt-8 text-xs text-brand-navy/60 text-pretty">
-              Note: Financials are based on a real case study. Your actual ROI will vary depending on your clinic's specific procedures and pricing.
+              Note: This is an illustrative model based on average costs for advanced diagnostics and treatment. Your actual ROI will vary depending on your clinic's specific procedures and pricing.
             </p>
           </div>
           <div className="text-center">
