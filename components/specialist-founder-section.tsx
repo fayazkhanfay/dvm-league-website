@@ -36,7 +36,7 @@ export function SpecialistFounderSection() {
             </p>
             <div className="mt-8">
               <a
-                href="#"
+                href="https://docs.google.com/forms/d/e/1FAIpQLScgDi_AQoCHGlf1N_hWF-5xQU73R0KGTw2UG3ZoynlhJjbKgA/viewform?usp=header"
                 target="_blank"
                 className="inline-block rounded-md bg-brand-gold px-12 py-4 text-lg font-bold text-brand-navy shadow-lg hover:bg-brand-navy hover:text-white transition-all transform hover:scale-105"
                 rel="noreferrer"
