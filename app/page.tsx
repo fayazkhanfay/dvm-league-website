@@ -23,9 +23,8 @@ export default function HomePage() {
         <FAQSection />
       </main>
       <Footer />
-      {process.env.NEXT_PUBLIC_ENABLE_SENTRY_TEST_BUTTON === "true" ? (
-        <SentryTestButton />
-      ) : null}
+      {/* {process.env.NODE_ENV !== "production" ? <SentryTestButton /> : null} */}
+      <SentryTestButton />
     </div>
   )
 }
