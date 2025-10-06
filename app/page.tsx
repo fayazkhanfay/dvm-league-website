@@ -7,7 +7,6 @@ import { TrustSection } from "@/components/trust-section"
 import { CTASection } from "@/components/cta-section"
 import { FAQSection } from "@/components/faq-section"
 import { Footer } from "@/components/footer"
-import { SentryTestButton } from "@/components/SentryTestButton"
 
 export default function HomePage() {
   return (
@@ -23,8 +22,6 @@ export default function HomePage() {
         <FAQSection />
       </main>
       <Footer />
-      {/* {process.env.NODE_ENV !== "production" ? <SentryTestButton /> : null} */}
-      <SentryTestButton />
     </div>
   )
 }
