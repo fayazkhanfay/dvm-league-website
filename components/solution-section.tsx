@@ -61,7 +61,7 @@ export function SolutionSection() {
               </div>
             </div>
           </div>
-          <div className="hidden lg:block scroll-animate" style={{ animationDelay: "1000ms" }}>
+          <div className="scroll-animate mt-8 lg:mt-0" style={{ animationDelay: "1000ms" }}>
             <img
               src="/probe.png"
               alt="A general practice veterinarian confidently performing an ultrasound in their own clinic, empowered by specialist guidance."
