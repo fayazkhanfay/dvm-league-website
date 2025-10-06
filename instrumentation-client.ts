@@ -1,5 +1,5 @@
-// This file initializes Sentry in the browser. Auto-loaded by @sentry/nextjs.
-// https://docs.sentry.io/platforms/javascript/guides/nextjs/
+// Recommended client instrumentation entrypoint for Sentry with App Router
+// https://nextjs.org/docs/app/api-reference/file-conventions/instrumentation-client
 
 import * as Sentry from "@sentry/nextjs"
 
