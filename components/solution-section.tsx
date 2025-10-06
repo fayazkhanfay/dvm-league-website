@@ -1,6 +1,7 @@
 "use client"
 
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
+import Image from "next/image"
 
 export function SolutionSection() {
   const sectionRef = useScrollAnimation()
@@ -62,11 +63,16 @@ export function SolutionSection() {
             </div>
           </div>
           <div className="hidden lg:block scroll-animate" style={{ animationDelay: "1000ms" }}>
-            <img
-              src="/probe.png"
-              alt="A general practice veterinarian confidently performing an ultrasound in their own clinic, empowered by specialist guidance."
-              className="rounded-lg shadow-xl border-4 border-white w-full h-auto hover-lift transition-all duration-500"
-            />
+            <div className="relative w-full rounded-lg shadow-xl border-4 border-white overflow-hidden hover-lift transition-all duration-500 aspect-[4/3]">
+              <Image
+                src="/probe.png"
+                alt="A general practice veterinarian confidently performing an ultrasound in their own clinic, empowered by specialist guidance."
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover object-center"
+                priority
+              />
+            </div>
           </div>
         </div>
         <div className="mt-12 scroll-animate" style={{ animationDelay: "1200ms" }}>

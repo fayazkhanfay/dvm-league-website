@@ -2,6 +2,7 @@
 
 import { Check } from "lucide-react"
 import { useState, useEffect, useRef } from "react"
+import Image from "next/image"
 
 export function SpecialistValuePropsSection() {
   const [payoutCount, setPayoutCount] = useState(0)
@@ -155,11 +156,16 @@ export function SpecialistValuePropsSection() {
             </div>
           </div>
           <div className="md:order-1">
-            <img
-              src="/vet-on-couch.png"
-              alt="A veterinary specialist enjoying a flexible work-life balance, working comfortably from her quiet home office with her pet nearby."
-              className="rounded-lg shadow-xl w-full h-auto object-cover"
-            />
+            <div className="relative w-full rounded-lg shadow-xl overflow-hidden aspect-square">
+              <Image
+                src="/vet-on-couch.png"
+                alt="A veterinary specialist enjoying a flexible work-life balance, working comfortably from her quiet home office with her pet nearby."
+                fill
+                sizes="(min-width: 1024px) 50vw, 100vw"
+                className="object-cover object-center"
+                priority
+              />
+            </div>
           </div>
         </div>
       </div>

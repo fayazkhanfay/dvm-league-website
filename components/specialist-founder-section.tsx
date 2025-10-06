@@ -1,4 +1,5 @@
 "use client"
+import Image from "next/image"
 
 export function SpecialistFounderSection() {
   return (
@@ -17,11 +18,16 @@ export function SpecialistFounderSection() {
         <div className="mt-16 flex flex-col md:flex-row items-center justify-center gap-12">
           {/* Founder Headshot */}
           <div className="text-center flex-shrink-0">
-            <img
-              src="/fayaz-khan-profile.png"
-              alt="Headshot of Fayaz Khan, Founder of DVM League"
-              className="rounded-full w-48 h-48 mx-auto shadow-xl border-4 border-white"
-            />
+            <div className="relative w-48 h-48 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-white">
+              <Image
+                src="/fayaz-khan-profile.png"
+                alt="Headshot of Fayaz Khan, Founder of DVM League"
+                fill
+                sizes="192px"
+                className="object-cover"
+                priority
+              />
+            </div>
             <h3 className="mt-4 text-xl font-bold text-brand-navy">Fayaz Khan</h3>
             <p className="text-sm font-semibold text-brand-navy/80">Founder, DVM League</p>
           </div>

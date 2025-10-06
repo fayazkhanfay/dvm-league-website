@@ -2,6 +2,7 @@
 
 import { useScrollAnimation } from "@/hooks/use-scroll-animation"
 import { useEffect, useRef, useState } from "react"
+import Image from "next/image"
 
 export function ROISection() {
   const sectionRef = useScrollAnimation()
@@ -88,11 +89,16 @@ export function ROISection() {
               className="scroll-animate bg-white p-8 rounded-2xl shadow-xl border border-brand-stone hover-lift transition-all duration-500"
               style={{ animationDelay: "800ms" }}
             >
-              <img
-                className="rounded-full w-48 h-48 mx-auto object-cover border-4 border-white shadow-lg transition-transform duration-300 hover:scale-105"
-                src="/golden-retriever.png"
-                alt="A healthy and happy golden retriever, representing a successful medical outcome."
-              />
+              <div className="relative w-48 h-48 mx-auto rounded-full border-4 border-white shadow-lg overflow-hidden transition-transform duration-300 hover:scale-105">
+                <Image
+                  src="/golden-retriever.png"
+                  alt="A healthy and happy golden retriever, representing a successful medical outcome."
+                  fill
+                  sizes="192px"
+                  className="object-cover"
+                  priority
+                />
+              </div>
               <p
                 ref={countRef}
                 className="mt-8 font-serif font-bold text-8xl tracking-tighter text-brand-navy transition-all duration-300"

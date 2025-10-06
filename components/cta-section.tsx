@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button"
 import { Shield } from "lucide-react"
 import Link from "next/link"
+import Image from "next/image"
 
 export function CTASection() {
   return (
@@ -15,11 +16,16 @@ export function CTASection() {
         {/* Founder Message & Headshot */}
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-4 gap-6 items-center text-left">
           <div className="sm:col-span-1 flex justify-center">
-            <img
-              src="/fayaz-khan-profile.png"
-              alt="Fayaz Khan, Founder of DVM League"
-              className="rounded-full w-32 h-32 sm:w-36 sm:h-36 border-4 border-brand-gold/50 shadow-lg"
-            />
+            <div className="relative w-32 h-32 sm:w-36 sm:h-36 rounded-full overflow-hidden border-4 border-brand-gold/50 shadow-lg">
+              <Image
+                src="/fayaz-khan-profile.png"
+                alt="Fayaz Khan, Founder of DVM League"
+                fill
+                sizes="(min-width: 640px) 9rem, 8rem"
+                className="object-cover"
+                priority
+              />
+            </div>
           </div>
           <div className="sm:col-span-3 text-center sm:text-left">
             <p className="text-lg text-brand-offwhite/80 leading-relaxed text-pretty">

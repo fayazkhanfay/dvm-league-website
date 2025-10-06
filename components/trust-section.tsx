@@ -1,3 +1,5 @@
+import Image from "next/image"
+
 export function TrustSection() {
   return (
     <section id="specialists" className="py-24 sm:py-32 bg-brand-offwhite">
@@ -10,26 +12,43 @@ export function TrustSection() {
           board-certified clinicians.
         </p>
         <div className="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
-          <img
-            src="/board-certified.png"
-            alt="A professional seal verifying that DVM League specialists are board-certified diplomates."
-            className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
-          />
-          <img
-            src="/us-map-badge.png"
-            alt="A professional seal verifying that all DVM League specialists are based in the United States."
-            className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
-          />
-          <img
-            src="/insurance-badge-v3.png"
-            alt="A modern shield icon verifying that DVM League specialists are professionally insured."
-            className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
-          />
-          <img
-            src="/dvm-experience.png"
-            alt="A professional seal verifying 5-7+ Years Post-Residency Experience' for DVM League specialists."
-            className="rounded-lg shadow-md w-full h-auto object-cover aspect-square"
-          />
+          <div className="relative aspect-square w-full rounded-lg shadow-md overflow-hidden">
+            <Image
+              src="/board-certified.png"
+              alt="A professional seal verifying that DVM League specialists are board-certified diplomates."
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
+              priority
+            />
+          </div>
+          <div className="relative aspect-square w-full rounded-lg shadow-md overflow-hidden">
+            <Image
+              src="/us-map-badge.png"
+              alt="A professional seal verifying that all DVM League specialists are based in the United States."
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative aspect-square w-full rounded-lg shadow-md overflow-hidden">
+            <Image
+              src="/insurance-badge-v3.png"
+              alt="A modern shield icon verifying that DVM League specialists are professionally insured."
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+          <div className="relative aspect-square w-full rounded-lg shadow-md overflow-hidden">
+            <Image
+              src="/dvm-experience.png"
+              alt="A professional seal verifying 5-7+ Years Post-Residency Experience' for DVM League specialists."
+              fill
+              sizes="(min-width: 768px) 25vw, 50vw"
+              className="object-cover"
+            />
+          </div>
         </div>
         <div className="mt-8 grid grid-cols-1 sm:grid-cols-2 gap-8 text-left">
           <div className="bg-white p-6 rounded-lg shadow-md border border-brand-stone">
