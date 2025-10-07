@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from "next"
 import { EB_Garamond, Inter } from "next/font/google"
 import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
+import Script from "next/script"
 import "./globals.css"
 
 const ebGaramond = EB_Garamond({
@@ -101,6 +102,19 @@ export default function RootLayout({
         <meta name="msapplication-TileColor" content="#0A2240" />
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" />
+        {/* Google tag (gtag.js) */}
+        <Script
+          src="https://www.googletagmanager.com/gtag/js?id=G-4L5KQ0Y3KW"
+          strategy="afterInteractive"
+        />
+        <Script id="ga-gtag-init" strategy="afterInteractive">
+          {`
+            window.dataLayer = window.dataLayer || [];
+            function gtag(){dataLayer.push(arguments);} 
+            gtag('js', new Date());
+            gtag('config', 'G-4L5KQ0Y3KW');
+          `}
+        </Script>
       </head>
       <body className="font-sans">
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
