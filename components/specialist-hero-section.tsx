@@ -5,6 +5,11 @@ export function SpecialistHeroSection() {
     <section className="relative pt-48 pb-24 flex items-center bg-brand-offwhite">
       <div className="mx-auto max-w-4xl w-full px-6 lg:px-8 relative z-10 text-center">
         <div className="animate-fade-in-rise">
+          <p className="font-sans text-lg font-bold tracking-widest text-brand-gold uppercase">
+            An Invitation for Board-Certified Specialists
+          </p>
+        </div>
+        <div className="animate-fade-in-rise">
           <h1 className="font-serif text-6xl font-bold tracking-tight text-brand-navy sm:text-8xl leading-tight text-balance">
             Practice Medicine On Your Terms. Not Theirs.
           </h1>

@@ -17,6 +17,11 @@ export function HeroSection() {
 
       <div className="mx-auto max-w-4xl w-full px-4 sm:px-6 lg:px-8 relative z-10 text-center">
         <div className="animate-fade-in-rise">
+          <p className="font-sans text-lg font-bold tracking-widest text-brand-gold uppercase">
+            For Independent Veterinary Practice Owners
+          </p>
+        </div>
+        <div className="animate-fade-in-rise">
           <h1 className="font-serif text-4xl sm:text-6xl lg:text-8xl font-bold tracking-tight text-brand-navy leading-tight text-balance">
             Stop Referring Your Profit. <br />
             Keep Cases In-House.
