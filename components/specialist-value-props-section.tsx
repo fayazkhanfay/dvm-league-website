@@ -116,8 +116,7 @@ export function SpecialistValuePropsSection() {
               Radical Flexibility.
             </h2>
             <p className="mt-6 text-lg text-brand-navy/90 leading-relaxed text-pretty">
-              This is a truly asynchronous platform built for a specialist's lifestyle. Our "Founder-Led Concierge"
-              model for our launch means no frantic race to claim cases. Work when and where you want.
+              This is a truly asynchronous platform built for a specialist's lifestyle. Our "Founder-Led Concierge" model for our launch means you can work when and where you want.
             </p>
             <div className="mt-8 space-y-8 max-w-md">
               <div className="flex items-start gap-6">
@@ -125,9 +124,9 @@ export function SpecialistValuePropsSection() {
                   1
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Receive a Personal Invitation</h3>
+                  <h3 className="text-xl font-bold">See Case Opportunities</h3>
                   <p className="mt-1 text-brand-navy/80">
-                    Our founder will contact you directly with a new case that aligns with your specialty and expertise.
+                    When a new case is submitted, you and other specialists in your field will be alerted of the new opportunity.
                   </p>
                 </div>
               </div>
@@ -136,9 +135,9 @@ export function SpecialistValuePropsSection() {
                   2
                 </div>
                 <div>
-                  <h3 className="text-xl font-bold">Review & Accept on Your Time</h3>
+                  <h3 className="text-xl font-bold">Claim It On Your Time</h3>
                   <p className="mt-1 text-brand-navy/80">
-                    If it's a good fit, you accept and the case is formally assigned to you in our platform.
+                    The case is available on a first-come, first-served basis. If it’s a good fit for your schedule, you claim it, and it's yours.
                   </p>
                 </div>
               </div>
