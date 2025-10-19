@@ -30,9 +30,9 @@ export function SpecialistFAQSection() {
           <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
             <h3 className="font-bold text-brand-navy">What is the typical case volume I can expect?</h3>
             <p className="mt-2 text-sm text-brand-navy/90">
-              Think of this as a private practice, not a public emergency room. Our concierge model means we only bring
-              you a curated stream of high-quality, interesting cases. We prioritize our founding partners, so you will
-              always have the first opportunity to take on the best work.
+            Think of this as a private practice, not a public emergency room. Our model is built on quality, so we only accept high-value, interesting
+            cases onto the platform. When a new case is approved, it's announced to all specialists in that field. This gives you the opportunity to 
+            claim the work that fits your schedule and interests on a first-come, first-served basis.
             </p>
           </div>
           <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
