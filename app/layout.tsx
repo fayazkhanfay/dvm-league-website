@@ -115,6 +115,31 @@ export default function RootLayout({
             gtag('config', 'G-4L5KQ0Y3KW');
           `}
         </Script>
+        <Script
+          id="organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "name": "DVM League, LLC",
+              "url": "https://dvmleague.com",
+              "logo": "https://dvmleague.com/dvm-league-logo.png",
+              "contactPoint": {
+                "@type": "ContactPoint",
+                "email": "khan@dvmleague.com",
+                "contactType": "Customer Service"
+              },
+              "sameAs": [
+                "https://www.linkedin.com/company/dvmleague",
+                "https://www.instagram.com/dvmleague/",
+                "https://www.facebook.com/DVMLeague/",
+                "https://x.com/DvmLeague",
+                "https://www.youtube.com/@DVMLeague",
+              ]
+            }),
+          }}
+        />
       </head>
       <body className="font-sans">
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>

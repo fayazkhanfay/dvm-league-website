@@ -5,12 +5,16 @@ import { SpecialistValuePropsSection } from "@/components/specialist-value-props
 import { SpecialistFounderSection } from "@/components/specialist-founder-section"
 import { SpecialistFAQSection } from "@/components/specialist-faq-section"
 import { Footer } from "@/components/footer"
+import type { Metadata } from 'next';
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Join The League | DVM League",
   description:
     "A professional network for elite, board-certified veterinary specialists seeking a flexible, high-payout, and low-stress way to practice medicine.",
-}
+  alternates: {
+    canonical: '/specialists',
+  },
+};
 
 export default function SpecialistsPage() {
   return (

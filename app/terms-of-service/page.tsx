@@ -1,5 +1,18 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Terms of Service | DVM League",
+  description: "Read the DVM League Terms of Service governing the use of our veterinary specialist consultation platform for General Practitioners and Specialists.",
+  robots: { 
+    index: true,
+    follow: true,
+  },
+   alternates: {
+    canonical: '/terms-of-service',
+  },
+};
 
 export default function TermsOfServicePage() {
     return (

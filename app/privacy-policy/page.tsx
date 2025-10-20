@@ -1,5 +1,18 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Privacy Policy | DVM League",
+  description: "Review the DVM League Privacy Policy regarding the collection, use, and protection of your professional and case data on our veterinary consultation platform.",
+  robots: { 
+    index: true,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/privacy-policy',
+  },
+};
 
 export default function PrivacyPolicyPage() {
   return (

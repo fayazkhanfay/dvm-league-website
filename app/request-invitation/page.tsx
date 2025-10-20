@@ -10,6 +10,19 @@ import { Label } from "@/components/ui/label"
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import { Shield, CheckCircle } from "lucide-react"
+import type { Metadata } from 'next';
+
+export const metadata: Metadata = {
+  title: "Request Invitation | Founder's Circle | DVM League",
+  description: "Join the DVM League Founder's Circle. Get priority access and your first $395 Complete Case Consult free. Request your invitation today.",
+  robots: { // Discourage indexing of this specific page if desired, otherwise omit this line
+    index: false,
+    follow: true,
+  },
+  alternates: {
+    canonical: '/request-invitation',
+  },
+};
 
 export default function RequestInvitationPage() {
   const [showConfirmation, setShowConfirmation] = useState(false)
