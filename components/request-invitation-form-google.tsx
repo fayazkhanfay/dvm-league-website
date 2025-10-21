@@ -162,12 +162,8 @@ export function RequestInvitationFormGoogle() {
         </div>
       ) : (
         <div className="animate-scale-in rounded-lg border-2 border-brand-stone bg-white p-10 text-center shadow-xl hover-glow sm-p-12">
-          <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-gold/20">
-            <Shield className="h-12 w-12 text-brand-gold" />
-            <CheckCircle className="absolute h-8 w-8 translate-x-3 translate-y-3 text-brand-gold" />
-          </div>
           <h2 className="mt-8 font-serif text-4xl font-bold text-brand-navy sm:text-5xl text-balance">
-            Welcome to the League.
+            Welcome to the DVM League.
           </h2>
           <p className="mt-6 text-lg leading-relaxed text-brand-navy/80 text-pretty">
             Thank you. Your invitation request has been received. We are finalizing our elite specialist roster and
