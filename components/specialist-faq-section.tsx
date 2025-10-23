@@ -11,11 +11,9 @@ export function SpecialistFAQSection() {
         <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">
             <h3 className="font-bold text-brand-navy">What exactly is the "Paid Advisory Role" and what is expected of me?</h3>
             <p className="mt-2 text-sm text-brand-navy/90">
-            This is a real, paid, professional consultation. We are a founder-led company, and we believe the only way to 
-            build a world-class platform is to get direct feedback from the experts who will use it. The 30-minute call is 
-            a structured conversation with our founder to get your expert opinion on our workflow and business model. 
-            There is no sales pitch. At the end of the call, you will be invited to join the DVM League as a founding specialist, 
-            but there is absolutely no obligation to do so.
+            The Paid Advisory Role is a professional, <strong>paid engagement</strong> on our Founding Advisory Board. We are a founder-led company, and we believe the only way to build a world-class platform is to get direct feedback from the experts who will use it.
+            <br/><br/>
+            The core of this <strong>engagement</strong> is a single 60-minute advisory video call. This is a structured conversation with our founder to get your expert opinion on our workflow and business model. There is no sales pitch. At the end of the call, you will be invited to join the DVM League as a founding specialist, but there is absolutely no obligation to do so.
             </p>
           </div>
           <div className="p-6 bg-brand-offwhite/80 rounded-lg border border-brand-stone hover:border-brand-navy/20 hover:shadow-sm transition-all">

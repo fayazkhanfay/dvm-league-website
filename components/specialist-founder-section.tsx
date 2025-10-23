@@ -35,7 +35,7 @@ export function SpecialistFounderSection() {
           <div className="w-full max-w-lg bg-white p-8 rounded-xl shadow-2xl border border-brand-navy/10 text-center">
             <h3 className="text-2xl font-bold text-brand-navy">The Offer:</h3>
             <p className="mt-4 font-serif text-7xl font-bold text-brand-gold">$500</p>
-            <p className="mt-2 text-lg font-semibold text-brand-navy">For a single, 30-minute consultation call.</p>
+            <p className="mt-2 text-lg font-semibold text-brand-navy">For a single, 60-minute advisory video call.</p>
             <p className="mt-4 text-sm text-brand-navy/80">
               We are seeking board-certified specialists in{" "}
               <strong>Internal Medicine, Dermatology, and Cardiology</strong> for our Founding Advisory Board.
