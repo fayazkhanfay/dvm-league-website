@@ -30,7 +30,7 @@ export function SpecialistHeader() {
               href="/"
               className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors tracking-wide"
             >
-              For General Practices
+              For General Practices →
             </a>
             <Button
               asChild
@@ -60,7 +60,7 @@ export function SpecialistHeader() {
               className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
-              For General Practices
+              For General Practices →
             </a>
             <Button
               asChild
