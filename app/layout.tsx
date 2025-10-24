@@ -34,7 +34,11 @@ export const metadata: Metadata = {
     address: false,
     telephone: false,
   },
-  metadataBase: new URL("https://dvmleague.com"),
+  metadataBase: new URL(
+    process.env.NEXT_PUBLIC_SITE_URL || process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "https://dvmleague.com",
+  ),
   openGraph: {
     title: "DVM League | Elite Specialist Consults for Veterinary Practices",
     description:
@@ -103,10 +107,7 @@ export default function RootLayout({
         <meta name="msapplication-tap-highlight" content="no" />
         <link rel="apple-touch-startup-image" href="/apple-touch-icon.png" />
         {/* Google tag (gtag.js) */}
-        <Script
-          src="https://www.googletagmanager.com/gtag/js?id=G-4L5KQ0Y3KW"
-          strategy="afterInteractive"
-        />
+        <Script src="https://www.googletagmanager.com/gtag/js?id=G-4L5KQ0Y3KW" strategy="afterInteractive" />
         <Script id="ga-gtag-init" strategy="afterInteractive">
           {`
             window.dataLayer = window.dataLayer || [];
@@ -122,21 +123,21 @@ export default function RootLayout({
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
-              "name": "DVM League, LLC",
-              "url": "https://dvmleague.com",
-              "logo": "https://dvmleague.com/dvm-league-logo.png",
-              "contactPoint": {
+              name: "DVM League, LLC",
+              url: "https://dvmleague.com",
+              logo: "https://dvmleague.com/dvm-league-logo.png",
+              contactPoint: {
                 "@type": "ContactPoint",
-                "email": "khan@dvmleague.com",
-                "contactType": "Customer Service"
+                email: "khan@dvmleague.com",
+                contactType: "Customer Service",
               },
-              "sameAs": [
+              sameAs: [
                 "https://www.linkedin.com/company/dvmleague",
                 "https://www.instagram.com/dvmleague/",
                 "https://www.facebook.com/DVMLeague/",
                 "https://x.com/DvmLeague",
                 "https://www.youtube.com/@DVMLeague",
-              ]
+              ],
             }),
           }}
         />
