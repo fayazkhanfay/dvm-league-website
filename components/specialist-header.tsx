@@ -26,12 +26,6 @@ export function SpecialistHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4">
-            <a
-              href="/"
-              className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors tracking-wide"
-            >
-              For General Practices →
-            </a>
             <Button
               asChild
               variant="outline"
@@ -40,6 +34,12 @@ export function SpecialistHeader() {
             >
               <a href={appLoginUrl}>Login</a>
             </Button>
+            <a
+              href="/"
+              className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors tracking-wide"
+            >
+              For General Practices →
+            </a>
           </nav>
 
           {/* Mobile Menu Button */}
