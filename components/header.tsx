@@ -10,66 +10,93 @@ export function Header() {
 
   return (
     <>
-      <header className="absolute top-0 left-0 w-full z-50 p-4 sm:p-6">
-        <div className="mx-auto max-w-7xl flex justify-between items-center">
-          <a href="/" className="flex-shrink-0">
-            <div>
-              <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy">DVM League</span>
-              <p className="text-xs sm:text-sm font-semibold text-brand-navy/70 tracking-wide -mt-1 hidden sm:block">
-                American Specialists. American Standards.
-              </p>
-            </div>
-          </a>
+      <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between items-center h-20">
+            <a href="/" className="flex-shrink-0 group">
+              <div className="transition-transform duration-200 group-hover:scale-[1.02]">
+                <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy tracking-tight">
+                  DVM League
+                </span>
+                <p className="text-[10px] sm:text-xs font-semibold text-brand-navy/60 tracking-[0.08em] uppercase -mt-0.5 hidden sm:block">
+                  American Specialists. American Standards.
+                </p>
+              </div>
+            </a>
 
-          <div className="flex items-center gap-4">
-            <Link
-              href="/specialists"
-              className="hidden md:inline-flex text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
-            >
-              Are you a Specialist?
-            </Link>
+            <nav className="flex items-center gap-2 sm:gap-3">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+              >
+                <a href="https://app.dvmleague.com/login">Login</a>
+              </Button>
 
-            <Link
-              href="/request-invitation"
-              className="hidden md:inline-flex rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300 transform hover:scale-105"
-            >
-              Request an Invitation
-            </Link>
+              <Link
+                href="/specialists"
+                className="hidden md:inline-flex text-sm font-semibold text-brand-navy/80 hover:text-brand-red transition-colors duration-200 px-3 py-2 rounded-md hover:bg-brand-navy/5"
+              >
+                For Specialists
+              </Link>
 
-            <Button
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300"
-              size="sm"
-            >
-              {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
-            </Button>
+              <Button
+                asChild
+                className="hidden md:inline-flex bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white font-semibold shadow-sm hover:shadow-md transition-all duration-300 border border-brand-gold hover:border-brand-navy"
+                size="default"
+              >
+                <Link href="/request-invitation">Request an Invitation</Link>
+              </Button>
+
+              <Button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden bg-brand-navy text-white hover:bg-brand-navy/90 transition-all duration-200 shadow-sm"
+                size="sm"
+              >
+                {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+              </Button>
+            </nav>
           </div>
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden absolute top-full left-0 w-full bg-brand-offwhite border-t border-brand-stone shadow-lg">
-            <div className="p-6 text-center">
-              <p className="text-sm font-semibold text-brand-navy/70 tracking-wide mb-4">
+          <div className="md:hidden bg-white border-t border-brand-navy/10 shadow-lg animate-in slide-in-from-top-2 duration-200">
+            <div className="px-4 py-6 space-y-3 max-w-7xl mx-auto">
+              <p className="text-xs font-semibold text-brand-navy/60 tracking-[0.08em] uppercase text-center pb-2">
                 American Specialists. American Standards.
               </p>
+
+              <Button
+                asChild
+                variant="outline"
+                size="default"
+                className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <a href="https://app.dvmleague.com/login">Login</a>
+              </Button>
+
               <Link
                 href="/specialists"
-                className="block mb-4 text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors"
+                className="block text-center text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors py-3 px-4 rounded-md hover:bg-brand-navy/5"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Are you a Specialist?
+                For Specialists
               </Link>
-              <Link
-                href="/request-invitation"
-                className="block w-full rounded-md bg-brand-gold px-6 py-3 text-sm font-bold text-brand-navy shadow-md hover:bg-brand-navy hover:text-white transition-all duration-300"
+
+              <Button
+                asChild
+                className="w-full bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white font-semibold shadow-sm transition-all duration-300"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                Request an Invitation
-              </Link>
+                <Link href="/request-invitation">Request an Invitation</Link>
+              </Button>
             </div>
           </div>
         )}
       </header>
+      <div className="h-20" />
     </>
   )
 }
