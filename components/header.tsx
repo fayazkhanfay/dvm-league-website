@@ -38,7 +38,7 @@ export function Header() {
                 href="/specialists"
                 className="hidden md:inline-flex text-sm font-semibold text-brand-navy/80 hover:text-brand-red transition-colors duration-200 px-3 py-2 rounded-md hover:bg-brand-navy/5"
               >
-                For Specialists
+                Are You a Specialist?
               </Link>
 
               <Button
