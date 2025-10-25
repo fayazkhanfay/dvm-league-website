@@ -5,9 +5,10 @@ import { ShieldCheck, PlusCircle, LayoutList, Settings } from "lucide-react"
 interface AppLayoutProps {
   children: React.ReactNode
   activePage: "submitCase" | "myCases" | "settings"
+  userName?: string
 }
 
-export function AppLayout({ children, activePage }: AppLayoutProps) {
+export function AppLayout({ children, activePage, userName = "Dr. Demo GP" }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-brand-offwhite">
       {/* Simplified App Header */}
@@ -21,7 +22,7 @@ export function AppLayout({ children, activePage }: AppLayoutProps) {
 
           {/* User Info */}
           <div className="flex items-center gap-4">
-            <span className="text-sm text-brand-navy/80">Logged in as Dr. Demo GP</span>
+            <span className="text-sm text-brand-navy/80">Logged in as {userName}</span>
             <a href="#" className="text-sm text-brand-navy/60 underline hover:text-brand-red">
               Logout
             </a>

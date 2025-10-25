@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 export default function SpecialistDashboard() {
   // Hardcoded demo data for active cases
@@ -32,6 +33,23 @@ export default function SpecialistDashboard() {
       status: "Awaiting Phase 2 Report",
       reportDue: "ASAP / Next AM",
       action: "submit-phase-2",
+    },
+  ]
+
+  const completedCases = [
+    {
+      caseId: "DVML-002",
+      clinicName: "City Vet Clinic",
+      signalment: "Feline, DSH, 5y FS",
+      specialty: "Dermatology",
+      completedDate: "2025-10-15",
+    },
+    {
+      caseId: "DVML-004",
+      clinicName: "Parkside Animal Hospital",
+      signalment: "Canine, Beagle, 7y MN",
+      specialty: "Cardiology",
+      completedDate: "2025-10-18",
     },
   ]
 
@@ -78,45 +96,88 @@ export default function SpecialistDashboard() {
   }
 
   return (
-    <AppLayout activePage="myCases">
+    <AppLayout activePage="myCases" userName="Dr. Jane Smith">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         {/* Page Title */}
         <h1 className="font-serif text-3xl font-bold text-brand-navy mb-8">Specialist Dashboard</h1>
 
-        {/* My Active Cases Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle className="text-2xl font-serif text-brand-navy">My Active Cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead className="font-semibold">Case ID</TableHead>
-                    <TableHead className="font-semibold">GP Clinic Name</TableHead>
-                    <TableHead className="font-semibold">Patient Signalment</TableHead>
-                    <TableHead className="font-semibold">Status</TableHead>
-                    <TableHead className="font-semibold">Report Due</TableHead>
-                    <TableHead className="font-semibold">Action</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {activeCases.map((caseItem) => (
-                    <TableRow key={caseItem.caseId}>
-                      <TableCell className="font-medium">{caseItem.caseId}</TableCell>
-                      <TableCell>{caseItem.clinicName}</TableCell>
-                      <TableCell>{caseItem.signalment}</TableCell>
-                      <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                      <TableCell>{caseItem.reportDue}</TableCell>
-                      <TableCell>{getActionButton(caseItem.action)}</TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          </CardContent>
-        </Card>
+        <Tabs defaultValue="active" className="mb-8">
+          <TabsList className="grid w-full max-w-md grid-cols-2">
+            <TabsTrigger value="active">Active Cases</TabsTrigger>
+            <TabsTrigger value="completed">Completed Cases</TabsTrigger>
+          </TabsList>
+
+          {/* Active Cases Tab */}
+          <TabsContent value="active">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-semibold">Case ID</TableHead>
+                        <TableHead className="font-semibold">GP Clinic Name</TableHead>
+                        <TableHead className="font-semibold">Patient Signalment</TableHead>
+                        <TableHead className="font-semibold">Status</TableHead>
+                        <TableHead className="font-semibold">Report Due</TableHead>
+                        <TableHead className="font-semibold">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {activeCases.map((caseItem) => (
+                        <TableRow key={caseItem.caseId}>
+                          <TableCell className="font-medium">{caseItem.caseId}</TableCell>
+                          <TableCell>{caseItem.clinicName}</TableCell>
+                          <TableCell>{caseItem.signalment}</TableCell>
+                          <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
+                          <TableCell>{caseItem.reportDue}</TableCell>
+                          <TableCell>{getActionButton(caseItem.action)}</TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="completed">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-semibold">Case ID</TableHead>
+                        <TableHead className="font-semibold">GP Clinic Name</TableHead>
+                        <TableHead className="font-semibold">Patient Signalment</TableHead>
+                        <TableHead className="font-semibold">Specialty</TableHead>
+                        <TableHead className="font-semibold">Completed Date</TableHead>
+                        <TableHead className="font-semibold">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {completedCases.map((caseItem) => (
+                        <TableRow key={caseItem.caseId}>
+                          <TableCell className="font-medium">{caseItem.caseId}</TableCell>
+                          <TableCell>{caseItem.clinicName}</TableCell>
+                          <TableCell>{caseItem.signalment}</TableCell>
+                          <TableCell>{caseItem.specialty}</TableCell>
+                          <TableCell>{caseItem.completedDate}</TableCell>
+                          <TableCell>
+                            <Button variant="outline" size="sm" asChild>
+                              <a href="#">View Final Report</a>
+                            </Button>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {/* Available Cases Section - Concierge Model Explanation */}
         <Card>
