@@ -7,6 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Checkbox } from "@/components/ui/checkbox"
 import { ShieldCheck, PlusCircle, LayoutList, UploadCloud, FileText, ImageIcon, AlertCircle } from "lucide-react"
 
 export default function SubmitCasePage() {
@@ -30,6 +32,9 @@ export default function SubmitCasePage() {
   const [weight, setWeight] = useState("")
   const [species, setSpecies] = useState("")
   const [sexStatus, setSexStatus] = useState("")
+  const [vaccinationStatus, setVaccinationStatus] = useState("")
+  const [isOnFleaTick, setIsOnFleaTick] = useState(false)
+  const [isOnHeartworm, setIsOnHeartworm] = useState(false)
 
   const validateStep = (step: number): boolean => {
     const newErrors: string[] = []
@@ -399,6 +404,58 @@ export default function SubmitCasePage() {
                       placeholder="Enter weight"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                     />
+                  </div>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-brand-navy">Vaccination Status (Optional)</Label>
+                  <RadioGroup value={vaccinationStatus} onValueChange={setVaccinationStatus} className="mt-3">
+                    <div className="flex items-center space-x-6">
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="up-to-date" id="vax-up-to-date" />
+                        <Label htmlFor="vax-up-to-date" className="font-normal cursor-pointer">
+                          Up-to-Date
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="overdue" id="vax-overdue" />
+                        <Label htmlFor="vax-overdue" className="font-normal cursor-pointer">
+                          Overdue
+                        </Label>
+                      </div>
+                      <div className="flex items-center space-x-2">
+                        <RadioGroupItem value="unknown" id="vax-unknown" />
+                        <Label htmlFor="vax-unknown" className="font-normal cursor-pointer">
+                          Unknown
+                        </Label>
+                      </div>
+                    </div>
+                  </RadioGroup>
+                </div>
+
+                <div>
+                  <Label className="text-sm font-medium text-brand-navy">Preventative Status (Optional)</Label>
+                  <div className="mt-3 space-y-3">
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="fleaTickPreventative"
+                        checked={isOnFleaTick}
+                        onCheckedChange={(checked) => setIsOnFleaTick(checked as boolean)}
+                      />
+                      <Label htmlFor="fleaTickPreventative" className="font-normal cursor-pointer">
+                        On Flea/Tick Preventative
+                      </Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Checkbox
+                        id="heartwormPreventative"
+                        checked={isOnHeartworm}
+                        onCheckedChange={(checked) => setIsOnHeartworm(checked as boolean)}
+                      />
+                      <Label htmlFor="heartwormPreventative" className="font-normal cursor-pointer">
+                        On Heartworm Preventative
+                      </Label>
+                    </div>
                   </div>
                 </div>
               </div>
