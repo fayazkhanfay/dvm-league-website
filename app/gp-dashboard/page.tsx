@@ -1,5 +1,6 @@
 "use client"
 
+import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -121,7 +122,7 @@ export default function GPDashboardPage() {
   }
 
   return (
-    <div className="min-h-screen bg-brand-offwhite">
+    <AppLayout activePage="myCases">
       {/* Simplified App Header */}
       <header className="border-b border-brand-stone bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
@@ -244,6 +245,6 @@ export default function GPDashboardPage() {
           </TabsContent>
         </Tabs>
       </main>
-    </div>
+    </AppLayout>
   )
 }

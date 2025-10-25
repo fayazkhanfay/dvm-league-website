@@ -2,6 +2,7 @@
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -9,7 +10,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShieldCheck, PlusCircle, LayoutList, UploadCloud, FileText, ImageIcon, AlertCircle } from "lucide-react"
+import { UploadCloud, FileText, ImageIcon, AlertCircle } from "lucide-react"
 
 export default function SubmitCasePage() {
   const router = useRouter()
@@ -84,48 +85,7 @@ export default function SubmitCasePage() {
   ]
 
   return (
-    <div className="min-h-screen bg-brand-offwhite">
-      {/* Simplified App Header */}
-      <header className="border-b border-brand-stone bg-white shadow-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
-            <ShieldCheck className="h-7 w-7 text-brand-navy" />
-            <h1 className="font-serif text-2xl font-bold text-brand-navy">DVM League</h1>
-          </div>
-
-          {/* User Info */}
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-brand-navy/80">Logged in as Dr. Demo GP</span>
-            <a href="#" className="text-sm text-brand-navy/60 underline hover:text-brand-red">
-              Logout
-            </a>
-          </div>
-        </div>
-      </header>
-
-      {/* Minimal App Top Navigation Bar */}
-      <nav className="border-b border-brand-stone bg-white">
-        <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-          <div className="flex gap-8">
-            <a
-              href="/submit-case"
-              className="flex items-center gap-2 border-b-2 border-brand-navy px-1 py-4 text-sm font-semibold text-brand-navy"
-            >
-              <PlusCircle className="h-4 w-4" />
-              Submit New Case
-            </a>
-            <a
-              href="/gp-dashboard"
-              className="flex items-center gap-2 border-b-2 border-transparent px-1 py-4 text-sm text-brand-navy/70 hover:text-brand-navy"
-            >
-              <LayoutList className="h-4 w-4" />
-              My Cases
-            </a>
-          </div>
-        </div>
-      </nav>
-
+    <AppLayout activePage="submitCase">
       {/* Main Content Area */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Title */}
@@ -601,6 +561,6 @@ export default function SubmitCasePage() {
           </div>
         </div>
       </main>
-    </div>
+    </AppLayout>
   )
 }
