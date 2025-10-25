@@ -85,7 +85,7 @@ export default function SubmitCasePage() {
   ]
 
   return (
-    <AppLayout activePage="submitCase">
+    <AppLayout activePage="submitCase" userRole="gp">
       {/* Main Content Area */}
       <main className="mx-auto max-w-4xl px-4 py-8 sm:px-6 lg:px-8">
         {/* Page Title */}

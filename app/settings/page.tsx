@@ -7,7 +7,7 @@ import { ExternalLink } from "lucide-react"
 
 export default function SettingsPage() {
   return (
-    <AppLayout activePage="settings">
+    <AppLayout activePage="settings" userRole="gp">
       <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Account Settings</h1>
 
       <div className="space-y-6">

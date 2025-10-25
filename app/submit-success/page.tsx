@@ -13,7 +13,7 @@ export default function SubmitSuccessPage() {
   }
 
   return (
-    <AppLayout activePage="submitCase">
+    <AppLayout activePage="submitCase" userRole="gp">
       {/* Main Content Area */}
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Confirmation Card */}
