@@ -19,6 +19,7 @@ export default function SubmitCasePage() {
   const [presentingComplaint, setPresentingComplaint] = useState("")
   const [briefHistory, setBriefHistory] = useState("")
   const [peFindings, setPeFindings] = useState("")
+  const [currentMedications, setCurrentMedications] = useState("")
   const [diagnostics, setDiagnostics] = useState("")
   const [treatments, setTreatments] = useState("")
   const [specificQuestions, setSpecificQuestions] = useState("")
@@ -38,6 +39,7 @@ export default function SubmitCasePage() {
       if (!presentingComplaint) newErrors.push("Presenting Complaint is required")
       if (!briefHistory) newErrors.push("Brief History is required")
       if (!peFindings) newErrors.push("Relevant PE Findings is required")
+      if (!currentMedications) newErrors.push("Current Medications is required")
       if (!specificQuestions) newErrors.push("Specific Questions for the Specialist is required")
     } else if (step === 2) {
       if (!patientName) newErrors.push("Patient Name is required")
@@ -216,7 +218,7 @@ export default function SubmitCasePage() {
                     id="brief-history"
                     value={briefHistory}
                     onChange={(e) => setBriefHistory(e.target.value)}
-                    placeholder="Provide relevant medical history..."
+                    placeholder="Chronological history, relevant past issues, current diet, response to any previous treatments..."
                     rows={4}
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
@@ -232,6 +234,22 @@ export default function SubmitCasePage() {
                     onChange={(e) => setPeFindings(e.target.value)}
                     placeholder="Physical examination findings..."
                     rows={3}
+                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  />
+                </div>
+
+                <div>
+                  <Label htmlFor="current-medications" className="text-sm font-medium text-brand-navy">
+                    Current Medications (Drug, Dose, Frequency) <span className="text-brand-red">*</span>
+                  </Label>
+                  <Textarea
+                    id="current-medications"
+                    name="currentMedications"
+                    value={currentMedications}
+                    onChange={(e) => setCurrentMedications(e.target.value)}
+                    placeholder="List all current medications, including dosage and frequency..."
+                    rows={3}
+                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
