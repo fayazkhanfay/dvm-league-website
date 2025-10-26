@@ -49,7 +49,7 @@ export function AppLayout({ children, activePage, userName = "Dr. Demo GP", user
               </Link>
             )}
             <Link
-              href="/gp-dashboard"
+              href={userRole === "gp" ? "/gp-dashboard" : "/specialist-dashboard"}
               className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm ${
                 activePage === "myCases"
                   ? "border-brand-navy font-semibold text-brand-navy"
@@ -60,7 +60,7 @@ export function AppLayout({ children, activePage, userName = "Dr. Demo GP", user
               My Cases
             </Link>
             <Link
-              href="/settings"
+              href={userRole === "gp" ? "/settings" : "/specialist/settings"}
               className={`flex items-center gap-2 border-b-2 px-1 py-4 text-sm ${
                 activePage === "settings"
                   ? "border-brand-navy font-semibold text-brand-navy"
