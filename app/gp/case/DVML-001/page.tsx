@@ -26,6 +26,7 @@ export default function GPCaseViewPage() {
     submittedDate: "2025-01-15",
 
     // GP's original submission
+    patientSignalment: "Canine, Golden Retriever, 8y MN, 35kg",
     presentingComplaint: "Chronic vomiting and weight loss over the past 3 weeks",
     briefHistory:
       "8-year-old Golden Retriever with a 3-week history of intermittent vomiting (2-3x daily) and progressive weight loss (2kg). Appetite decreased. No diarrhea. Current diet: Premium dry food. No known toxin exposure.",
@@ -36,6 +37,7 @@ export default function GPCaseViewPage() {
       "CBC: Mild leukocytosis (18,000). Chemistry: Mild hypoalbuminemia (2.2 g/dL). Fecal: Negative for parasites.",
     specificQuestions:
       "What additional diagnostics would you recommend? Could this be IBD or something more serious like lymphoma?",
+    initialFiles: ["Buddy_Smith_Labwork_Jan25.pdf", "Abdo_Rads_Lateral.dcm", "CBC_Results.pdf"],
 
     // Phase 1 Plan from specialist
     phase1Plan:
@@ -70,249 +72,308 @@ export default function GPCaseViewPage() {
 
   return (
     <AppLayout activePage="myCases" userRole="gp" userName="Dr. Sarah Chen">
-      <main className="mx-auto max-w-6xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Back to Dashboard Link */}
-        <Link
-          href="/gp-dashboard"
-          className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-brand-navy/70 transition-colors hover:text-brand-navy"
-        >
-          <ArrowLeft className="h-4 w-4" />
-          Back to Dashboard
-        </Link>
-
-        {/* Page Title & Status */}
-        <div className="mb-8">
-          <h1 className="font-serif text-3xl font-bold text-brand-navy">
-            View Case: {caseData.patientName} ({caseData.caseId})
-          </h1>
-          <div className="mt-3">
-            <Badge
-              variant={
-                caseStatus === "Completed"
-                  ? "default"
-                  : caseStatus === "Phase 2 Plan Ready"
-                    ? "default"
-                    : caseStatus === "Awaiting Diagnostics Upload"
-                      ? "secondary"
-                      : "outline"
-              }
-              className={
-                caseStatus === "Completed"
-                  ? "bg-green-100 text-green-800 hover:bg-green-100"
-                  : caseStatus === "Phase 2 Plan Ready"
-                    ? "bg-brand-gold/20 text-brand-navy hover:bg-brand-gold/20"
-                    : caseStatus === "Awaiting Diagnostics Upload"
-                      ? "bg-amber-100 text-amber-800 hover:bg-amber-100"
-                      : "bg-blue-100 text-blue-800 hover:bg-blue-100"
-              }
-            >
-              {caseStatus}
-            </Badge>
-          </div>
-        </div>
-
-        {/* Specialist Info Card */}
-        <Card className="mb-6 border-brand-stone shadow-sm">
-          <CardContent className="flex items-center gap-4 p-4">
-            <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-navy/10">
-              <span className="font-semibold text-brand-navy">JS</span>
-            </div>
-            <div>
-              <p className="font-semibold text-brand-navy">{caseData.specialistName}</p>
-              <p className="text-sm text-brand-navy/70">{caseData.specialty}</p>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Conditional Content Based on Status */}
-        {isPhase1OrAwaiting && (
-          <>
-            {/* Phase 1 Report Card */}
-            <Card className="mb-6 border-brand-stone shadow-sm">
+      <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
+          {/* Left Column: Your Submission Summary (Phase 0) */}
+          <div className="lg:col-span-1">
+            <Card className="sticky top-24 border-brand-stone shadow-md">
               <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan Received</CardTitle>
+                <CardTitle className="text-lg font-bold text-brand-navy">Your Submission Summary</CardTitle>
               </CardHeader>
-              <CardContent className="p-6">
-                <div className="whitespace-pre-line text-brand-navy/90">{caseData.phase1Plan}</div>
-              </CardContent>
-            </Card>
-
-            {/* Action Required Section */}
-            <Card className="mb-6 border-2 border-brand-gold shadow-md">
-              <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                <CardTitle className="text-xl font-bold text-brand-navy">Next Step: Upload Diagnostics</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <p className="mb-6 text-brand-navy/90">
-                  Please perform the recommended diagnostics. Once complete, upload the results (e.g., lab reports,
-                  imaging reports/DICOMs) below to receive the Phase 2 Treatment Plan from {caseData.specialistName}.
-                </p>
-
-                {/* File Upload Area */}
-                <div className="space-y-6">
-                  <div>
-                    <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
-                    <div className="rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold">
-                      <UploadCloud className="mx-auto h-12 w-12 text-brand-navy/40" />
-                      <p className="mt-2 text-sm text-brand-navy/70">Click to upload or drag and drop</p>
-                      <p className="mt-1 text-xs text-brand-navy/50">PDF, DICOM, JPG, PNG up to 50MB</p>
-                      <input type="file" className="hidden" />
-                    </div>
-                  </div>
-
-                  {/* Hardcoded Uploaded Files */}
-                  <div>
-                    <h4 className="mb-2 text-sm font-medium text-brand-navy">Uploaded Files:</h4>
-                    <div className="space-y-2">
-                      <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
-                        <FileText className="h-4 w-4 text-brand-navy/60" />
-                        <span className="text-brand-navy">Ultrasound_Report.pdf</span>
-                      </div>
-                      <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
-                        <ImageIcon className="h-4 w-4 text-brand-navy/60" />
-                        <span className="text-brand-navy">Endoscopy_Images.jpg</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Submit Button */}
-                  <Button
-                    onClick={handleSubmitDiagnostics}
-                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
-                  >
-                    Confirm & Submit Diagnostic Results
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {isPhase2OrCompleted && (
-          <>
-            {/* Phase 2 Final Report Card */}
-            <Card className="mb-6 border-brand-stone shadow-sm">
-              <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report Received</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-6 p-6">
+              <CardContent className="space-y-4 p-6">
+                {/* Patient Signalment */}
                 <div>
-                  <h3 className="mb-2 font-semibold text-brand-navy">Assessment</h3>
-                  <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2Assessment}</p>
+                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Patient Signalment</h3>
+                  <p className="text-sm text-brand-navy/80">
+                    {caseData.patientName} | {caseData.patientSignalment}
+                  </p>
                 </div>
+
+                {/* Presenting Complaint */}
                 <div>
-                  <h3 className="mb-2 font-semibold text-brand-navy">Treatment Plan</h3>
-                  <p className="whitespace-pre-line text-brand-navy/90">{caseData.treatmentPlan}</p>
+                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Presenting Complaint</h3>
+                  <p className="text-sm text-brand-navy/80">{caseData.presentingComplaint}</p>
                 </div>
+
+                {/* Specific Questions */}
                 <div>
-                  <h3 className="mb-2 font-semibold text-brand-navy">Prognosis</h3>
-                  <p className="whitespace-pre-line text-brand-navy/90">{caseData.prognosis}</p>
+                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Your Specific Question(s)</h3>
+                  <p className="text-sm text-brand-navy/80">{caseData.specificQuestions}</p>
                 </div>
-              </CardContent>
-            </Card>
 
-            {/* Client-Friendly Summary Card */}
-            <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
-              <CardHeader className="border-b border-brand-gold">
-                <CardTitle className="flex items-center justify-between text-xl font-bold text-brand-navy">
-                  Client-Friendly Summary
-                  <Button
-                    onClick={handleCopySummary}
-                    variant="outline"
-                    size="sm"
-                    className="gap-2 border-brand-navy text-brand-navy hover:bg-brand-navy hover:text-white bg-transparent"
-                  >
-                    {copied ? (
-                      <>
-                        <CheckCircle className="h-4 w-4" />
-                        Copied!
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="h-4 w-4" />
-                        Copy Summary for Client
-                      </>
-                    )}
-                  </Button>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <p className="text-brand-navy/90">{caseData.clientSummary}</p>
-              </CardContent>
-            </Card>
-          </>
-        )}
-
-        {/* Case History & Files Accordion */}
-        <Accordion type="single" collapsible className="rounded-lg border border-brand-stone bg-white shadow-sm">
-          <AccordionItem value="case-history" className="border-none">
-            <AccordionTrigger className="px-6 py-4 font-semibold text-brand-navy hover:no-underline">
-              View Case History & Files
-            </AccordionTrigger>
-            <AccordionContent className="space-y-6 px-6 pb-6">
-              {/* Original GP Submission */}
-              <div>
-                <h3 className="mb-3 font-semibold text-brand-navy">Original Case Submission</h3>
-                <div className="space-y-3 rounded-lg bg-brand-offwhite p-4">
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">Presenting Complaint:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.presentingComplaint}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">Brief History:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.briefHistory}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">PE Findings:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.peFindings}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">Current Medications:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.currentMedications}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">Diagnostics Performed:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.diagnostics}</p>
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-brand-navy">Specific Questions:</p>
-                    <p className="text-sm text-brand-navy/80">{caseData.specificQuestions}</p>
-                  </div>
+                {/* Current Medications */}
+                <div>
+                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Current Medications</h3>
+                  <p className="text-sm text-brand-navy/80">{caseData.currentMedications}</p>
                 </div>
-              </div>
 
-              {/* Phase 1 Plan */}
-              <div>
-                <h3 className="mb-3 font-semibold text-brand-navy">Phase 1 Diagnostic Plan</h3>
-                <div className="rounded-lg bg-brand-offwhite p-4">
-                  <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase1Plan}</p>
-                </div>
-              </div>
-
-              {/* All Files */}
-              <div>
-                <h3 className="mb-3 font-semibold text-brand-navy">All Attached Files</h3>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
-                    <ImageIcon className="h-4 w-4 text-brand-navy/60" />
-                    <span className="text-brand-navy">Radiograph_Lateral.dcm</span>
-                  </div>
-                  <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
-                    <FileText className="h-4 w-4 text-brand-navy/60" />
-                    <span className="text-brand-navy">Lab_Results.pdf</span>
-                  </div>
-                  {isPhase2OrCompleted &&
-                    caseData.diagnosticFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
-                        <FileText className="h-4 w-4 text-brand-navy/60" />
-                        <span className="text-brand-navy">{file}</span>
+                {/* Initially Submitted Files */}
+                <div>
+                  <h3 className="mb-2 text-sm font-semibold text-brand-navy">Initially Submitted Files</h3>
+                  <div className="space-y-2">
+                    {caseData.initialFiles.map((file, index) => (
+                      <div key={index} className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm">
+                        {file.endsWith(".dcm") ? (
+                          <ImageIcon className="h-3 w-3 text-brand-navy/60" />
+                        ) : (
+                          <FileText className="h-3 w-3 text-brand-navy/60" />
+                        )}
+                        <span className="text-brand-navy/80">{file}</span>
                       </div>
                     ))}
+                  </div>
                 </div>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Right Column: Specialist Report & Actions */}
+          <div className="lg:col-span-2">
+            {/* Back to Dashboard Link */}
+            <Link
+              href="/gp-dashboard"
+              className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-brand-navy/70 transition-colors hover:text-brand-navy"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Back to Dashboard
+            </Link>
+
+            {/* Page Title & Status */}
+            <div className="mb-8">
+              <h1 className="font-serif text-3xl font-bold text-brand-navy">
+                View Case: {caseData.patientName} ({caseData.caseId})
+              </h1>
+              <div className="mt-3">
+                <Badge
+                  variant={
+                    caseStatus === "Completed"
+                      ? "default"
+                      : caseStatus === "Phase 2 Plan Ready"
+                        ? "default"
+                        : caseStatus === "Awaiting Diagnostics Upload"
+                          ? "secondary"
+                          : "outline"
+                  }
+                  className={
+                    caseStatus === "Completed"
+                      ? "bg-green-100 text-green-800 hover:bg-green-100"
+                      : caseStatus === "Phase 2 Plan Ready"
+                        ? "bg-brand-gold/20 text-brand-navy hover:bg-brand-gold/20"
+                        : caseStatus === "Awaiting Diagnostics Upload"
+                          ? "bg-amber-100 text-amber-800 hover:bg-amber-100"
+                          : "bg-blue-100 text-blue-800 hover:bg-blue-100"
+                  }
+                >
+                  {caseStatus}
+                </Badge>
               </div>
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+            </div>
+
+            {/* Specialist Info Card */}
+            <Card className="mb-6 border-brand-stone shadow-sm">
+              <CardContent className="flex items-center gap-4 p-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-brand-navy/10">
+                  <span className="font-semibold text-brand-navy">JS</span>
+                </div>
+                <div>
+                  <p className="font-semibold text-brand-navy">{caseData.specialistName}</p>
+                  <p className="text-sm text-brand-navy/70">{caseData.specialty}</p>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Conditional Content Based on Status */}
+            {isPhase1OrAwaiting && (
+              <>
+                {/* Phase 1 Report Card */}
+                <Card className="mb-6 border-brand-stone shadow-sm">
+                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                    <CardTitle className="text-xl font-bold text-brand-navy">
+                      Phase 1: Diagnostic Plan Received
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="whitespace-pre-line text-brand-navy/90">{caseData.phase1Plan}</div>
+                  </CardContent>
+                </Card>
+
+                {/* Action Required Section */}
+                <Card className="mb-6 border-2 border-brand-gold shadow-md">
+                  <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
+                    <CardTitle className="text-xl font-bold text-brand-navy">Next Step: Upload Diagnostics</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <p className="mb-6 text-brand-navy/90">
+                      Please perform the recommended diagnostics. Once complete, upload the results (e.g., lab reports,
+                      imaging reports/DICOMs) below to receive the Phase 2 Treatment Plan from {caseData.specialistName}
+                      .
+                    </p>
+
+                    {/* File Upload Area */}
+                    <div className="space-y-6">
+                      <div>
+                        <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
+                        <div className="rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold">
+                          <UploadCloud className="mx-auto h-12 w-12 text-brand-navy/40" />
+                          <p className="mt-2 text-sm text-brand-navy/70">Click to upload or drag and drop</p>
+                          <p className="mt-1 text-xs text-brand-navy/50">PDF, DICOM, JPG, PNG up to 50MB</p>
+                          <input type="file" className="hidden" />
+                        </div>
+                      </div>
+
+                      {/* Hardcoded Uploaded Files */}
+                      <div>
+                        <h4 className="mb-2 text-sm font-medium text-brand-navy">Uploaded Files:</h4>
+                        <div className="space-y-2">
+                          <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
+                            <FileText className="h-4 w-4 text-brand-navy/60" />
+                            <span className="text-brand-navy">Ultrasound_Report.pdf</span>
+                          </div>
+                          <div className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
+                            <ImageIcon className="h-4 w-4 text-brand-navy/60" />
+                            <span className="text-brand-navy">Endoscopy_Images.jpg</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Submit Button */}
+                      <Button
+                        onClick={handleSubmitDiagnostics}
+                        className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+                      >
+                        Confirm & Submit Diagnostic Results
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            {isPhase2OrCompleted && (
+              <>
+                {/* Phase 2 Final Report Card */}
+                <Card className="mb-6 border-brand-stone shadow-sm">
+                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                    <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report Received</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
+                    <div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Assessment</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2Assessment}</p>
+                    </div>
+                    <div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Treatment Plan</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.treatmentPlan}</p>
+                    </div>
+                    <div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Prognosis</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.prognosis}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Client-Friendly Summary Card */}
+                <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
+                  <CardHeader className="border-b border-brand-gold">
+                    <CardTitle className="flex items-center justify-between text-xl font-bold text-brand-navy">
+                      Client-Friendly Summary
+                      <Button
+                        onClick={handleCopySummary}
+                        variant="outline"
+                        size="sm"
+                        className="gap-2 border-brand-navy bg-transparent text-brand-navy hover:bg-brand-navy hover:text-white"
+                      >
+                        {copied ? (
+                          <>
+                            <CheckCircle className="h-4 w-4" />
+                            Copied!
+                          </>
+                        ) : (
+                          <>
+                            <Copy className="h-4 w-4" />
+                            Copy Summary for Client
+                          </>
+                        )}
+                      </Button>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <p className="text-brand-navy/90">{caseData.clientSummary}</p>
+                  </CardContent>
+                </Card>
+              </>
+            )}
+
+            <Accordion type="single" collapsible className="rounded-lg border border-brand-stone bg-white shadow-sm">
+              <AccordionItem value="case-history" className="border-none">
+                <AccordionTrigger className="px-6 py-4 font-semibold text-brand-navy hover:no-underline">
+                  View Specialist Reports & All Files
+                </AccordionTrigger>
+                <AccordionContent className="space-y-6 px-6 pb-6">
+                  {/* Phase 1 Plan */}
+                  <div>
+                    <h3 className="mb-3 font-semibold text-brand-navy">Phase 1 Diagnostic Plan</h3>
+                    <div className="rounded-lg bg-brand-offwhite p-4">
+                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase1Plan}</p>
+                    </div>
+                  </div>
+
+                  {/* Phase 2 Report (if available) */}
+                  {isPhase2OrCompleted && (
+                    <div>
+                      <h3 className="mb-3 font-semibold text-brand-navy">Phase 2 Final Report</h3>
+                      <div className="space-y-3 rounded-lg bg-brand-offwhite p-4">
+                        <div>
+                          <p className="text-sm font-medium text-brand-navy">Assessment:</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.phase2Assessment}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-brand-navy">Treatment Plan:</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.treatmentPlan}</p>
+                        </div>
+                        <div>
+                          <p className="text-sm font-medium text-brand-navy">Prognosis:</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.prognosis}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* All Files */}
+                  <div>
+                    <h3 className="mb-3 font-semibold text-brand-navy">All Attached Files</h3>
+                    <div className="space-y-2">
+                      {/* Initial Files */}
+                      {caseData.initialFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm">
+                          {file.endsWith(".dcm") ? (
+                            <ImageIcon className="h-4 w-4 text-brand-navy/60" />
+                          ) : (
+                            <FileText className="h-4 w-4 text-brand-navy/60" />
+                          )}
+                          <span className="text-brand-navy">{file}</span>
+                          <span className="ml-auto text-xs text-brand-navy/50">(Initial)</span>
+                        </div>
+                      ))}
+                      {/* Diagnostic Files (if Phase 2) */}
+                      {isPhase2OrCompleted &&
+                        caseData.diagnosticFiles.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                          >
+                            <FileText className="h-4 w-4 text-brand-navy/60" />
+                            <span className="text-brand-navy">{file}</span>
+                            <span className="ml-auto text-xs text-brand-navy/50">(Diagnostic)</span>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                </AccordionContent>
+              </AccordionItem>
+            </Accordion>
+          </div>
+        </div>
       </main>
     </AppLayout>
   )
