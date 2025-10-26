@@ -22,7 +22,7 @@ export default function RequestInvitationPage() {
   return (
     <div className="min-h-screen bg-brand-offwhite">
       <Header />
-      <main className="px-4 py-16 sm:py-24 lg:py-32">
+      <main className="px-4 pt-8 pb-16 sm:pt-12 sm:pb-24 lg:pt-16 lg:pb-32">
         <div className="mx-auto max-w-7xl">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 lg:gap-16 items-center">
             {/* Left Column - Value Propositions */}
