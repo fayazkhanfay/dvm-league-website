@@ -30,7 +30,6 @@ export function middleware(request: NextRequest) {
     "/specialist/settings",
     "/settings",
     "/request-invitation",
-    "/standings",
   ]
 
   // Check if we're on the app subdomain

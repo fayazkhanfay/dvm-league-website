@@ -30,7 +30,6 @@ The DVM League website uses a subdomain-based architecture to separate marketing
 - **Specialist Case View** (`/specialist/case/*`) - Review cases and submit reports
 - **Settings** (`/settings`, `/specialist/settings`) - Account settings
 - **Request Invitation** (`/request-invitation`) - Founder's Circle invitation form
-- **Standings** (`/standings`) - League standings
 
 ### Routing Logic
 
