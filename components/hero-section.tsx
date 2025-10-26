@@ -5,7 +5,7 @@ import Link from "next/link"
 
 export function HeroSection() {
   return (
-    <section className="relative pt-32 sm:pt-48 pb-16 sm:pb-24 flex items-center overflow-hidden bg-brand-offwhite min-h-screen">
+    <section className="relative pt-24 sm:pt-32 pb-16 sm:pb-24 flex items-center overflow-hidden bg-brand-offwhite min-h-screen">
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div
           className="w-[1200px] h-[1200px] rounded-full animate-pulse-slow"
@@ -29,7 +29,8 @@ export function HeroSection() {
         </div>
         <div className="animate-fade-in-rise animate-delay-200">
           <p className="mt-4 sm:mt-6 text-lg sm:text-xl leading-relaxed text-brand-navy/90 max-w-3xl mx-auto text-pretty px-2">
-            DVM League is a text-based platform that gives you a dedicated, board-certified specialist to guide you through your most complex cases, empowering you to keep them 100% in-house.
+            DVM League is a text-based platform that gives you a dedicated, board-certified specialist to guide you
+            through your most complex cases, empowering you to keep them 100% in-house.
           </p>
         </div>
         <div className="animate-fade-in-rise animate-delay-500">
