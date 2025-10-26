@@ -112,7 +112,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <a
-            href="https://dvmleague.com"
+            href="/"
             className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline"
           >
             ← Back to dvmleague.com

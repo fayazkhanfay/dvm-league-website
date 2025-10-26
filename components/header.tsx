@@ -31,7 +31,7 @@ export function Header() {
                 size="sm"
                 className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
               >
-                <a href="https://app.dvmleague.com/login">Login</a>
+                <a href="/login">Login</a>
               </Button>
 
               <Link
@@ -74,7 +74,7 @@ export function Header() {
                 className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
                 onClick={() => setMobileMenuOpen(false)}
               >
-                <a href="https://app.dvmleague.com/login">Login</a>
+                <a href="/login">Login</a>
               </Button>
 
               <Link

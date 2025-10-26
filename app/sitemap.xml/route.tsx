@@ -17,7 +17,6 @@ export async function GET(request: NextRequest) {
       "app/sitemap.xml/**",
       "app/robots.txt/**",
       "app/request-invitation/**", // App subdomain page
-      "app/standings/**", // App subdomain page
     ],
   })
 

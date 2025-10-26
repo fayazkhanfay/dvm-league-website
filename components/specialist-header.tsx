@@ -6,7 +6,7 @@ import { useState } from "react"
 
 export function SpecialistHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const appLoginUrl = "https://app.dvmleague.com/login"
+  const appLoginUrl = "/login"
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
