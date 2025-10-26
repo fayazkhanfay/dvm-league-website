@@ -21,42 +21,37 @@ The DVM League website uses a subdomain-based architecture to separate marketing
 - **Terms of Service** (`/terms-of-service`) - Legal documentation
 
 ### Application Site (app.dvmleague.com)
+- **Login** (`/login`) - User authentication
+- **GP Dashboard** (`/gp-dashboard`) - General practitioner case management
+- **Submit Case** (`/submit-case`) - Case submission form
+- **Submit Success** (`/submit-success`) - Case submission confirmation
+- **GP Case View** (`/gp/case/*`) - View case details and specialist reports
+- **Specialist Dashboard** (`/specialist-dashboard`) - Specialist case management
+- **Specialist Case View** (`/specialist/case/*`) - Review cases and submit reports
+- **Settings** (`/settings`, `/specialist/settings`) - Account settings
 - **Request Invitation** (`/request-invitation`) - Founder's Circle invitation form
-- **Standings** (`/standings`) - Application feature for tracking league standings
+- **Standings** (`/standings`) - League standings
 
 ### Routing Logic
 
 The `middleware.ts` file handles automatic routing between domains:
-- Marketing pages accessed on `app.dvmleague.com` redirect to `dvmleague.com`
-- Application pages accessed on `dvmleague.com` redirect to `app.dvmleague.com`
-- In development (localhost), all pages are accessible directly without redirects
-
-### SEO Configuration
-
-- **robots.txt**: Dynamically generated based on subdomain
-  - Marketing site: Allows all crawlers, includes sitemap
-  - App subdomain: Disallows all crawlers (private application)
-- **sitemap.xml**: Only includes marketing pages for search engine indexing
+- **Production**: Marketing pages accessed on `app.dvmleague.com` redirect to `dvmleague.com`, and application pages accessed on `dvmleague.com` redirect to `app.dvmleague.com`
+- **Development (localhost)**: All pages are accessible directly without redirects for easier local testing
 
 ## Local Development
 
-To test subdomain routing locally:
+To develop locally:
 
 1. Run the development server:
    \`\`\`bash
    npm run dev
    \`\`\`
 
-2. Access pages directly:
-   - Marketing: `http://localhost:3000/`
-   - Application: `http://localhost:3000/request-invitation`
+2. Access all pages directly on localhost:
+   - Marketing pages: `http://localhost:3000/`, `http://localhost:3000/specialists`
+   - Application pages: `http://localhost:3000/login`, `http://localhost:3000/gp-dashboard`, etc.
 
-3. To test actual subdomain behavior, add to your `/etc/hosts`:
-   \`\`\`
-   127.0.0.1 dvmleague.local
-   127.0.0.1 app.dvmleague.local
-   \`\`\`
-   Then access `http://dvmleague.local:3000` and `http://app.dvmleague.local:3000`
+**Note**: In local development, subdomain routing is disabled. All pages are accessible via direct paths on `localhost:3000`. Subdomain separation only applies in production.
 
 ## Deployment
 

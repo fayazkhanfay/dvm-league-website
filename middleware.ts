@@ -8,44 +8,62 @@ export function middleware(request: NextRequest) {
   // Extract subdomain
   const subdomain = hostname.split(".")[0]
 
-  // Define marketing pages (accessible on main domain)
+  const isLocalhost = hostname.includes("localhost") || hostname.includes("127.0.0.1")
+  const isPreview = hostname.includes(".v0.app") || hostname.includes(".vercel.app")
+
+  // Bypass subdomain routing in development and preview environments
+  if (isLocalhost || isPreview) {
+    return NextResponse.next()
+  }
+
+  // Define marketing pages (accessible on main domain dvmleague.com)
   const marketingPages = ["/", "/specialists", "/privacy-policy", "/terms-of-service"]
 
-  // Define app pages (accessible on app subdomain)
-  const appPages = ["/request-invitation", "/standings"]
+  const appPagePrefixes = [
+    "/login",
+    "/submit-case",
+    "/submit-success",
+    "/gp-dashboard",
+    "/gp/case",
+    "/specialist-dashboard",
+    "/specialist/case",
+    "/specialist/settings",
+    "/settings",
+    "/request-invitation",
+    "/standings",
+  ]
 
   // Check if we're on the app subdomain
   const isAppSubdomain = subdomain === "app" || hostname.startsWith("app.")
 
-  // Check if we're on localhost (for development)
-  const isLocalhost = hostname.includes("localhost")
+  // Check if current path is an app page
+  const isAppPage = appPagePrefixes.some((prefix) => url.pathname.startsWith(prefix))
 
-  // If on app subdomain or localhost with app path
-  if (isAppSubdomain || (isLocalhost && appPages.some((page) => url.pathname.startsWith(page)))) {
+  // Check if current path is a marketing page
+  const isMarketingPage = marketingPages.includes(url.pathname)
+
+  // If on app subdomain
+  if (isAppSubdomain) {
     // Allow app pages
-    if (appPages.some((page) => url.pathname.startsWith(page))) {
+    if (isAppPage) {
       return NextResponse.next()
     }
 
     // Redirect marketing pages to main domain when accessed from app subdomain
-    if (marketingPages.includes(url.pathname)) {
-      if (!isLocalhost) {
-        url.hostname = "dvmleague.com"
-        return NextResponse.redirect(url)
-      }
+    if (isMarketingPage) {
+      url.hostname = "dvmleague.com"
+      return NextResponse.redirect(url)
     }
   } else {
     // On main domain - allow marketing pages
-    if (marketingPages.includes(url.pathname)) {
+    if (isMarketingPage) {
       return NextResponse.next()
     }
 
     // Redirect app pages to app subdomain when accessed from main domain
-    if (appPages.some((page) => url.pathname.startsWith(page))) {
-      if (!isLocalhost) {
-        url.hostname = "app.dvmleague.com"
-        return NextResponse.redirect(url)
-      }
+    if (isAppPage) {
+      url.hostname = "app.dvmleague.com"
+      return NextResponse.redirect(url)
     }
   }
 
