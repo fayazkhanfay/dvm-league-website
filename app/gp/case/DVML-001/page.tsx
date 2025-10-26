@@ -25,16 +25,24 @@ export default function GPCaseViewPage() {
     specialistName: "Dr. Jane Smith",
     submittedDate: "2025-01-15",
 
-    // GP's original submission
-    patientSignalment: "Canine, Golden Retriever, 8y MN, 35kg",
+    // GP's original submission - detailed patient info
+    species: "Canine",
+    breed: "Golden Retriever",
+    age: "8 years",
+    sex: "Male Neutered",
+    weight: "35 kg",
+    vaccinationStatus: "Up-to-Date",
+    preventativeStatus: "On Flea/Tick, On Heartworm",
+
     presentingComplaint: "Chronic vomiting and weight loss over the past 3 weeks",
     briefHistory:
       "8-year-old Golden Retriever with a 3-week history of intermittent vomiting (2-3x daily) and progressive weight loss (2kg). Appetite decreased. No diarrhea. Current diet: Premium dry food. No known toxin exposure.",
     peFindings:
       "BCS 4/9, mild dehydration (5%), abdominal palpation reveals mild cranial abdominal discomfort, no masses palpated. Otherwise unremarkable PE.",
     currentMedications: "Metronidazole 250mg PO BID (started 5 days ago), Cerenia 16mg PO SID PRN",
-    diagnostics:
+    diagnosticsPerformed:
       "CBC: Mild leukocytosis (18,000). Chemistry: Mild hypoalbuminemia (2.2 g/dL). Fecal: Negative for parasites.",
+    treatmentsAttempted: "Cerenia for vomiting control, Metronidazole for suspected GI inflammation - minimal response",
     specificQuestions:
       "What additional diagnostics would you recommend? Could this be IBD or something more serious like lymphoma?",
     initialFiles: ["Buddy_Smith_Labwork_Jan25.pdf", "Abdo_Rads_Lateral.dcm", "CBC_Results.pdf"],
@@ -74,57 +82,113 @@ export default function GPCaseViewPage() {
     <AppLayout activePage="myCases" userRole="gp" userName="Dr. Sarah Chen">
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
-          {/* Left Column: Your Submission Summary (Phase 0) */}
+          {/* Left Column: Complete Submission Summary (Scrollable) */}
           <div className="lg:col-span-1">
-            <Card className="sticky top-24 border-brand-stone shadow-md">
-              <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                <CardTitle className="text-lg font-bold text-brand-navy">Your Submission Summary</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4 p-6">
-                {/* Patient Signalment */}
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Patient Signalment</h3>
-                  <p className="text-sm text-brand-navy/80">
-                    {caseData.patientName} | {caseData.patientSignalment}
-                  </p>
-                </div>
-
-                {/* Presenting Complaint */}
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Presenting Complaint</h3>
-                  <p className="text-sm text-brand-navy/80">{caseData.presentingComplaint}</p>
-                </div>
-
-                {/* Specific Questions */}
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Your Specific Question(s)</h3>
-                  <p className="text-sm text-brand-navy/80">{caseData.specificQuestions}</p>
-                </div>
-
-                {/* Current Medications */}
-                <div>
-                  <h3 className="mb-1 text-sm font-semibold text-brand-navy">Current Medications</h3>
-                  <p className="text-sm text-brand-navy/80">{caseData.currentMedications}</p>
-                </div>
-
-                {/* Initially Submitted Files */}
-                <div>
-                  <h3 className="mb-2 text-sm font-semibold text-brand-navy">Initially Submitted Files</h3>
-                  <div className="space-y-2">
-                    {caseData.initialFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm">
-                        {file.endsWith(".dcm") ? (
-                          <ImageIcon className="h-3 w-3 text-brand-navy/60" />
-                        ) : (
-                          <FileText className="h-3 w-3 text-brand-navy/60" />
-                        )}
-                        <span className="text-brand-navy/80">{file}</span>
+            <div className="sticky top-24 max-h-[calc(100vh-8rem)] overflow-y-auto">
+              <Card className="border-brand-stone shadow-md">
+                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                  <CardTitle className="text-lg font-bold text-brand-navy">Your Submission Summary</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                  {/* Patient Information Section */}
+                  <div>
+                    <h3 className="mb-3 text-base font-bold text-brand-navy">Patient Information</h3>
+                    <div className="space-y-2">
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Name</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patientName}</p>
                       </div>
-                    ))}
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Species</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.species}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Breed</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.breed}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Age</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.age}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Sex</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.sex}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Weight</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.weight}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Vaccination Status</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.vaccinationStatus}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Preventative Status</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.preventativeStatus}</p>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
+
+                  {/* Case Details Section */}
+                  <div>
+                    <h3 className="mb-3 text-base font-bold text-brand-navy">Case Details</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Specialty Selected</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.specialty}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Presenting Complaint</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.presentingComplaint}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Brief History</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.briefHistory}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Relevant PE Findings</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.peFindings}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Current Medications</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.currentMedications}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Diagnostics Performed So Far</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.diagnosticsPerformed}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Treatments Attempted So Far</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.treatmentsAttempted}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Your Specific Question(s)</p>
+                        <div className="mt-1 rounded-md bg-brand-offwhite p-3">
+                          <p className="text-sm text-brand-navy/90">{caseData.specificQuestions}</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Initially Submitted Files Section */}
+                  <div>
+                    <h3 className="mb-3 text-base font-bold text-brand-navy">Initially Submitted Files</h3>
+                    <div className="space-y-2">
+                      {caseData.initialFiles.map((file, index) => (
+                        <div key={index} className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm">
+                          {file.endsWith(".dcm") ? (
+                            <ImageIcon className="h-3 w-3 text-brand-navy/60" />
+                          ) : (
+                            <FileText className="h-3 w-3 text-brand-navy/60" />
+                          )}
+                          <span className="text-brand-navy/80">{file}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
           </div>
 
           {/* Right Column: Specialist Report & Actions */}
