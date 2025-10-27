@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShieldCheck } from "lucide-react"
+import { ShieldCheck, Eye, EyeOff } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -18,6 +18,7 @@ export default function LoginPage() {
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [showPassword, setShowPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -102,16 +103,27 @@ export default function LoginPage() {
               <Label htmlFor="password" className="text-sm font-medium text-brand-navy">
                 Password
               </Label>
-              <Input
-                type="password"
-                id="password"
-                name="password"
-                required
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                className="mt-2 border-2 border-brand-stone px-4 py-3 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-              />
+              <div className="relative mt-2">
+                <Input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  name="password"
+                  required
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="border-2 border-brand-stone px-4 py-3 pr-12 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  disabled={isLoading}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-stone hover:text-brand-navy transition-colors disabled:opacity-50"
+                  aria-label={showPassword ? "Hide password" : "Show password"}
+                >
+                  {showPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
+              </div>
             </div>
 
             {/* Remember Me and Forgot Password Row */}
