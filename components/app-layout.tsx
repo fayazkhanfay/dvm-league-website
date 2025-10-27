@@ -1,6 +1,7 @@
 import type React from "react"
 import Link from "next/link"
 import { ShieldCheck, PlusCircle, LayoutList, Settings } from "lucide-react"
+import { LogoutButton } from "./logout-button"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -24,9 +25,7 @@ export function AppLayout({ children, activePage, userName = "Dr. Demo GP", user
           {/* User Info */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-brand-navy/80">Logged in as {userName}</span>
-            <a href="#" className="text-sm text-brand-navy/60 underline hover:text-brand-red">
-              Logout
-            </a>
+            <LogoutButton />
           </div>
         </div>
       </header>
