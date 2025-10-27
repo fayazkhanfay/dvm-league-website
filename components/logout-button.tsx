@@ -22,7 +22,10 @@ export function LogoutButton() {
   }
 
   return (
-    <button onClick={handleLogout} className="text-sm text-brand-navy/60 underline hover:text-brand-red">
+    <button
+      onClick={handleLogout}
+      className="text-sm text-brand-navy/60 underline hover:text-brand-red transition-colors duration-200 cursor-pointer hover:opacity-80"
+    >
       Logout
     </button>
   )
