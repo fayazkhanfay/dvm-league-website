@@ -115,7 +115,7 @@ export default async function GPDashboardPage() {
   }
 
   return (
-    <AppLayout activePage="myCases" userRole="gp">
+    <AppLayout activePage="myCases" userRole="gp" userName={profile.full_name}>
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="font-serif text-3xl font-bold text-brand-navy">Case Dashboard</h1>
