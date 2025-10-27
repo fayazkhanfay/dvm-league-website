@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -16,20 +17,51 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [rememberMe, setRememberMe] = useState(false)
   const [error, setError] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+    setIsLoading(true)
 
-    // Demo login logic based on email
-    if (email === "specialist@dvmleague.com") {
-      router.push("/specialist-dashboard")
-    } else if (email === "gp@dvmleague.com") {
-      router.push("/gp-dashboard")
-    } else if (email === "admin@dvmleague.com") {
-      router.push("/")
-    } else {
-      setError("Invalid demo credentials. Please use specialist@dvmleague.com or gp@dvmleague.com.")
+    try {
+      const supabase = createClient()
+
+      const { data, error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      })
+
+      if (signInError) {
+        setError(signInError.message)
+        setIsLoading(false)
+        return
+      }
+
+      // Fetch user profile to determine role and redirect accordingly
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", data.user.id)
+        .single()
+
+      if (profileError) {
+        setError("Failed to load user profile")
+        setIsLoading(false)
+        return
+      }
+
+      // Redirect based on user role
+      if (profile.role === "specialist") {
+        router.push("/specialist-dashboard")
+      } else if (profile.role === "gp") {
+        router.push("/gp-dashboard")
+      } else {
+        router.push("/")
+      }
+    } catch (err) {
+      setError("An unexpected error occurred. Please try again.")
+      setIsLoading(false)
     }
   }
 
@@ -60,6 +92,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isLoading}
                 className="mt-2 border-2 border-brand-stone px-4 py-3 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
               />
             </div>
@@ -76,6 +109,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isLoading}
                 className="mt-2 border-2 border-brand-stone px-4 py-3 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
               />
             </div>
@@ -87,6 +121,7 @@ export default function LoginPage() {
                   id="remember"
                   checked={rememberMe}
                   onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+                  disabled={isLoading}
                 />
                 <Label htmlFor="remember" className="text-sm font-medium text-brand-navy">
                   Remember me
@@ -103,18 +138,23 @@ export default function LoginPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+              disabled={isLoading}
+              className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Sign In
+              {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
+
+          <div className="mt-6 rounded-md bg-blue-50 p-4">
+            <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
+            <p className="text-xs text-blue-800">GP: gp@dvmleague.com</p>
+            <p className="text-xs text-blue-800">Specialist: specialist@dvmleague.com</p>
+            <p className="text-xs text-blue-800 mt-1">Password: password123</p>
+          </div>
         </div>
 
         <div className="mt-6 text-center">
-          <a
-            href="/"
-            className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline"
-          >
+          <a href="/" className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline">
             ← Back to dvmleague.com
           </a>
         </div>

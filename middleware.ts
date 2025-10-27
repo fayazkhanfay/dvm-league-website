@@ -1,7 +1,15 @@
 import { NextResponse } from "next/server"
 import type { NextRequest } from "next/server"
+import { updateSession } from "@/lib/supabase/middleware"
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
+  const supabaseResponse = await updateSession(request)
+
+  // If updateSession returned a redirect (e.g., to login), return it immediately
+  if (supabaseResponse.status === 307 || supabaseResponse.status === 308) {
+    return supabaseResponse
+  }
+
   const hostname = request.headers.get("host") || ""
   const url = request.nextUrl.clone()
 
@@ -13,7 +21,7 @@ export function middleware(request: NextRequest) {
 
   // Bypass subdomain routing in development and preview environments
   if (isLocalhost || isPreview) {
-    return NextResponse.next()
+    return supabaseResponse
   }
 
   // Define marketing pages (accessible on main domain dvmleague.com)
@@ -45,7 +53,7 @@ export function middleware(request: NextRequest) {
   if (isAppSubdomain) {
     // Allow app pages
     if (isAppPage) {
-      return NextResponse.next()
+      return supabaseResponse
     }
 
     // Redirect marketing pages to main domain when accessed from app subdomain
@@ -56,7 +64,7 @@ export function middleware(request: NextRequest) {
   } else {
     // On main domain - allow marketing pages
     if (isMarketingPage) {
-      return NextResponse.next()
+      return supabaseResponse
     }
 
     // Redirect app pages to app subdomain when accessed from main domain
@@ -66,7 +74,7 @@ export function middleware(request: NextRequest) {
     }
   }
 
-  return NextResponse.next()
+  return supabaseResponse
 }
 
 export const config = {

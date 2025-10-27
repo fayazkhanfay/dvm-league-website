@@ -1,72 +1,58 @@
-"use client"
-
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import Link from "next/link"
 
-export default function SpecialistDashboard() {
-  // Hardcoded demo data for active cases
-  const activeCases = [
-    {
-      caseId: "DVML-001",
-      clinicName: "Main Street Animal Hospital",
-      signalment: "Canine, Golden Retriever, 8y MN",
-      status: "Awaiting Phase 1 Report",
-      reportDue: "ASAP / Next AM",
-      action: "submit-phase-1",
-    },
-    {
-      caseId: "DVML-003",
-      clinicName: "Riverside Veterinary Clinic",
-      signalment: "Feline, DSH, 12y FS",
-      status: "Awaiting Diagnostics Upload",
-      reportDue: "1-2 Business Days",
-      action: "awaiting-diagnostics",
-    },
-    {
-      caseId: "DVML-005",
-      clinicName: "Oakwood Pet Care",
-      signalment: "Canine, Labrador, 5y MN",
-      status: "Awaiting Phase 2 Report",
-      reportDue: "ASAP / Next AM",
-      action: "submit-phase-2",
-    },
-  ]
+export default async function SpecialistDashboard() {
+  const supabase = await createClient()
 
-  const completedCases = [
-    {
-      caseId: "DVML-002",
-      clinicName: "City Vet Clinic",
-      signalment: "Feline, DSH, 5y FS",
-      specialty: "Dermatology",
-      completedDate: "2025-10-15",
-    },
-    {
-      caseId: "DVML-004",
-      clinicName: "Parkside Animal Hospital",
-      signalment: "Canine, Beagle, 7y MN",
-      specialty: "Cardiology",
-      completedDate: "2025-10-18",
-    },
-  ]
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  if (!profile || profile.role !== "specialist") {
+    redirect("/login")
+  }
+
+  const { data: allCases } = await supabase
+    .from("cases")
+    .select(
+      `
+      *,
+      gp:gp_id(full_name, clinic_name)
+    `,
+    )
+    .eq("specialist_id", user.id)
+    .order("created_at", { ascending: false })
+
+  const activeCases = allCases?.filter((c) => c.status !== "completed") || []
+  const completedCases = allCases?.filter((c) => c.status === "completed") || []
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "Awaiting Phase 1 Report":
+      case "awaiting_phase1":
         return (
           <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
-            {status}
+            Awaiting Phase 1 Report
           </Badge>
         )
-      case "Awaiting Diagnostics Upload":
-        return <Badge variant="secondary">{status}</Badge>
-      case "Awaiting Phase 2 Report":
+      case "awaiting_diagnostics":
+        return <Badge variant="secondary">Awaiting Diagnostics Upload</Badge>
+      case "awaiting_phase2":
         return (
           <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">
-            {status}
+            Awaiting Phase 2 Report
           </Badge>
         )
       default:
@@ -74,20 +60,20 @@ export default function SpecialistDashboard() {
     }
   }
 
-  const getActionButton = (action: string) => {
-    switch (action) {
-      case "submit-phase-1":
+  const getActionButton = (caseItem: any) => {
+    switch (caseItem.status) {
+      case "awaiting_phase1":
         return (
           <Button variant="outline" size="sm" asChild>
-            <a href="#">Submit Phase 1 Plan</a>
+            <Link href={`/specialist/case/${caseItem.id}`}>Submit Phase 1 Plan</Link>
           </Button>
         )
-      case "awaiting-diagnostics":
+      case "awaiting_diagnostics":
         return <span className="text-sm text-brand-navy/60">Awaiting GP Diagnostics</span>
-      case "submit-phase-2":
+      case "awaiting_phase2":
         return (
           <Button variant="outline" size="sm" asChild>
-            <a href="#">Submit Final Report</a>
+            <Link href={`/specialist/case/${caseItem.id}`}>Submit Final Report</Link>
           </Button>
         )
       default:
@@ -95,10 +81,13 @@ export default function SpecialistDashboard() {
     }
   }
 
+  const formatSignalment = (signalment: any) => {
+    return `${signalment.species}, ${signalment.breed}, ${signalment.age} ${signalment.sex_status}`
+  }
+
   return (
-    <AppLayout activePage="myCases" userName="Dr. Jane Smith">
+    <AppLayout activePage="myCases" userName={profile.full_name}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
-        {/* Page Title */}
         <h1 className="font-serif text-3xl font-bold text-brand-navy mb-8">Specialist Dashboard</h1>
 
         <Tabs defaultValue="active" className="mb-8">
@@ -107,7 +96,6 @@ export default function SpecialistDashboard() {
             <TabsTrigger value="completed">Completed Cases</TabsTrigger>
           </TabsList>
 
-          {/* Active Cases Tab */}
           <TabsContent value="active">
             <Card>
               <CardContent className="pt-6">
@@ -125,15 +113,22 @@ export default function SpecialistDashboard() {
                     </TableHeader>
                     <TableBody>
                       {activeCases.map((caseItem) => (
-                        <TableRow key={caseItem.caseId}>
-                          <TableCell className="font-medium">{caseItem.caseId}</TableCell>
-                          <TableCell>{caseItem.clinicName}</TableCell>
-                          <TableCell>{caseItem.signalment}</TableCell>
+                        <TableRow key={caseItem.id}>
+                          <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
+                          <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
+                          <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
                           <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                          <TableCell>{caseItem.reportDue}</TableCell>
-                          <TableCell>{getActionButton(caseItem.action)}</TableCell>
+                          <TableCell>{caseItem.report_due_description || "1-2 Business Days"}</TableCell>
+                          <TableCell>{getActionButton(caseItem)}</TableCell>
                         </TableRow>
                       ))}
+                      {activeCases.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-brand-navy/60">
+                            No active cases
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -158,19 +153,26 @@ export default function SpecialistDashboard() {
                     </TableHeader>
                     <TableBody>
                       {completedCases.map((caseItem) => (
-                        <TableRow key={caseItem.caseId}>
-                          <TableCell className="font-medium">{caseItem.caseId}</TableCell>
-                          <TableCell>{caseItem.clinicName}</TableCell>
-                          <TableCell>{caseItem.signalment}</TableCell>
-                          <TableCell>{caseItem.specialty}</TableCell>
-                          <TableCell>{caseItem.completedDate}</TableCell>
+                        <TableRow key={caseItem.id}>
+                          <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
+                          <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
+                          <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
+                          <TableCell>{caseItem.specialty_requested}</TableCell>
+                          <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>
                             <Button variant="outline" size="sm" asChild>
-                              <a href="#">View Final Report</a>
+                              <Link href={`/specialist/case/${caseItem.id}`}>View Final Report</Link>
                             </Button>
                           </TableCell>
                         </TableRow>
                       ))}
+                      {completedCases.length === 0 && (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-brand-navy/60">
+                            No completed cases
+                          </TableCell>
+                        </TableRow>
+                      )}
                     </TableBody>
                   </Table>
                 </div>
@@ -179,7 +181,6 @@ export default function SpecialistDashboard() {
           </TabsContent>
         </Tabs>
 
-        {/* Available Cases Section - Concierge Model Explanation */}
         <Card>
           <CardHeader>
             <CardTitle className="text-2xl font-serif text-brand-navy">Available Cases</CardTitle>
