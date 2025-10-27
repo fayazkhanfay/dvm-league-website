@@ -7,13 +7,16 @@ export function LogoutButton() {
         method: "POST",
       })
 
-      if (response.redirected) {
-        window.location.href = response.url
+      if (response.ok) {
+        // Force a hard navigation to clear all client-side state
+        window.location.href = "/login"
       } else {
+        console.error("Logout failed")
         window.location.href = "/login"
       }
     } catch (error) {
       console.error("Logout failed:", error)
+      // Still redirect to login even if there's an error
       window.location.href = "/login"
     }
   }

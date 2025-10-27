@@ -8,7 +8,8 @@ export async function POST() {
 
   if (error) {
     console.error("Logout error:", error)
+    return NextResponse.json({ error: error.message }, { status: 500 })
   }
 
-  return NextResponse.redirect(new URL("/login", process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"))
+  return NextResponse.json({ success: true })
 }
