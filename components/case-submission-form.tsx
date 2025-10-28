@@ -104,11 +104,11 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
           throw new Error("Unable to access file storage. Please contact support.")
         }
 
-        const bucketExists = buckets?.some((bucket) => bucket.name === "case-files")
+        const bucketExists = buckets?.some((bucket) => bucket.name === "case-bucket")
 
         if (!bucketExists) {
           throw new Error(
-            "File storage bucket 'case-files' does not exist. Please contact your administrator to set up the storage bucket in Supabase.",
+            "File storage bucket 'case-bucket' does not exist. Please contact your administrator to set up the storage bucket in Supabase.",
           )
         }
 
@@ -120,7 +120,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
           const fileName = `${newCase.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
           console.log("[v0] Uploading file:", file.name)
-          const { error: uploadError } = await supabase.storage.from("case-files").upload(fileName, file, {
+          const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
             cacheControl: "3600",
             upsert: false,
           })
