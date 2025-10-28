@@ -1,13 +1,30 @@
-"use client"
-
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ExternalLink } from "lucide-react"
 
-export default function SpecialistSettingsPage() {
+export default async function SpecialistSettingsPage() {
+  const supabase = await createClient()
+
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  if (!profile || profile.role !== "specialist") {
+    redirect("/login")
+  }
+  // </CHANGE>
+
   return (
-    <AppLayout activePage="settings" userRole="specialist" userName="Dr. Jane Smith">
+    <AppLayout activePage="settings" userRole="specialist" userName={profile.full_name}>
       <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Account Settings</h1>
 
       <div className="space-y-6">
@@ -19,15 +36,15 @@ export default function SpecialistSettingsPage() {
           <CardContent className="space-y-4">
             <div>
               <p className="text-sm font-medium text-brand-navy/70">Name</p>
-              <p className="text-base text-brand-navy">Dr. Jane Smith</p>
+              <p className="text-base text-brand-navy">{profile.full_name}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-brand-navy/70">Email</p>
-              <p className="text-base text-brand-navy">specialist@dvmleague.com</p>
+              <p className="text-base text-brand-navy">{profile.email}</p>
             </div>
             <div>
               <p className="text-sm font-medium text-brand-navy/70">Specialty</p>
-              <p className="text-base text-brand-navy">Internal Medicine</p>
+              <p className="text-base text-brand-navy">{profile.specialty || "Not specified"}</p>
             </div>
           </CardContent>
         </Card>
