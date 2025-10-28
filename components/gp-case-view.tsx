@@ -1,5 +1,7 @@
 "use client"
 
+import type React from "react"
+
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -8,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, UploadCloud, FileText, ImageIcon, Copy, CheckCircle, Download } from "lucide-react"
+import { ArrowLeft, UploadCloud, FileText, ImageIcon, Copy, CheckCircle, Download, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
 interface GPCaseViewProps {
@@ -20,21 +22,27 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const router = useRouter()
   const [copied, setCopied] = useState(false)
   const [fileUrls, setFileUrls] = useState<Record<string, string>>({})
+  const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
+  const [isUploading, setIsUploading] = useState(false)
+  const [uploadError, setUploadError] = useState<string | null>(null)
+  const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
   const supabase = createClient()
 
   const signalment = caseData.patient_signalment
   const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
-  const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+  const existingDiagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+
+  const allDiagnosticFiles = [...existingDiagnosticFiles, ...uploadedDiagnosticFiles]
 
   useEffect(() => {
     const generateSignedUrls = async () => {
-      const allFiles = [...initialFiles, ...diagnosticFiles]
+      const allFiles = [...initialFiles, ...allDiagnosticFiles]
       const urls: Record<string, string> = {}
 
       for (const file of allFiles) {
         const { data, error } = await supabase.storage
           .from("case-bucket")
-          .createSignedUrl(file.storage_object_path, 3600) // 1 hour expiration
+          .createSignedUrl(file.storage_object_path, 3600)
 
         if (!error && data) {
           urls[file.id] = data.signedUrl
@@ -47,7 +55,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
     }
 
     generateSignedUrls()
-  }, [initialFiles, diagnosticFiles, supabase])
+  }, [initialFiles, uploadedDiagnosticFiles, supabase])
 
   const getFileUrl = (fileId: string) => {
     return fileUrls[fileId] || "#"
@@ -61,7 +69,6 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
       return
     }
 
-    // Create a download link
     const url = window.URL.createObjectURL(data)
     const a = document.createElement("a")
     a.href = url
@@ -80,8 +87,101 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
     }
   }
 
-  const handleSubmitDiagnostics = () => {
-    router.push("/gp-dashboard")
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || [])
+    setDiagnosticFiles((prev) => [...prev, ...files])
+    setUploadError(null)
+  }
+
+  const handleRemoveFile = (index: number) => {
+    setDiagnosticFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleUploadDiagnostics = async () => {
+    if (diagnosticFiles.length === 0) {
+      setUploadError("Please select at least one file to upload")
+      return
+    }
+
+    setIsUploading(true)
+    setUploadError(null)
+
+    try {
+      console.log("[v0] Uploading diagnostic files...")
+
+      const uploadedFiles: any[] = []
+
+      for (const file of diagnosticFiles) {
+        const fileExt = file.name.split(".").pop()
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+        const filePath = `${caseData.id}/${fileName}`
+
+        console.log("[v0] Uploading file:", file.name, "to", filePath)
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from("case-bucket")
+          .upload(filePath, file)
+
+        if (uploadError) {
+          console.error("[v0] Error uploading file:", file.name, uploadError)
+          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
+        }
+
+        console.log("[v0] File uploaded successfully:", uploadData.path)
+
+        const { data: fileRecord, error: fileRecordError } = await supabase
+          .from("case_files")
+          .insert({
+            case_id: caseData.id,
+            uploader_id: userProfile.id,
+            file_name: file.name,
+            file_type: file.type,
+            storage_object_path: uploadData.path,
+            upload_phase: "diagnostic_results",
+          })
+          .select()
+          .single()
+
+        if (fileRecordError) {
+          console.error("[v0] Error creating file record:", fileRecordError)
+          throw new Error(`Failed to save file record for ${file.name}`)
+        }
+
+        console.log("[v0] File record created:", fileRecord)
+        uploadedFiles.push(fileRecord)
+      }
+
+      setUploadedDiagnosticFiles((prev) => [...prev, ...uploadedFiles])
+      setDiagnosticFiles([])
+      console.log("[v0] All diagnostic files uploaded successfully")
+    } catch (error: any) {
+      console.error("[v0] Error uploading diagnostics:", error)
+      setUploadError(error.message || "Failed to upload files. Please try again.")
+    } finally {
+      setIsUploading(false)
+    }
+  }
+
+  const handleSubmitDiagnostics = async () => {
+    if (allDiagnosticFiles.length === 0) {
+      setUploadError("Please upload at least one diagnostic file before submitting")
+      return
+    }
+
+    try {
+      const { error } = await supabase.from("cases").update({ status: "awaiting_phase2" }).eq("id", caseData.id)
+
+      if (error) {
+        console.error("[v0] Error updating case status:", error)
+        setUploadError("Failed to submit diagnostics. Please try again.")
+        return
+      }
+
+      router.push("/gp-dashboard")
+    } catch (error) {
+      console.error("[v0] Error submitting diagnostics:", error)
+      setUploadError("Failed to submit diagnostics. Please try again.")
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -233,7 +333,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                         {initialFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm transition-colors hover:bg-brand-offwhite"
+                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                           >
                             {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
                               <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
@@ -344,19 +444,65 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                     <div className="space-y-6">
                       <div>
                         <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
-                        <div className="rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold">
+                        <label
+                          htmlFor="diagnostic-upload"
+                          className="block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold"
+                        >
                           <UploadCloud className="mx-auto h-12 w-12 text-brand-navy/40" />
                           <p className="mt-2 text-sm text-brand-navy/70">Click to upload or drag and drop</p>
                           <p className="mt-1 text-xs text-brand-navy/50">PDF, DICOM, JPG, PNG up to 50MB</p>
-                          <input type="file" className="hidden" />
-                        </div>
+                          <input
+                            id="diagnostic-upload"
+                            type="file"
+                            multiple
+                            accept=".pdf,.dcm,.jpg,.jpeg,.png"
+                            onChange={handleFileSelect}
+                            className="hidden"
+                            disabled={isUploading}
+                          />
+                        </label>
                       </div>
 
                       {diagnosticFiles.length > 0 && (
                         <div>
+                          <h4 className="mb-2 text-sm font-medium text-brand-navy">Selected Files:</h4>
+                          <div className="space-y-2">
+                            {diagnosticFiles.map((file, index) => (
+                              <div
+                                key={index}
+                                className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                              >
+                                <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                                <span className="flex-1 truncate text-brand-navy">{file.name}</span>
+                                <button
+                                  onClick={() => handleRemoveFile(index)}
+                                  className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
+                                  title="Remove file"
+                                >
+                                  <X className="h-4 w-4" />
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                          <Button
+                            onClick={handleUploadDiagnostics}
+                            disabled={isUploading}
+                            className="mt-3 w-full bg-brand-navy text-white hover:bg-brand-navy/90"
+                          >
+                            {isUploading ? "Uploading..." : "Upload Files"}
+                          </Button>
+                        </div>
+                      )}
+
+                      {uploadError && (
+                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">{uploadError}</div>
+                      )}
+
+                      {allDiagnosticFiles.length > 0 && (
+                        <div>
                           <h4 className="mb-2 text-sm font-medium text-brand-navy">Uploaded Files:</h4>
                           <div className="space-y-2">
-                            {diagnosticFiles.map((file: any) => (
+                            {allDiagnosticFiles.map((file: any) => (
                               <div
                                 key={file.id}
                                 className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
@@ -385,7 +531,8 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
 
                       <Button
                         onClick={handleSubmitDiagnostics}
-                        className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+                        disabled={allDiagnosticFiles.length === 0}
+                        className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                       >
                         Confirm & Submit Diagnostic Results
                       </Button>
@@ -528,7 +675,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                           <span className="ml-2 text-xs text-brand-navy/50">(Initial)</span>
                         </div>
                       ))}
-                      {diagnosticFiles.map((file: any) => (
+                      {allDiagnosticFiles.map((file: any) => (
                         <div
                           key={file.id}
                           className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
