@@ -74,6 +74,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
 
   const isPhase1OrAwaiting = caseData.status === "awaiting_phase1" || caseData.status === "awaiting_diagnostics"
   const isPhase2OrCompleted = caseData.status === "awaiting_phase2" || caseData.status === "completed"
+  const isPendingAssignment = caseData.status === "pending_assignment"
 
   return (
     <AppLayout activePage="myCases" userRole="gp" userName={userProfile.full_name}>
@@ -233,6 +234,23 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                     <p className="font-semibold text-brand-navy">{caseData.specialist.full_name}</p>
                     <p className="text-sm text-brand-navy/70">{caseData.specialist.specialty}</p>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {isPendingAssignment && (
+              <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
+                <CardHeader className="border-b border-brand-gold">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Case Submitted Successfully</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="text-brand-navy/90">
+                    Your case has been submitted and is awaiting assignment to a specialist. You will be notified once a
+                    specialist has been assigned and begins reviewing your case.
+                  </p>
+                  <p className="mt-4 text-sm text-brand-navy/70">
+                    You can review all the information you submitted in the summary panel on the left.
+                  </p>
                 </CardContent>
               </Card>
             )}

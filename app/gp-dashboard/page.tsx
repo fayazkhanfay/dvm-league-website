@@ -78,7 +78,11 @@ export default async function GPDashboardPage() {
   const getActionButton = (caseItem: any) => {
     switch (caseItem.status) {
       case "pending_assignment":
-        return <span className="text-sm text-brand-navy/60">Awaiting Assignment</span>
+        return (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/gp/case/${caseItem.id}`}>View Case</Link>
+          </Button>
+        )
       case "awaiting_phase1":
         return (
           <Button variant="outline" size="sm" asChild>
