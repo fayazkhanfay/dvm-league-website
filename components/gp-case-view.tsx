@@ -8,7 +8,8 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { ArrowLeft, UploadCloud, FileText, ImageIcon, Copy, CheckCircle } from "lucide-react"
+import { ArrowLeft, UploadCloud, FileText, ImageIcon, Copy, CheckCircle, Download } from "lucide-react"
+import { createClient } from "@/lib/supabase/client"
 
 interface GPCaseViewProps {
   caseData: any
@@ -18,10 +19,35 @@ interface GPCaseViewProps {
 export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const router = useRouter()
   const [copied, setCopied] = useState(false)
+  const supabase = createClient()
 
   const signalment = caseData.patient_signalment
   const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
   const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+
+  const getFileUrl = (storagePath: string) => {
+    const { data } = supabase.storage.from("case-bucket").getPublicUrl(storagePath)
+    return data.publicUrl
+  }
+
+  const handleFileDownload = async (storagePath: string, fileName: string) => {
+    const { data, error } = await supabase.storage.from("case-bucket").download(storagePath)
+
+    if (error) {
+      console.error("[v0] Error downloading file:", error)
+      return
+    }
+
+    // Create a download link
+    const url = window.URL.createObjectURL(data)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }
 
   const handleCopySummary = () => {
     if (caseData.phase2_client_summary) {
@@ -184,14 +210,28 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                         {initialFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm"
+                            className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm transition-colors hover:bg-brand-offwhite"
                           >
                             {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                              <ImageIcon className="h-3 w-3 text-brand-navy/60" />
+                              <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
                             ) : (
-                              <FileText className="h-3 w-3 text-brand-navy/60" />
+                              <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
                             )}
-                            <span className="text-brand-navy/80">{file.file_name}</span>
+                            <a
+                              href={getFileUrl(file.storage_object_path)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
+                            >
+                              {file.file_name}
+                            </a>
+                            <button
+                              onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                              className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                              title="Download file"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -296,10 +336,24 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                             {diagnosticFiles.map((file: any) => (
                               <div
                                 key={file.id}
-                                className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                                className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                               >
-                                <FileText className="h-4 w-4 text-brand-navy/60" />
-                                <span className="text-brand-navy">{file.file_name}</span>
+                                <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                                <a
+                                  href={getFileUrl(file.storage_object_path)}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="flex-1 truncate text-brand-navy hover:text-brand-navy hover:underline"
+                                >
+                                  {file.file_name}
+                                </a>
+                                <button
+                                  onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                                  className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                                  title="Download file"
+                                >
+                                  <Download className="h-4 w-4" />
+                                </button>
                               </div>
                             ))}
                           </div>
@@ -426,25 +480,53 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                       {initialFiles.map((file: any) => (
                         <div
                           key={file.id}
-                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                         >
                           {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                            <ImageIcon className="h-4 w-4 text-brand-navy/60" />
+                            <ImageIcon className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                           ) : (
-                            <FileText className="h-4 w-4 text-brand-navy/60" />
+                            <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                           )}
-                          <span className="text-brand-navy">{file.file_name}</span>
-                          <span className="ml-auto text-xs text-brand-navy/50">(Initial)</span>
+                          <a
+                            href={getFileUrl(file.storage_object_path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 truncate text-brand-navy hover:underline"
+                          >
+                            {file.file_name}
+                          </a>
+                          <button
+                            onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                            className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                            title="Download file"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <span className="ml-2 text-xs text-brand-navy/50">(Initial)</span>
                         </div>
                       ))}
                       {diagnosticFiles.map((file: any) => (
                         <div
                           key={file.id}
-                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                         >
-                          <FileText className="h-4 w-4 text-brand-navy/60" />
-                          <span className="text-brand-navy">{file.file_name}</span>
-                          <span className="ml-auto text-xs text-brand-navy/50">(Diagnostic)</span>
+                          <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                          <a
+                            href={getFileUrl(file.storage_object_path)}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="flex-1 truncate text-brand-navy hover:underline"
+                          >
+                            {file.file_name}
+                          </a>
+                          <button
+                            onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                            className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                            title="Download file"
+                          >
+                            <Download className="h-4 w-4" />
+                          </button>
+                          <span className="ml-2 text-xs text-brand-navy/50">(Diagnostic)</span>
                         </div>
                       ))}
                     </div>
