@@ -97,33 +97,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
       if (files.length > 0) {
         console.log("[v0] Uploading", files.length, "files...")
 
-        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets()
-
-        console.log("[v0] Buckets found:", buckets)
-        console.log("[v0] Bucket error:", bucketError)
-
-        if (bucketError) {
-          console.error("[v0] Error checking buckets:", bucketError)
-          throw new Error(`Unable to access file storage: ${bucketError.message}`)
-        }
-
-        if (!buckets || buckets.length === 0) {
-          console.error("[v0] No buckets found in storage")
-          throw new Error("No storage buckets found. Please contact your administrator.")
-        }
-
-        const bucketNames = buckets.map((b) => b.name)
-        console.log("[v0] Available bucket names:", bucketNames)
-
-        const bucketExists = buckets.some((bucket) => bucket.name === "case-bucket")
-        console.log("[v0] Does 'case-bucket' exist?", bucketExists)
-
-        if (!bucketExists) {
-          throw new Error(
-            `Storage bucket 'case-bucket' not found. Available buckets: ${bucketNames.join(", ")}. Please create the 'case-bucket' bucket in Supabase Storage.`,
-          )
-        }
-
         let uploadedCount = 0
         const uploadErrors: string[] = []
 
