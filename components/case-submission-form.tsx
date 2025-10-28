@@ -310,14 +310,8 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Internal Medicine">Internal Medicine</SelectItem>
-                    <SelectItem value="Surgery">Surgery</SelectItem>
                     <SelectItem value="Cardiology">Cardiology</SelectItem>
-                    <SelectItem value="Neurology">Neurology</SelectItem>
-                    <SelectItem value="Oncology">Oncology</SelectItem>
                     <SelectItem value="Dermatology">Dermatology</SelectItem>
-                    <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
-                    <SelectItem value="Radiology">Radiology</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
