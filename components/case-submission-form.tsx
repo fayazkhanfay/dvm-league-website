@@ -4,6 +4,7 @@ import type React from "react"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
@@ -11,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload } from "lucide-react"
+import { Upload, Loader2 } from "lucide-react"
 
 interface CaseSubmissionFormProps {
   userProfile: any
@@ -19,6 +20,7 @@ interface CaseSubmissionFormProps {
 
 export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
   const router = useRouter()
+  const supabase = createClient()
 
   // Patient Signalment
   const [patientName, setPatientName] = useState("")
@@ -41,6 +43,9 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
   const [specialtyRequested, setSpecialtyRequested] = useState("")
   const [files, setFiles] = useState<File[]>([])
 
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       setFiles(Array.from(e.target.files))
@@ -49,30 +54,96 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    setIsSubmitting(true)
+    setError(null)
 
-    // TODO: Implement Supabase case creation and file upload
-    console.log("[v0] Submitting case:", {
-      patientName,
-      signalment: { species, breed, age, sexStatus, weightKg },
-      presentingComplaint,
-      briefHistory,
-      peFindings,
-      medications,
-      diagnosticsPerformed,
-      treatmentsAttempted,
-      gpQuestions,
-      specialtyRequested,
-      files: files.map((f) => f.name),
-    })
+    try {
+      console.log("[v0] Starting case submission...")
 
-    // Redirect to dashboard after submission
-    router.push("/gp-dashboard")
+      const patientSignalment = {
+        species,
+        breed,
+        age,
+        sex_status: sexStatus,
+        weight_kg: Number.parseFloat(weightKg),
+      }
+
+      const { data: newCase, error: caseError } = await supabase
+        .from("cases")
+        .insert({
+          gp_id: userProfile.id,
+          patient_name: patientName,
+          patient_signalment: patientSignalment,
+          presenting_complaint: presentingComplaint,
+          brief_history: briefHistory,
+          pe_findings: peFindings,
+          medications,
+          diagnostics_performed: diagnosticsPerformed || null,
+          treatments_attempted: treatmentsAttempted || null,
+          gp_questions: gpQuestions,
+          specialty_requested: specialtyRequested,
+          status: "pending_assignment",
+        })
+        .select()
+        .single()
+
+      if (caseError) {
+        console.error("[v0] Error creating case:", caseError)
+        throw new Error(`Failed to create case: ${caseError.message}`)
+      }
+
+      console.log("[v0] Case created successfully:", newCase.id)
+
+      if (files.length > 0) {
+        console.log("[v0] Uploading", files.length, "files...")
+
+        for (const file of files) {
+          const fileExt = file.name.split(".").pop()
+          const fileName = `${newCase.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+
+          const { error: uploadError } = await supabase.storage.from("case-files").upload(fileName, file)
+
+          if (uploadError) {
+            console.error("[v0] Error uploading file:", uploadError)
+            continue
+          }
+
+          const { error: fileRecordError } = await supabase.from("case_files").insert({
+            case_id: newCase.id,
+            uploader_id: userProfile.id,
+            file_name: file.name,
+            file_type: file.type,
+            storage_object_path: fileName,
+            upload_phase: "initial_submission",
+          })
+
+          if (fileRecordError) {
+            console.error("[v0] Error creating file record:", fileRecordError)
+          }
+        }
+
+        console.log("[v0] Files uploaded successfully")
+      }
+
+      console.log("[v0] Case submission complete, redirecting...")
+      router.push("/gp-dashboard")
+    } catch (err) {
+      console.error("[v0] Submission error:", err)
+      setError(err instanceof Error ? err.message : "Failed to submit case. Please try again.")
+      setIsSubmitting(false)
+    }
   }
 
   return (
     <AppLayout activePage="submitCase" userName={userProfile.full_name}>
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Submit New Case</h1>
+
+        {error && (
+          <div className="mb-6 rounded-md border-2 border-red-500 bg-red-50 p-4">
+            <p className="text-sm font-medium text-red-800">{error}</p>
+          </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Patient Information */}
@@ -357,9 +428,17 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
           <Button
             type="submit"
-            className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+            disabled={isSubmitting}
+            className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
           >
-            Submit Case
+            {isSubmitting ? (
+              <>
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                Submitting Case...
+              </>
+            ) : (
+              "Submit Case"
+            )}
           </Button>
         </form>
       </main>
