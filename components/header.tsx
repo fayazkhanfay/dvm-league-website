@@ -1,12 +1,58 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
+import { Menu, X, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
+import { createBrowserClient } from "@supabase/ssr"
+
+interface UserProfile {
+  role: "gp" | "specialist"
+  full_name: string
+}
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        setIsAuthenticated(true)
+        // Fetch user profile to get role
+        const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+
+        if (profile) {
+          setUserProfile(profile as UserProfile)
+        }
+      }
+      setIsLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const dashboardUrl = userProfile?.role === "specialist" ? "/specialist-dashboard" : "/gp-dashboard"
+
+  const handleLogout = async () => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+    await supabase.auth.signOut()
+    window.location.href = "/login"
+  }
 
   return (
     <>
@@ -25,14 +71,43 @@ export function Header() {
             </a>
 
             <nav className="flex items-center gap-2 sm:gap-3">
-              <Button
-                asChild
-                variant="ghost"
-                size="sm"
-                className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-              >
-                <a href="/login">Login</a>
-              </Button>
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <>
+                      <Button
+                        asChild
+                        variant="ghost"
+                        size="sm"
+                        className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+                      >
+                        <Link href={dashboardUrl}>
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          My Dashboard
+                        </Link>
+                      </Button>
+
+                      <Button
+                        onClick={handleLogout}
+                        variant="ghost"
+                        size="sm"
+                        className="hidden md:inline-flex text-brand-navy hover:text-brand-red hover:bg-red-50 font-semibold transition-all duration-200"
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      asChild
+                      variant="ghost"
+                      size="sm"
+                      className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+                    >
+                      <a href="/login">Login</a>
+                    </Button>
+                  )}
+                </>
+              )}
 
               <Link
                 href="/specialists"
@@ -67,15 +142,48 @@ export function Header() {
                 American Specialists. American Standards.
               </p>
 
-              <Button
-                asChild
-                variant="outline"
-                size="default"
-                className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <a href="/login">Login</a>
-              </Button>
+              {!isLoading && (
+                <>
+                  {isAuthenticated ? (
+                    <>
+                      <Button
+                        asChild
+                        variant="outline"
+                        size="default"
+                        className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Link href={dashboardUrl}>
+                          <LayoutDashboard className="w-4 h-4 mr-2" />
+                          My Dashboard
+                        </Link>
+                      </Button>
+
+                      <Button
+                        onClick={() => {
+                          setMobileMenuOpen(false)
+                          handleLogout()
+                        }}
+                        variant="outline"
+                        size="default"
+                        className="w-full border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red font-semibold transition-all duration-200 bg-transparent"
+                      >
+                        Logout
+                      </Button>
+                    </>
+                  ) : (
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="default"
+                      className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      <a href="/login">Login</a>
+                    </Button>
+                  )}
+                </>
+              )}
 
               <Link
                 href="/specialists"
