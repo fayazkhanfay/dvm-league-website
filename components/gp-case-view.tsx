@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { AppLayout } from "@/components/app-layout"
@@ -19,15 +19,38 @@ interface GPCaseViewProps {
 export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const router = useRouter()
   const [copied, setCopied] = useState(false)
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({})
   const supabase = createClient()
 
   const signalment = caseData.patient_signalment
   const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
   const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
 
-  const getFileUrl = (storagePath: string) => {
-    const { data } = supabase.storage.from("case-bucket").getPublicUrl(storagePath)
-    return data.publicUrl
+  useEffect(() => {
+    const generateSignedUrls = async () => {
+      const allFiles = [...initialFiles, ...diagnosticFiles]
+      const urls: Record<string, string> = {}
+
+      for (const file of allFiles) {
+        const { data, error } = await supabase.storage
+          .from("case-bucket")
+          .createSignedUrl(file.storage_object_path, 3600) // 1 hour expiration
+
+        if (!error && data) {
+          urls[file.id] = data.signedUrl
+        } else {
+          console.error("[v0] Error generating signed URL for file:", file.file_name, error)
+        }
+      }
+
+      setFileUrls(urls)
+    }
+
+    generateSignedUrls()
+  }, [initialFiles, diagnosticFiles, supabase])
+
+  const getFileUrl = (fileId: string) => {
+    return fileUrls[fileId] || "#"
   }
 
   const handleFileDownload = async (storagePath: string, fileName: string) => {
@@ -218,7 +241,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                               <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
                             )}
                             <a
-                              href={getFileUrl(file.storage_object_path)}
+                              href={getFileUrl(file.id)}
                               target="_blank"
                               rel="noopener noreferrer"
                               className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
@@ -340,7 +363,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                               >
                                 <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                                 <a
-                                  href={getFileUrl(file.storage_object_path)}
+                                  href={getFileUrl(file.id)}
                                   target="_blank"
                                   rel="noopener noreferrer"
                                   className="flex-1 truncate text-brand-navy hover:text-brand-navy hover:underline"
@@ -488,7 +511,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                             <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                           )}
                           <a
-                            href={getFileUrl(file.storage_object_path)}
+                            href={getFileUrl(file.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 truncate text-brand-navy hover:underline"
@@ -512,7 +535,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                         >
                           <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                           <a
-                            href={getFileUrl(file.storage_object_path)}
+                            href={getFileUrl(file.id)}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="flex-1 truncate text-brand-navy hover:underline"
