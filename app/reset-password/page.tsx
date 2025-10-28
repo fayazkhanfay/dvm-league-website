@@ -1,8 +1,8 @@
 "use client"
 
 import type React from "react"
-import { useState, useEffect } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -11,45 +11,16 @@ import { ShieldCheck, Eye, EyeOff } from "lucide-react"
 
 export default function ResetPasswordPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [password, setPassword] = useState("")
   const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [showConfirmPassword, setShowConfirmPassword] = useState(false)
-  const [hasValidSession, setHasValidSession] = useState(false)
-
-  useEffect(() => {
-    const checkSession = async () => {
-      const supabase = createClient()
-
-      // Check if we have a valid session
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession()
-
-      if (sessionError || !session) {
-        setError("Auth session missing!")
-        setHasValidSession(false)
-        return
-      }
-
-      setHasValidSession(true)
-    }
-
-    checkSession()
-  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
-
-    if (!hasValidSession) {
-      setError("Auth session missing! Please request a new password reset link.")
-      return
-    }
 
     if (password !== confirmPassword) {
       setError("Passwords do not match")
@@ -113,14 +84,14 @@ export default function ResetPasswordPage() {
                   required
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  disabled={isLoading || !hasValidSession}
+                  disabled={isLoading}
                   className="border-2 border-brand-stone px-4 py-3 pr-12 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   placeholder="Enter new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  disabled={isLoading || !hasValidSession}
+                  disabled={isLoading}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-stone hover:text-brand-navy transition-colors disabled:opacity-50"
                   aria-label={showPassword ? "Hide password" : "Show password"}
                 >
@@ -142,14 +113,14 @@ export default function ResetPasswordPage() {
                   required
                   value={confirmPassword}
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  disabled={isLoading || !hasValidSession}
+                  disabled={isLoading}
                   className="border-2 border-brand-stone px-4 py-3 pr-12 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   placeholder="Confirm new password"
                 />
                 <button
                   type="button"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                  disabled={isLoading || !hasValidSession}
+                  disabled={isLoading}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-stone hover:text-brand-navy transition-colors disabled:opacity-50"
                   aria-label={showConfirmPassword ? "Hide password" : "Show password"}
                 >
@@ -164,7 +135,7 @@ export default function ResetPasswordPage() {
             {/* Submit Button */}
             <Button
               type="submit"
-              disabled={isLoading || !hasValidSession}
+              disabled={isLoading}
               className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? "Resetting..." : "Reset Password"}

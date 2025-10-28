@@ -29,10 +29,6 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser()
 
-  if (request.nextUrl.pathname === "/reset-password") {
-    return supabaseResponse
-  }
-
   // Protect dashboard routes - redirect to login if not authenticated
   if (
     !user &&
