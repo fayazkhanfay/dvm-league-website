@@ -2,8 +2,7 @@
 
 import type React from "react"
 import Link from "next/link"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -20,6 +19,14 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+
+  useEffect(() => {
+    const savedEmail = localStorage.getItem("dvmleague_remember_email")
+    if (savedEmail) {
+      setEmail(savedEmail)
+      setRememberMe(true)
+    }
+  }, [])
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -40,7 +47,12 @@ export default function LoginPage() {
         return
       }
 
-      // Fetch user profile to determine role and redirect accordingly
+      if (rememberMe) {
+        localStorage.setItem("dvmleague_remember_email", email)
+      } else {
+        localStorage.removeItem("dvmleague_remember_email")
+      }
+
       const { data: profile, error: profileError } = await supabase
         .from("profiles")
         .select("role")
@@ -53,7 +65,6 @@ export default function LoginPage() {
         return
       }
 
-      // Redirect based on user role
       if (profile.role === "specialist") {
         router.push("/specialist-dashboard")
       } else if (profile.role === "gp") {
@@ -71,18 +82,14 @@ export default function LoginPage() {
     <div className="min-h-screen bg-brand-offwhite px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-md">
         <div className="rounded-lg border-2 border-brand-stone border-t-4 border-t-brand-gold bg-white p-8 shadow-xl">
-          {/* Logo and Brand */}
           <div className="mb-8 flex items-center justify-center gap-3">
             <ShieldCheck className="h-8 w-8 text-brand-navy" />
             <h1 className="font-serif text-3xl font-bold text-brand-navy">DVM League</h1>
           </div>
 
-          {/* Headline */}
           <h2 className="mb-8 text-center font-serif text-2xl font-bold text-brand-navy">Sign in to your account</h2>
 
-          {/* Login Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            {/* Email Field */}
             <div>
               <Label htmlFor="email" className="text-sm font-medium text-brand-navy">
                 Email address
@@ -99,7 +106,6 @@ export default function LoginPage() {
               />
             </div>
 
-            {/* Password Field */}
             <div>
               <Label htmlFor="password" className="text-sm font-medium text-brand-navy">
                 Password
@@ -127,7 +133,6 @@ export default function LoginPage() {
               </div>
             </div>
 
-            {/* Remember Me and Forgot Password Row */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-2">
                 <Checkbox
@@ -145,10 +150,8 @@ export default function LoginPage() {
               </Link>
             </div>
 
-            {/* Error Message */}
             {error && <div className="rounded-md bg-brand-red/10 p-3 text-sm text-brand-red">{error}</div>}
 
-            {/* Submit Button */}
             <Button
               type="submit"
               disabled={isLoading}
