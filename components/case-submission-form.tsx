@@ -109,8 +109,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                     <SelectContent>
                       <SelectItem value="Canine">Canine</SelectItem>
                       <SelectItem value="Feline">Feline</SelectItem>
-                      <SelectItem value="Equine">Equine</SelectItem>
-                      <SelectItem value="Other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
