@@ -97,17 +97,41 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
       if (files.length > 0) {
         console.log("[v0] Uploading", files.length, "files...")
 
+        const { data: buckets, error: bucketError } = await supabase.storage.listBuckets()
+
+        if (bucketError) {
+          console.error("[v0] Error checking buckets:", bucketError)
+          throw new Error("Unable to access file storage. Please contact support.")
+        }
+
+        const bucketExists = buckets?.some((bucket) => bucket.name === "case-files")
+
+        if (!bucketExists) {
+          throw new Error(
+            "File storage bucket 'case-files' does not exist. Please contact your administrator to set up the storage bucket in Supabase.",
+          )
+        }
+
+        let uploadedCount = 0
+        const uploadErrors: string[] = []
+
         for (const file of files) {
           const fileExt = file.name.split(".").pop()
           const fileName = `${newCase.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
-          const { error: uploadError } = await supabase.storage.from("case-files").upload(fileName, file)
+          console.log("[v0] Uploading file:", file.name)
+          const { error: uploadError } = await supabase.storage.from("case-files").upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          })
 
           if (uploadError) {
-            console.error("[v0] Error uploading file:", uploadError)
+            console.error("[v0] Error uploading file:", file.name, uploadError)
+            uploadErrors.push(`${file.name}: ${uploadError.message}`)
             continue
           }
 
+          console.log("[v0] File uploaded, creating database record...")
           const { error: fileRecordError } = await supabase.from("case_files").insert({
             case_id: newCase.id,
             uploader_id: userProfile.id,
@@ -119,10 +143,21 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
           if (fileRecordError) {
             console.error("[v0] Error creating file record:", fileRecordError)
+            uploadErrors.push(`${file.name} record: ${fileRecordError.message}`)
+          } else {
+            uploadedCount++
+            console.log("[v0] File record created successfully")
           }
         }
 
-        console.log("[v0] Files uploaded successfully")
+        if (uploadErrors.length > 0) {
+          console.error("[v0] Some files failed to upload:", uploadErrors)
+          throw new Error(
+            `Case created but ${uploadErrors.length} file(s) failed to upload: ${uploadErrors.join(", ")}`,
+          )
+        }
+
+        console.log("[v0] All files uploaded successfully:", uploadedCount)
       }
 
       console.log("[v0] Case submission complete, redirecting...")
