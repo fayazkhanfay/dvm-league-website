@@ -99,16 +99,28 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
         const { data: buckets, error: bucketError } = await supabase.storage.listBuckets()
 
+        console.log("[v0] Buckets found:", buckets)
+        console.log("[v0] Bucket error:", bucketError)
+
         if (bucketError) {
           console.error("[v0] Error checking buckets:", bucketError)
-          throw new Error("Unable to access file storage. Please contact support.")
+          throw new Error(`Unable to access file storage: ${bucketError.message}`)
         }
 
-        const bucketExists = buckets?.some((bucket) => bucket.name === "case-bucket")
+        if (!buckets || buckets.length === 0) {
+          console.error("[v0] No buckets found in storage")
+          throw new Error("No storage buckets found. Please contact your administrator.")
+        }
+
+        const bucketNames = buckets.map((b) => b.name)
+        console.log("[v0] Available bucket names:", bucketNames)
+
+        const bucketExists = buckets.some((bucket) => bucket.name === "case-bucket")
+        console.log("[v0] Does 'case-bucket' exist?", bucketExists)
 
         if (!bucketExists) {
           throw new Error(
-            "File storage bucket 'case-bucket' does not exist. Please contact your administrator to set up the storage bucket in Supabase.",
+            `Storage bucket 'case-bucket' not found. Available buckets: ${bucketNames.join(", ")}. Please create the 'case-bucket' bucket in Supabase Storage.`,
           )
         }
 
@@ -119,7 +131,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
           const fileExt = file.name.split(".").pop()
           const fileName = `${newCase.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
-          console.log("[v0] Uploading file:", file.name)
+          console.log("[v0] Uploading file:", file.name, "to path:", fileName)
           const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
             cacheControl: "3600",
             upsert: false,
