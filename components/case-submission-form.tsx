@@ -170,7 +170,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
   }
 
   return (
-    <AppLayout activePage="submitCase" userName={userProfile.full_name}>
+    <AppLayout activePage="submitCase" userName={userProfile.full_name} userRole="gp">
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Submit New Case</h1>
 

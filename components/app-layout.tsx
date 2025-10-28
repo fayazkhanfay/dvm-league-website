@@ -10,7 +10,7 @@ interface AppLayoutProps {
   userRole: "gp" | "specialist" // Pages using this layout must pass userRole="gp" or userRole="specialist"
 }
 
-export function AppLayout({ children, activePage, userName = "Dr. Demo GP", userRole }: AppLayoutProps) {
+export function AppLayout({ children, activePage, userName = "No user logged in", userRole }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-brand-offwhite">
       {/* Simplified App Header */}
