@@ -16,11 +16,10 @@ export function AppLayout({ children, activePage, userName = "Dr. Demo GP", user
       {/* Simplified App Header */}
       <header className="border-b border-brand-stone bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
             <ShieldCheck className="h-7 w-7 text-brand-navy" />
             <h1 className="font-serif text-2xl font-bold text-brand-navy">DVM League</h1>
-          </div>
+          </Link>
 
           {/* User Info */}
           <div className="flex items-center gap-4">
