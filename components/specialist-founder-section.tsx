@@ -16,9 +16,13 @@ export function SpecialistFounderSection() {
           </p>
         </div>
         <div className="mt-16 flex flex-col md:flex-row items-center justify-center gap-12">
-          {/* Founder Headshot */}
-          <div className="text-center flex-shrink-0">
-            <div className="relative w-48 h-48 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-white">
+          <a
+            href="https://www.linkedin.com/in/fayazkhanfay/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-center flex-shrink-0 group"
+          >
+            <div className="relative w-48 h-48 mx-auto rounded-full overflow-hidden shadow-xl border-4 border-white transition-transform duration-300 group-hover:scale-105">
               <Image
                 src="/fayaz-khan-profile.png"
                 alt="Headshot of Fayaz Khan, Founder of DVM League"
@@ -28,9 +32,11 @@ export function SpecialistFounderSection() {
                 priority
               />
             </div>
-            <h3 className="mt-4 text-xl font-bold text-brand-navy">Fayaz Khan</h3>
+            <h3 className="mt-4 text-xl font-bold text-brand-navy transition-colors duration-300 group-hover:text-brand-gold">
+              Fayaz Khan
+            </h3>
             <p className="text-sm font-semibold text-brand-navy/80">Founder, DVM League</p>
-          </div>
+          </a>
           {/* The Offer Card */}
           <div className="w-full max-w-lg bg-white p-8 rounded-xl shadow-2xl border border-brand-navy/10 text-center">
             <h3 className="text-2xl font-bold text-brand-navy">The Offer:</h3>
