@@ -47,12 +47,28 @@ export const metadata: Metadata = {
     siteName: "DVM League",
     locale: "en_US",
     type: "website",
+    images: [
+      {
+        url: "/dvm-league-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "DVM League",
+      },
+    ],
   },
   twitter: {
     card: "summary_large_image",
     title: "DVM League | Elite Specialist Consults for Veterinary Practices",
     description:
       "The B2B platform that empowers independent veterinarians to keep their most complex cases in-house with one dedicated specialist, from diagnosis to treatment.",
+    images: [
+      {
+        url: "/dvm-league-logo.png",
+        width: 1200,
+        height: 630,
+        alt: "DVM League",
+      },
+    ],
   },
   robots: {
     index: true,
@@ -67,9 +83,15 @@ export const metadata: Metadata = {
   },
   manifest: "/manifest.json",
   icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon-16x16.png",
+    icon: [
+      { url: "/favicon.ico" },
+      { url: "/favicon.svg", type: "image/svg+xml" },
+      { url: "/favicon-96x96.png", sizes: "96x96" },
+    ],
     apple: "/apple-touch-icon.png",
+    other: [
+      { rel: "mask-icon", url: "/favicon.svg", color: "#0A2240" },
+    ],
   },
   appleWebApp: {
     capable: true,
