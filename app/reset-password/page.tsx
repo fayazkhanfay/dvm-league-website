@@ -1,77 +1,54 @@
 "use client"
 
 import type React from "react"
-import Link from "next/link"
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Checkbox } from "@/components/ui/checkbox"
 import { ShieldCheck, Eye, EyeOff } from "lucide-react"
 
-export default function LoginPage() {
+export default function ResetPasswordPage() {
   const router = useRouter()
-  const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
-  const [rememberMe, setRememberMe] = useState(false)
+  const [confirmPassword, setConfirmPassword] = useState("")
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-
-  useEffect(() => {
-    const savedEmail = localStorage.getItem("dvmleague_remember_email")
-    if (savedEmail) {
-      setEmail(savedEmail)
-      setRememberMe(true)
-    }
-  }, [])
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setError("")
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match")
+      return
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters")
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const supabase = createClient()
 
-      const { data, error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      const { error: updateError } = await supabase.auth.updateUser({
+        password: password,
       })
 
-      if (signInError) {
-        setError(signInError.message)
+      if (updateError) {
+        setError(updateError.message)
         setIsLoading(false)
         return
       }
 
-      if (rememberMe) {
-        localStorage.setItem("dvmleague_remember_email", email)
-      } else {
-        localStorage.removeItem("dvmleague_remember_email")
-      }
-
-      const { data: profile, error: profileError } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", data.user.id)
-        .single()
-
-      if (profileError) {
-        setError("Failed to load user profile")
-        setIsLoading(false)
-        return
-      }
-
-      if (profile.role === "specialist") {
-        router.push("/specialist-dashboard")
-      } else if (profile.role === "gp") {
-        router.push("/gp-dashboard")
-      } else {
-        router.push("/")
-      }
+      // Redirect to login after successful reset
+      router.push("/login")
     } catch (err) {
       setError("An unexpected error occurred. Please try again.")
       setIsLoading(false)
@@ -82,33 +59,22 @@ export default function LoginPage() {
     <div className="min-h-screen bg-brand-offwhite px-4 py-12 sm:px-6 lg:px-8">
       <div className="mx-auto w-full max-w-md">
         <div className="rounded-lg border-2 border-brand-stone border-t-4 border-t-brand-gold bg-white p-8 shadow-xl">
+          {/* Logo and Brand */}
           <div className="mb-8 flex items-center justify-center gap-3">
             <ShieldCheck className="h-8 w-8 text-brand-navy" />
             <h1 className="font-serif text-3xl font-bold text-brand-navy">DVM League</h1>
           </div>
 
-          <h2 className="mb-8 text-center font-serif text-2xl font-bold text-brand-navy">Sign in to your account</h2>
+          {/* Headline */}
+          <h2 className="mb-2 text-center font-serif text-2xl font-bold text-brand-navy">Reset your password</h2>
+          <p className="mb-8 text-center text-sm text-brand-navy/70">Enter your new password below.</p>
 
+          {/* Reset Password Form */}
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <Label htmlFor="email" className="text-sm font-medium text-brand-navy">
-                Email address
-              </Label>
-              <Input
-                type="email"
-                id="email"
-                name="email"
-                required
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="mt-2 border-2 border-brand-stone px-4 py-3 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-              />
-            </div>
-
+            {/* New Password Field */}
             <div>
               <Label htmlFor="password" className="text-sm font-medium text-brand-navy">
-                Password
+                New Password
               </Label>
               <div className="relative mt-2">
                 <Input
@@ -120,6 +86,7 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={isLoading}
                   className="border-2 border-brand-stone px-4 py-3 pr-12 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  placeholder="Enter new password"
                 />
                 <button
                   type="button"
@@ -133,39 +100,47 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="remember"
-                  checked={rememberMe}
-                  onCheckedChange={(checked) => setRememberMe(checked as boolean)}
+            {/* Confirm Password Field */}
+            <div>
+              <Label htmlFor="confirm-password" className="text-sm font-medium text-brand-navy">
+                Confirm New Password
+              </Label>
+              <div className="relative mt-2">
+                <Input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirm-password"
+                  name="confirm-password"
+                  required
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
                   disabled={isLoading}
+                  className="border-2 border-brand-stone px-4 py-3 pr-12 text-brand-navy shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  placeholder="Confirm new password"
                 />
-                <Label htmlFor="remember" className="text-sm font-medium text-brand-navy">
-                  Remember me
-                </Label>
+                <button
+                  type="button"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  disabled={isLoading}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-brand-stone hover:text-brand-navy transition-colors disabled:opacity-50"
+                  aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                >
+                  {showConfirmPassword ? <EyeOff className="h-5 w-5" /> : <Eye className="h-5 w-5" />}
+                </button>
               </div>
-              <Link href="/forgot-password" className="text-sm font-semibold text-brand-red hover:text-brand-red/80">
-                Forgot password?
-              </Link>
             </div>
 
+            {/* Error Message */}
             {error && <div className="rounded-md bg-brand-red/10 p-3 text-sm text-brand-red">{error}</div>}
 
+            {/* Submit Button */}
             <Button
               type="submit"
               disabled={isLoading}
               className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {isLoading ? "Signing in..." : "Sign In"}
+              {isLoading ? "Resetting..." : "Reset Password"}
             </Button>
           </form>
-        </div>
-
-        <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline">
-            ← Back to dvmleague.com
-          </a>
         </div>
       </div>
     </div>

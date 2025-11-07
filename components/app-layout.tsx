@@ -1,6 +1,7 @@
 import type React from "react"
 import Link from "next/link"
 import { ShieldCheck, PlusCircle, LayoutList, Settings } from "lucide-react"
+import { LogoutButton } from "./logout-button"
 
 interface AppLayoutProps {
   children: React.ReactNode
@@ -9,24 +10,21 @@ interface AppLayoutProps {
   userRole: "gp" | "specialist" // Pages using this layout must pass userRole="gp" or userRole="specialist"
 }
 
-export function AppLayout({ children, activePage, userName = "Dr. Demo GP", userRole }: AppLayoutProps) {
+export function AppLayout({ children, activePage, userName = "No user logged in", userRole }: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-brand-offwhite">
       {/* Simplified App Header */}
       <header className="border-b border-brand-stone bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">
-          {/* Logo */}
-          <div className="flex items-center gap-3">
+          <Link href="/" className="flex items-center gap-3 transition-opacity hover:opacity-80">
             <ShieldCheck className="h-7 w-7 text-brand-navy" />
             <h1 className="font-serif text-2xl font-bold text-brand-navy">DVM League</h1>
-          </div>
+          </Link>
 
           {/* User Info */}
           <div className="flex items-center gap-4">
             <span className="text-sm text-brand-navy/80">Logged in as {userName}</span>
-            <a href="#" className="text-sm text-brand-navy/60 underline hover:text-brand-red">
-              Logout
-            </a>
+            <LogoutButton />
           </div>
         </div>
       </header>

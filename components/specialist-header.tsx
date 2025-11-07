@@ -1,12 +1,57 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, X } from "lucide-react"
-import { useState } from "react"
+import { Menu, X, LayoutDashboard } from "lucide-react"
+import { useState, useEffect } from "react"
+import { createBrowserClient } from "@supabase/ssr"
+
+interface UserProfile {
+  role: "gp" | "specialist"
+  full_name: string
+}
 
 export function SpecialistHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const appLoginUrl = "/login"
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+
+    const checkAuth = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      if (user) {
+        setIsAuthenticated(true)
+        // Fetch user profile to get role
+        const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+
+        if (profile) {
+          setUserProfile(profile as UserProfile)
+        }
+      }
+      setIsLoading(false)
+    }
+
+    checkAuth()
+  }, [])
+
+  const dashboardUrl = userProfile?.role === "specialist" ? "/specialist-dashboard" : "/gp-dashboard"
+
+  const handleLogout = async () => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    )
+    await supabase.auth.signOut()
+    window.location.href = "/login"
+  }
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
@@ -26,14 +71,42 @@ export function SpecialistHeader() {
 
           {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4">
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
-            >
-              <a href={appLoginUrl}>Login</a>
-            </Button>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
+                    >
+                      <a href={dashboardUrl}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        My Dashboard
+                      </a>
+                    </Button>
+                    <Button
+                      onClick={handleLogout}
+                      variant="outline"
+                      size="sm"
+                      className="border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red transition-all duration-300 shadow-sm bg-transparent"
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
+                  >
+                    <a href="/login">Login</a>
+                  </Button>
+                )}
+              </>
+            )}
             <a
               href="/"
               className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors tracking-wide"
@@ -62,16 +135,47 @@ export function SpecialistHeader() {
             >
               For General Practices →
             </a>
-            <Button
-              asChild
-              variant="outline"
-              size="sm"
-              className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
-            >
-              <a href={appLoginUrl} onClick={() => setMobileMenuOpen(false)}>
-                Login
-              </a>
-            </Button>
+            {!isLoading && (
+              <>
+                {isAuthenticated ? (
+                  <>
+                    <Button
+                      asChild
+                      variant="outline"
+                      size="sm"
+                      className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
+                    >
+                      <a href={dashboardUrl} onClick={() => setMobileMenuOpen(false)}>
+                        <LayoutDashboard className="w-4 h-4 mr-2" />
+                        My Dashboard
+                      </a>
+                    </Button>
+                    <Button
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        handleLogout()
+                      }}
+                      variant="outline"
+                      size="sm"
+                      className="border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red transition-all duration-300 w-full justify-center bg-transparent"
+                    >
+                      Logout
+                    </Button>
+                  </>
+                ) : (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="sm"
+                    className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
+                  >
+                    <a href="/login" onClick={() => setMobileMenuOpen(false)}>
+                      Login
+                    </a>
+                  </Button>
+                )}
+              </>
+            )}
           </nav>
         )}
       </div>

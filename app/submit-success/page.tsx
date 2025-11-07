@@ -1,19 +1,29 @@
-"use client"
-
-import { useRouter } from "next/navigation"
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 import { AppLayout } from "@/components/app-layout"
 
-export default function SubmitSuccessPage() {
-  const router = useRouter()
+export default async function SubmitSuccessPage() {
+  const supabase = await createClient()
 
-  const handleReturnToDashboard = () => {
-    router.push("/gp-dashboard")
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
+
+  if (!user) {
+    redirect("/login")
+  }
+
+  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+
+  if (!profile || profile.role !== "gp") {
+    redirect("/login")
   }
 
   return (
-    <AppLayout activePage="submitCase" userRole="gp">
+    <AppLayout activePage="submitCase" userRole="gp" userName={profile.full_name}>
       {/* Main Content Area */}
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Confirmation Card */}
@@ -83,10 +93,10 @@ export default function SubmitSuccessPage() {
           {/* Action Button */}
           <div className="mt-10">
             <Button
-              onClick={handleReturnToDashboard}
+              asChild
               className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white sm:w-auto"
             >
-              Return to Dashboard
+              <Link href="/gp-dashboard">Return to Dashboard</Link>
             </Button>
           </div>
         </div>
