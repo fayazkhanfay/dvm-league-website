@@ -160,13 +160,6 @@ export default function LoginPage() {
               {isLoading ? "Signing in..." : "Sign In"}
             </Button>
           </form>
-
-          <div className="mt-6 rounded-md bg-blue-50 p-4">
-            <p className="text-xs font-semibold text-blue-900 mb-2">Demo Credentials:</p>
-            <p className="text-xs text-blue-800">GP: gp@dvmleague.com</p>
-            <p className="text-xs text-blue-800">Specialist: specialist@dvmleague.com</p>
-            <p className="text-xs text-blue-800 mt-1">Password: password123</p>
-          </div>
         </div>
 
         <div className="mt-6 text-center">
