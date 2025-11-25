@@ -417,7 +417,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                     <div>
                       <h4 className="text-sm font-bold text-amber-800">Strict Upload Exclusions</h4>
                       <p className="text-xs text-amber-700 mt-1">
-                        To maintain HIPAA compliance and efficient triage, <strong>do not upload</strong>:
+                        To maintain Client Confidentiality and efficient triage, <strong>do not upload</strong>:
                       </p>
                       <ul className="list-disc list-outside ml-4 mt-2 text-xs text-amber-800 space-y-1">
                         <li>
