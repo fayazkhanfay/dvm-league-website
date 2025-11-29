@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, Loader2, AlertTriangle } from "lucide-react"
+import { Upload, Loader2, AlertTriangle, X } from "lucide-react"
 
 interface CaseSubmissionFormProps {
   userProfile: any
@@ -38,9 +38,11 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
   const [diagnosticsPerformed, setDiagnosticsPerformed] = useState("")
   const [treatmentsAttempted, setTreatmentsAttempted] = useState("")
   const [gpQuestions, setGpQuestions] = useState("")
+  const [financialConstraints, setFinancialConstraints] = useState("")
 
   // Specialty & Files
   const [specialtyRequested, setSpecialtyRequested] = useState("")
+  const [preferredSpecialist, setPreferredSpecialist] = useState("")
   const [files, setFiles] = useState<File[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
@@ -48,8 +50,30 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
-      setFiles(Array.from(e.target.files))
+      const newFiles = Array.from(e.target.files)
+
+      // Check file count limit
+      if (newFiles.length > 25) {
+        setError("You cannot upload more than 25 files at once. Please ZIP your images or select fewer files")
+        return
+      }
+
+      // Check individual file sizes
+      for (const file of newFiles) {
+        if (file.size > 1024 * 1024 * 1024) {
+          // 1GB in bytes
+          setError(`File ${file.name} is too large (Max 1GB).`)
+          return
+        }
+      }
+
+      setError(null)
+      setFiles(newFiles)
     }
+  }
+
+  const removeFile = (index: number) => {
+    setFiles(files.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -82,6 +106,8 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
           treatments_attempted: treatmentsAttempted || null,
           gp_questions: gpQuestions,
           specialty_requested: specialtyRequested,
+          preferred_specialist: preferredSpecialist || null,
+          financial_constraints: financialConstraints || null,
           status: "pending_assignment",
         })
         .select()
@@ -338,6 +364,19 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
               </div>
 
               <div>
+                <Label htmlFor="financial-constraints" className="text-sm font-medium text-brand-navy">
+                  Client Financial Constraints (Optional)
+                </Label>
+                <Input
+                  id="financial-constraints"
+                  value={financialConstraints}
+                  onChange={(e) => setFinancialConstraints(e.target.value)}
+                  placeholder="e.g., Hard cap of $1,500, or 'No constraints'"
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="diagnostics-performed" className="text-sm font-medium text-brand-navy">
                   Diagnostics Performed
                 </Label>
@@ -408,6 +447,19 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
               </div>
 
               <div>
+                <Label htmlFor="preferred-specialist" className="text-sm font-medium text-brand-navy">
+                  Preferred Specialist (Optional)
+                </Label>
+                <Input
+                  id="preferred-specialist"
+                  value={preferredSpecialist}
+                  onChange={(e) => setPreferredSpecialist(e.target.value)}
+                  placeholder="Enter name if you have a specific doctor in mind"
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
                 <Label htmlFor="files" className="text-sm font-medium text-brand-navy">
                   Upload Clinical Data Only
                 </Label>
@@ -438,7 +490,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload relevant medical files (Images, DICOM, Lab Results, History).
+                  Upload relevant medical files (Images, DICOM, Lab Results, History). Max 25 files per submission.
                 </p>
                 <div className="mt-2">
                   <label
@@ -460,11 +512,18 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   />
                 </div>
                 {files.length > 0 && (
-                  <div className="mt-3 space-y-1">
+                  <div className="mt-3 space-y-2">
                     {files.map((file, index) => (
-                      <p key={index} className="text-xs text-brand-navy/70">
-                        {file.name}
-                      </p>
+                      <div key={index} className="flex items-center justify-between rounded bg-brand-offwhite p-2">
+                        <p className="text-xs text-brand-navy/70">{file.name}</p>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </button>
+                      </div>
                     ))}
                   </div>
                 )}
