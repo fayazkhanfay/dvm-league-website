@@ -52,23 +52,27 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
 
-      // Check file count limit
-      if (newFiles.length > 25) {
-        setError("You cannot upload more than 25 files at once. Please ZIP your images or select fewer files")
-        return
-      }
-
-      // Check individual file sizes
-      for (const file of newFiles) {
-        if (file.size > 1024 * 1024 * 1024) {
-          // 1GB in bytes
-          setError(`File ${file.name} is too large (Max 1GB).`)
-          return
+      setFiles((prevFiles) => {
+        // Check total file count limit
+        if (prevFiles.length + newFiles.length > 25) {
+          setError(
+            `Cannot add ${newFiles.length} file(s). You already have ${prevFiles.length} file(s) selected. Maximum is 25 files total. Please ZIP your images or select fewer files.`,
+          )
+          return prevFiles
         }
-      }
 
-      setError(null)
-      setFiles(newFiles)
+        // Check individual file sizes
+        for (const file of newFiles) {
+          if (file.size > 1024 * 1024 * 1024) {
+            // 1GB in bytes
+            setError(`File ${file.name} is too large (Max 1GB).`)
+            return prevFiles
+          }
+        }
+
+        setError(null)
+        return [...prevFiles, ...newFiles]
+      })
     }
   }
 
@@ -490,7 +494,8 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload relevant medical files (Images, DICOM, Lab Results, History). Max 25 files per submission.
+                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
+                  file. Max 25 files per submission.
                 </p>
                 <div className="mt-2">
                   <label
