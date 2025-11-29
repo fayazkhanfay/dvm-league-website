@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Checkbox } from "@/components/ui/checkbox"
-import { ShieldCheck, Eye, EyeOff } from "lucide-react"
+import { ShieldCheck, Eye, EyeOff, Loader2 } from "lucide-react"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -19,6 +19,52 @@ export default function LoginPage() {
   const [error, setError] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [checkingSession, setCheckingSession] = useState(true)
+
+  useEffect(() => {
+    const checkSession = async () => {
+      try {
+        const supabase = createClient()
+        const {
+          data: { user },
+          error: userError,
+        } = await supabase.auth.getUser()
+
+        if (userError || !user) {
+          // No user found, show login form
+          setCheckingSession(false)
+          return
+        }
+
+        // User found, fetch their profile to get role
+        const { data: profile, error: profileError } = await supabase
+          .from("profiles")
+          .select("role")
+          .eq("id", user.id)
+          .single()
+
+        if (profileError || !profile) {
+          // Profile not found, show login form
+          setCheckingSession(false)
+          return
+        }
+
+        // Redirect based on role
+        if (profile.role === "specialist") {
+          router.push("/specialist-dashboard")
+        } else if (profile.role === "gp") {
+          router.push("/gp-dashboard")
+        } else {
+          router.push("/")
+        }
+      } catch (err) {
+        // On any error, show login form
+        setCheckingSession(false)
+      }
+    }
+
+    checkSession()
+  }, [router])
 
   useEffect(() => {
     const savedEmail = localStorage.getItem("dvmleague_remember_email")
@@ -76,6 +122,17 @@ export default function LoginPage() {
       setError("An unexpected error occurred. Please try again.")
       setIsLoading(false)
     }
+  }
+
+  if (checkingSession) {
+    return (
+      <div className="min-h-screen bg-brand-offwhite px-4 py-12 sm:px-6 lg:px-8 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-8 w-8 text-brand-gold animate-spin" />
+          <p className="text-brand-navy font-medium">Checking session...</p>
+        </div>
+      </div>
+    )
   }
 
   return (
