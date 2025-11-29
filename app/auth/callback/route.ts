@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 export async function GET(request: NextRequest) {
   // Extract code and next from query parameters
   const code = request.nextUrl.searchParams.get("code")
-  const next = request.nextUrl.searchParams.get("next") ?? "/reset-password"
+  const next = request.nextUrl.searchParams.get("next") ?? "/gp-dashboard"
 
   if (code) {
     // Initialize the Supabase client
@@ -19,9 +19,7 @@ export async function GET(request: NextRequest) {
     }
   }
 
-  if (!code) {
-    return NextResponse.redirect(`${request.nextUrl.origin}/login?error=no_code`)
-  }
-
-  return NextResponse.redirect(`${request.nextUrl.origin}/login?error=auth_code_error`)
+  // Hash fragments (#access_token=...) are not sent to the server, so we redirect
+  // to a client page that can read the fragment and complete the auth flow
+  return NextResponse.redirect(`${request.nextUrl.origin}/auth/confirm?next=${encodeURIComponent(next)}`)
 }
