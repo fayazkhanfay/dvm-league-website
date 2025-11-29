@@ -513,7 +513,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                     multiple
                     onChange={handleFileChange}
                     className="hidden"
-                    accept="image/*,.pdf,.dcm"
+                    accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx"
                   />
                 </div>
                 {files.length > 0 && (
