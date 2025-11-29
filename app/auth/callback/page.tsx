@@ -1,60 +1,75 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
-import { createBrowserClient } from "@supabase/ssr"
+import { useRouter } from "next/navigation"
+import { createClient } from "@/lib/supabase/client"
 
 export default function AuthCallbackPage() {
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [status, setStatus] = useState("Verifying invitation...")
 
   useEffect(() => {
     const handleAuthCallback = async () => {
-      const supabase = createBrowserClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      )
+      const supabase = createClient()
 
-      // 1. Check if we have a session (handled automatically by Supabase client parsing the URL hash)
+      // 1. Try standard detection first
       const { data } = await supabase.auth.getSession()
 
       if (data?.session) {
-        // SUCCESS: User is logged in.
-        // Check if there is a 'next' param, otherwise default to reset-password
-        const next = searchParams.get('next') || '/reset-password'
-        router.push(next)
-      } else {
-        // 2. If no session yet, listen for the SIGNED_IN event (sometimes the hash processing takes a millisecond)
-        const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-          if (event === 'SIGNED_IN' && session) {
-            const next = searchParams.get('next') || '/reset-password'
-            router.push(next)
-          }
-        })
+        setStatus("Session found. Redirecting...")
+        router.replace('/reset-password')
+        return
+      }
 
-        // 3. Fallback: If nothing happens after 3 seconds, redirect to login error
-        setTimeout(() => {
-            if (!data.session) { // Only redirect if we still don't have a session
-                 setStatus("Redirecting to login...")
-                 // router.push('/login?error=auth_timeout') // Optional: Uncomment if you want strict timeouts
+      // 2. If no session, FORCE parse the hash (The "Launch Day" Hammer)
+      // The dashboard invite sends tokens in the hash: #access_token=xyz&refresh_token=abc
+      if (typeof window !== 'undefined' && window.location.hash) {
+        try {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1)) // Remove the '#'
+          const access_token = hashParams.get("access_token")
+          const refresh_token = hashParams.get("refresh_token")
+
+          if (access_token && refresh_token) {
+            setStatus("Token detected. Setting session...")
+            
+            const { error } = await supabase.auth.setSession({
+              access_token,
+              refresh_token,
+            })
+
+            if (!error) {
+              router.replace('/reset-password')
+              return
+            } else {
+              console.error("Manual session set failed:", error)
             }
-        }, 3000)
-
-        return () => {
-          subscription.unsubscribe()
+          }
+        } catch (e) {
+          console.error("Error parsing hash:", e)
         }
+      }
+
+      // 3. Fallback Listener (If the SDK processes it late)
+      const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+        if (event === 'SIGNED_IN' && session) {
+          router.replace('/reset-password')
+        }
+      })
+
+      return () => {
+        subscription.unsubscribe()
       }
     }
 
     handleAuthCallback()
-  }, [router, searchParams])
+  }, [router])
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-[#f8f7f4]">
       <div className="text-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#e7e5e4] border-t-[#0A2240] mx-auto mb-4"></div>
         <p className="text-[#0A2240] font-medium">{status}</p>
+        <p className="text-xs text-gray-400 mt-4">Securely verifying credentials...</p>
       </div>
     </div>
   )
