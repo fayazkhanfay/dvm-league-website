@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Menu, X, LayoutDashboard } from "lucide-react"
 import Link from "next/link"
-import { createBrowserClient } from "@supabase/ssr"
+import { createClient } from "@/lib/supabase/client"
 
 interface UserProfile {
   role: "gp" | "specialist"
@@ -18,10 +18,7 @@ export function Header() {
   const [isLoading, setIsLoading] = useState(true)
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = createClient()
 
     const checkAuth = async () => {
       const {
@@ -36,20 +33,44 @@ export function Header() {
         if (profile) {
           setUserProfile(profile as UserProfile)
         }
+      } else {
+        setIsAuthenticated(false)
+        setUserProfile(null)
       }
       setIsLoading(false)
     }
 
     checkAuth()
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        setIsAuthenticated(true)
+        // Re-fetch profile to ensure role is correct
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("role, full_name")
+          .eq("id", session.user.id)
+          .single()
+        if (profile) setUserProfile(profile as UserProfile)
+      } else {
+        // Handle Logout
+        setIsAuthenticated(false)
+        setUserProfile(null)
+      }
+      setIsLoading(false)
+    })
+
+    return () => {
+      subscription.unsubscribe()
+    }
   }, [])
 
   const dashboardUrl = userProfile?.role === "specialist" ? "/specialist-dashboard" : "/gp-dashboard"
 
   const handleLogout = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
+    const supabase = createClient()
     await supabase.auth.signOut()
     window.location.href = "/login"
   }
