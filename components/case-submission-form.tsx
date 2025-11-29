@@ -12,7 +12,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, Loader2 } from "lucide-react"
+import { Upload, Loader2, AlertTriangle } from "lucide-react"
 
 interface CaseSubmissionFormProps {
   userProfile: any
@@ -409,10 +409,36 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
               <div>
                 <Label htmlFor="files" className="text-sm font-medium text-brand-navy">
-                  Upload Files
+                  Upload Clinical Data Only
                 </Label>
+                <div className="rounded-md bg-amber-50 p-4 border border-amber-200 mb-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                    <div>
+                      <h4 className="text-sm font-bold text-amber-800">Strict Upload Exclusions</h4>
+                      <p className="text-xs text-amber-700 mt-1">
+                        To maintain Client Confidentiality and efficient triage, <strong>do not upload</strong>:
+                      </p>
+                      <ul className="list-disc list-outside ml-4 mt-2 text-xs text-amber-800 space-y-1">
+                        <li>
+                          <strong>Financial Documents:</strong> No invoices, estimates, receipts, or billing statements.
+                        </li>
+                        <li>
+                          <strong>Client Financial Data:</strong> No payment histories or insurance claims.
+                        </li>
+                        <li>
+                          <strong>Non-Medical Communications:</strong> No email chains regarding scheduling or admin.
+                        </li>
+                        <li>
+                          <strong>Excessive Identifying Data:</strong> Focus strictly on the patient's signalment and
+                          medical diagnostics.
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
                 <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload relevant files (images, lab results, DICOM files, etc.)
+                  Upload relevant medical files (Images, DICOM, Lab Results, History).
                 </p>
                 <div className="mt-2">
                   <label
