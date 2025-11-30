@@ -1,5 +1,5 @@
 import { createClient } from "@/lib/supabase/server"
-import Link from "next/link"
+import { revalidatePath } from "next/cache"
 import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 import { AppLayout } from "@/components/app-layout"
@@ -72,6 +72,14 @@ export default async function SubmitSuccessPage({
           } else {
             console.log("[v0] Case status updated to pending_assignment")
             paymentConfirmed = true
+
+            try {
+              revalidatePath("/gp-dashboard")
+              revalidatePath("/specialist-dashboard")
+              console.log("[v0] Dashboard paths revalidated")
+            } catch (error) {
+              console.error("[v0] Error revalidating paths:", error)
+            }
           }
         } catch (error) {
           console.error("[v0] Exception while updating case status:", error)
@@ -108,7 +116,7 @@ export default async function SubmitSuccessPage({
           <h1 className="text-2xl font-bold text-gray-900">Authentication Required</h1>
           <p className="mt-4 text-gray-600">Please log in to view this page.</p>
           <Button asChild className="mt-6">
-            <Link href="/login">Go to Login</Link>
+            <a href="/login">Go to Login</a>
           </Button>
         </div>
       </div>
@@ -193,7 +201,7 @@ export default async function SubmitSuccessPage({
               asChild
               className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white sm:w-auto"
             >
-              <Link href="/gp-dashboard">Return to Dashboard</Link>
+              <a href="/gp-dashboard">Return to Dashboard</a>
             </Button>
           </div>
         </div>
