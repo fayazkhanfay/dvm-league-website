@@ -494,8 +494,8 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
-                  file. Max 25 files per submission.
+                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) and other non-viewable files into a single
+                  file. Supported: Images, PDF, Audio (MP3/M4A/WAV), Video. Max 25 files per submission.
                 </p>
                 <div className="mt-2">
                   <label
@@ -513,7 +513,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                     multiple
                     onChange={handleFileChange}
                     className="hidden"
-                    accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx"
+                    accept="image/*,application/pdf,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,.mp3,.wav,.m4a"
                   />
                 </div>
                 {files.length > 0 && (
