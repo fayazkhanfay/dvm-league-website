@@ -10,68 +10,111 @@ export default async function SubmitSuccessPage({
 }: {
   searchParams: Promise<{ case_id?: string }>
 }) {
-  const supabase = await createClient()
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
-
-  if (!user) {
-    redirect("/login")
-  }
-
-  const { data: profile } = await supabase.from("profiles").select("*").eq("id", user.id).single()
-
-  if (!profile || profile.role !== "gp") {
-    redirect("/login")
-  }
-
-  const params = await searchParams
-  const caseId = params.case_id
-
-  console.log("[v0] Submit Success - Case ID from URL:", caseId)
-
+  let user = null
+  let profile = null
+  let caseId: string | undefined
   let paymentConfirmed = false
-  if (caseId) {
-    const { error: updateError } = await supabase
-      .from("cases")
-      .update({ status: "pending_assignment" })
-      .eq("id", caseId)
-      .eq("gp_id", user.id) // Security check - only update if case belongs to this GP
-
-    if (updateError) {
-      console.error("[v0] Error updating case status:", updateError)
-    } else {
-      console.log("[v0] Case status updated to pending_assignment")
-      paymentConfirmed = true
-    }
-  }
-
   let caseData = null
-  if (caseId) {
-    const { data, error } = await supabase
-      .from("cases")
-      .select("id, patient_name, created_at")
-      .eq("id", caseId)
-      .single()
 
-    if (error) {
-      console.error("[v0] Error fetching case data:", error)
-    } else {
-      console.log("[v0] Case data fetched successfully:", data)
-      caseData = data
+  try {
+    const supabase = await createClient()
+
+    // Safely get user
+    try {
+      const {
+        data: { user: authUser },
+      } = await supabase.auth.getUser()
+      user = authUser
+    } catch (error) {
+      console.error("[v0] Error getting user:", error)
     }
-  } else {
-    console.log("[v0] No case_id provided in URL")
+
+    if (!user) {
+      redirect("/login")
+    }
+
+    // Safely get profile
+    try {
+      const { data: profileData } = await supabase.from("profiles").select("*").eq("id", user.id).single()
+      profile = profileData
+    } catch (error) {
+      console.error("[v0] Error fetching profile:", error)
+    }
+
+    if (!profile || profile.role !== "gp") {
+      redirect("/login")
+    }
+
+    // Safely parse searchParams
+    try {
+      const params = await searchParams
+      caseId = params.case_id
+      console.log("[v0] Submit Success - Case ID from URL:", caseId)
+    } catch (error) {
+      console.error("[v0] Error parsing searchParams:", error)
+    }
+
+    // Safely update case status if case_id is present
+    if (caseId) {
+      try {
+        const { error: updateError } = await supabase
+          .from("cases")
+          .update({ status: "pending_assignment" })
+          .eq("id", caseId)
+          .eq("gp_id", user.id) // Security check - only update if case belongs to this GP
+
+        if (updateError) {
+          console.error("[v0] Error updating case status:", updateError)
+        } else {
+          console.log("[v0] Case status updated to pending_assignment")
+          paymentConfirmed = true
+        }
+      } catch (error) {
+        console.error("[v0] Exception while updating case status:", error)
+        // Continue rendering even if update fails
+      }
+
+      // Safely fetch case data
+      try {
+        const { data, error } = await supabase
+          .from("cases")
+          .select("id, patient_name, created_at")
+          .eq("id", caseId)
+          .single()
+
+        if (error) {
+          console.error("[v0] Error fetching case data:", error)
+        } else {
+          console.log("[v0] Case data fetched successfully:", data)
+          caseData = data
+        }
+      } catch (error) {
+        console.error("[v0] Exception while fetching case data:", error)
+        // Continue rendering with fallback data
+      }
+    } else {
+      console.log("[v0] No case_id provided in URL")
+    }
+  } catch (error) {
+    console.error("[v0] Unexpected error in submit-success page:", error)
+    // If we don't have a user or profile at this point, redirect to login
+    if (!user || !profile) {
+      try {
+        redirect("/login")
+      } catch (redirectError) {
+        console.error("[v0] Failed to redirect to login:", redirectError)
+      }
+    }
   }
 
   const patientName = caseData?.patient_name || "Unknown Patient"
   const caseIdDisplay = caseId || "N/A"
+  const userName = profile?.full_name || "User"
 
   console.log("[v0] Displaying - Patient:", patientName, "Case ID:", caseIdDisplay)
 
   return (
-    <AppLayout activePage="submitCase" userRole="gp" userName={profile.full_name}>
+    <AppLayout activePage="submitCase" userRole="gp" userName={userName}>
       {/* Main Content Area */}
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         {/* Confirmation Card */}
