@@ -50,9 +50,11 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
+  const [caseId, setCaseId] = useState<string | null>(initialData?.id || null)
 
   useEffect(() => {
     if (initialData) {
+      setCaseId(initialData.id)
       setPatientName(initialData.patient_name || "")
       setSpecies(initialData.patient_signalment?.species || "")
       setBreed(initialData.patient_signalment?.breed || "")
@@ -152,19 +154,21 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         status: "draft",
       }
 
-      let caseId = initialData?.id
+      let activeCaseId = caseId
 
-      if (initialData?.id) {
-        // Update existing draft
-        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", initialData.id)
+      if (activeCaseId) {
+        console.log("[v0] Updating existing draft:", activeCaseId)
+        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", activeCaseId)
 
         if (updateError) throw updateError
       } else {
-        // Create new draft
+        console.log("[v0] Creating new draft case")
         const { data: newCase, error: insertError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (insertError) throw insertError
-        caseId = newCase.id
+        activeCaseId = newCase.id
+        setCaseId(activeCaseId)
+        console.log("[v0] New draft created with ID:", activeCaseId)
       }
 
       // Upload new files if any
@@ -173,7 +177,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
         for (const file of files) {
           const fileExt = file.name.split(".").pop()
-          const fileName = `${caseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+          const fileName = `${activeCaseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
           const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
             cacheControl: "3600",
@@ -186,7 +190,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
           }
 
           await supabase.from("case_files").insert({
-            case_id: caseId,
+            case_id: activeCaseId,
             uploader_id: userProfile.id,
             file_name: file.name,
             file_type: file.type,
@@ -194,6 +198,8 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             upload_phase: "initial_submission",
           })
         }
+
+        setFiles([])
       }
 
       toast.success("Draft saved successfully", {
@@ -257,21 +263,22 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         status: "awaiting_payment", // Set to awaiting_payment initially
       }
 
-      let caseId = initialData?.id
+      let activeCaseId = caseId
 
-      if (initialData?.id) {
-        // Update existing case (from draft)
-        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", initialData.id)
+      if (activeCaseId) {
+        console.log("[v0] Updating existing case:", activeCaseId)
+        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", activeCaseId)
 
         if (updateError) throw updateError
-        console.log("[v0] Case updated successfully:", initialData.id)
+        console.log("[v0] Case updated successfully:", activeCaseId)
       } else {
-        // Create new case
+        console.log("[v0] Creating new case")
         const { data: newCase, error: caseError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (caseError) throw caseError
-        caseId = newCase.id
-        console.log("[v0] Case created successfully:", caseId)
+        activeCaseId = newCase.id
+        setCaseId(activeCaseId)
+        console.log("[v0] Case created successfully:", activeCaseId)
       }
 
       // Upload new files if any
@@ -283,7 +290,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
         for (const file of files) {
           const fileExt = file.name.split(".").pop()
-          const fileName = `${caseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+          const fileName = `${activeCaseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
           console.log("[v0] Uploading file:", file.name, "to path:", fileName)
           const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
@@ -299,7 +306,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
           console.log("[v0] File uploaded, creating database record...")
           const { error: fileRecordError } = await supabase.from("case_files").insert({
-            case_id: caseId,
+            case_id: activeCaseId,
             uploader_id: userProfile.id,
             file_name: file.name,
             file_type: file.type,
@@ -331,14 +338,14 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       if (previousCaseCount === 0) {
         // First case - Founder's Circle freebie
         // Update status to pending_assignment
-        await supabase.from("cases").update({ status: "pending_assignment" }).eq("id", caseId)
+        await supabase.from("cases").update({ status: "pending_assignment" }).eq("id", activeCaseId)
 
         console.log("[v0] First case detected - redirecting to success page (free case)")
-        router.push(`/submit-success?case_id=${caseId}`)
+        router.push(`/submit-success?case_id=${activeCaseId}`)
       } else {
         // Subsequent cases - requires payment
         console.log("[v0] Subsequent case detected - redirecting to Stripe checkout")
-        router.push(`/api/stripe/checkout?case_id=${caseId}`)
+        router.push(`/api/stripe/checkout?case_id=${activeCaseId}`)
       }
     } catch (err) {
       console.error("[v0] Submission error:", err)
