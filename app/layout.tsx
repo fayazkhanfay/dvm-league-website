@@ -90,9 +90,7 @@ export const metadata: Metadata = {
       { url: "/favicon-96x96.png", sizes: "96x96" },
     ],
     apple: "/apple-touch-icon.png",
-    other: [
-      { rel: "mask-icon", url: "/favicon.svg", color: "#0A2240" },
-    ],
+    other: [{ rel: "mask-icon", url: "/favicon.svg", color: "#0A2240" }],
   },
   appleWebApp: {
     capable: true,
@@ -185,7 +183,7 @@ export default function RootLayout({
             `,
           }}
         />
-        <Toaster />
+        <Toaster position="top-center" expand={true} richColors={true} duration={6000} closeButton={true} />
       </body>
     </html>
   )

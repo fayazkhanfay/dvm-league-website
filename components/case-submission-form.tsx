@@ -181,7 +181,7 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
       console.error("[v0] Submission error:", err)
       toast.error("Failed to submit case", {
         description: err instanceof Error ? err.message : "Please try again.",
-        duration: 5000,
+        duration: 8000,
       })
       setIsSubmitting(false)
     }
