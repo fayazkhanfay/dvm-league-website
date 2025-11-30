@@ -1,7 +1,3 @@
-// DATABASE REMINDER: The profiles table requires a stripe_customer_id column
-// for the "Saved Card" feature to work fully. This enables returning customers
-// to use their saved payment methods automatically.
-
 import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
@@ -33,10 +29,10 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Processing checkout for case:", caseId, "user:", user.id)
 
-    // Get Customer ID: Query profiles table for existing stripe_customer_id
+    // Get Customer ID: Query profiles table
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("stripe_customer_id")
+      .select("full_name, stripe_customer_id")
       .eq("id", user.id)
       .single()
 
@@ -49,23 +45,40 @@ export async function GET(request: NextRequest) {
       apiVersion: "2024-12-18.acacia",
     })
 
-    // Prepare customer handling
-    const customerConfig: any = {}
-    if (profile?.stripe_customer_id) {
-      // Returning customer - use existing customer ID
-      customerConfig.customer = profile.stripe_customer_id
-      console.log("[v0] Using existing Stripe customer:", profile.stripe_customer_id)
-    } else {
-      // New customer - create during checkout
-      customerConfig.customer_email = user.email
-      customerConfig.customer_creation = "always"
+    let customerId = profile?.stripe_customer_id
+
+    // CRITICAL FIX: Ensure Customer ID exists and is saved to Supabase
+    if (!customerId) {
       console.log("[v0] Creating new Stripe customer for:", user.email)
+
+      const newCustomer = await stripe.customers.create({
+        email: user.email,
+        name: profile?.full_name || "DVM League User",
+        metadata: {
+          supabase_id: user.id,
+        },
+      })
+
+      customerId = newCustomer.id
+
+      // Save to Supabase immediately so we remember them next time
+      const { error: updateError } = await supabase
+        .from("profiles")
+        .update({ stripe_customer_id: customerId })
+        .eq("id", user.id)
+
+      if (updateError) {
+        console.error("[v0] Failed to save stripe_customer_id:", updateError)
+        // We continue anyway so the payment can proceed, but log the error
+      }
+    } else {
+      console.log("[v0] Using existing Stripe customer:", customerId)
     }
 
     // Create Checkout Session
     const origin = request.nextUrl.origin
     const session = await stripe.checkout.sessions.create({
-      ...customerConfig,
+      customer: customerId, // Explicitly pass the ID we found or created
       line_items: [
         {
           price_data: {
@@ -80,7 +93,7 @@ export async function GET(request: NextRequest) {
       ],
       mode: "payment",
       payment_intent_data: {
-        setup_future_usage: "on_session", // Save card for future use
+        setup_future_usage: "on_session", // This saves the card to the Customer ID
       },
       metadata: {
         case_id: caseId,
@@ -92,7 +105,6 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Stripe checkout session created:", session.id)
 
-    // Redirect to Stripe Checkout
     if (!session.url) {
       throw new Error("No checkout URL returned from Stripe")
     }
