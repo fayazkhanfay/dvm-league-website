@@ -13,6 +13,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Upload, Loader2, AlertTriangle, X } from "lucide-react"
+import { toast } from "sonner"
 
 interface CaseSubmissionFormProps {
   userProfile: any
@@ -47,7 +48,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [uploadWarning, setUploadWarning] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -56,9 +56,9 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
       setFiles((prevFiles) => {
         // Check total file count limit
         if (prevFiles.length + newFiles.length > 25) {
-          setUploadWarning(
-            `Limit reached: Cannot add ${newFiles.length} file(s). You already have ${prevFiles.length}. Max 25 total.`,
-          )
+          toast.warning("Limit reached: Max 25 files per submission.", {
+            description: "Please zip larger sets of files.",
+          })
           return prevFiles
         }
 
@@ -66,12 +66,13 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
         for (const file of newFiles) {
           if (file.size > 1024 * 1024 * 1024) {
             // 1GB in bytes
-            setUploadWarning(`File ${file.name} is too large (Max 1GB).`)
+            toast.warning(`File too large: ${file.name}`, {
+              description: "Maximum file size is 1GB.",
+            })
             return prevFiles
           }
         }
 
-        setUploadWarning(null)
         setError(null)
         return [...prevFiles, ...newFiles]
       })
@@ -518,12 +519,7 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                     accept="image/*,application/pdf,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,.mp3,.wav,.m4a"
                   />
                 </div>
-                {uploadWarning && (
-                  <div className="mt-3 flex items-start gap-2 rounded-md border border-amber-200 bg-amber-50 p-3">
-                    <AlertTriangle className="mt-0.5 h-4 w-4 flex-shrink-0 text-amber-600" />
-                    <p className="text-sm text-amber-800">{uploadWarning}</p>
-                  </div>
-                )}
+
                 {files.length > 0 && (
                   <div className="mt-3 space-y-2">
                     {files.map((file, index) => (

@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import Script from "next/script"
 import "./globals.css"
+import { Toaster } from "sonner"
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],
@@ -184,6 +185,7 @@ export default function RootLayout({
             `,
           }}
         />
+        <Toaster />
       </body>
     </html>
   )
