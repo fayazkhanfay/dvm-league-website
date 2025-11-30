@@ -31,6 +31,22 @@ export default async function SubmitSuccessPage({
 
   console.log("[v0] Submit Success - Case ID from URL:", caseId)
 
+  let paymentConfirmed = false
+  if (caseId) {
+    const { error: updateError } = await supabase
+      .from("cases")
+      .update({ status: "pending_assignment" })
+      .eq("id", caseId)
+      .eq("gp_id", user.id) // Security check - only update if case belongs to this GP
+
+    if (updateError) {
+      console.error("[v0] Error updating case status:", updateError)
+    } else {
+      console.log("[v0] Case status updated to pending_assignment")
+      paymentConfirmed = true
+    }
+  }
+
   let caseData = null
   if (caseId) {
     const { data, error } = await supabase
@@ -73,6 +89,14 @@ export default async function SubmitSuccessPage({
             Your case for <strong>{patientName}</strong> (Case ID: <strong>{caseIdDisplay}</strong>) has been received.
             You will receive Phase 1 (The Diagnostic Plan) within 1-2 business days.
           </p>
+
+          {paymentConfirmed && (
+            <div className="mt-4 rounded-md bg-green-50 p-4">
+              <p className="text-sm font-medium text-green-800">
+                Payment confirmed. Your case is now active and has been sent to the specialist network.
+              </p>
+            </div>
+          )}
 
           {/* What Happens Next Section */}
           <div className="mt-8 border-t border-brand-stone pt-8">
