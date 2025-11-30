@@ -192,7 +192,7 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
       if (previousCaseCount === 0) {
         // First case - Founder's Circle freebie
         console.log("[v0] First case detected - redirecting to success page (free case)")
-        router.push("/submit-success")
+        router.push(`/submit-success?case_id=${newCase.id}`)
       } else {
         // Subsequent cases - requires payment
         console.log("[v0] Subsequent case detected - redirecting to Stripe checkout")

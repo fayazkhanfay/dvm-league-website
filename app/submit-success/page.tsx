@@ -5,7 +5,11 @@ import { Button } from "@/components/ui/button"
 import { CheckCircle } from "lucide-react"
 import { AppLayout } from "@/components/app-layout"
 
-export default async function SubmitSuccessPage() {
+export default async function SubmitSuccessPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ case_id?: string }>
+}) {
   const supabase = await createClient()
 
   const {
@@ -21,6 +25,18 @@ export default async function SubmitSuccessPage() {
   if (!profile || profile.role !== "gp") {
     redirect("/login")
   }
+
+  const params = await searchParams
+  const caseId = params.case_id
+
+  let caseData = null
+  if (caseId) {
+    const { data } = await supabase.from("cases").select("*").eq("id", caseId).single()
+    caseData = data
+  }
+
+  const patientName = caseData?.patient_name || "Unknown Patient"
+  const caseIdDisplay = caseId || "N/A"
 
   return (
     <AppLayout activePage="submitCase" userRole="gp" userName={profile.full_name}>
@@ -38,8 +54,8 @@ export default async function SubmitSuccessPage() {
 
           {/* Subtitle */}
           <p className="mt-4 text-lg text-brand-navy/80">
-            Your case for <strong>Buddy Smith</strong> (Case ID: <strong>DVML-001</strong>) has been received. You will
-            receive Phase 1 (The Diagnostic Plan) within 1-2 business days.
+            Your case for <strong>{patientName}</strong> (Case ID: <strong>{caseIdDisplay}</strong>) has been received.
+            You will receive Phase 1 (The Diagnostic Plan) within 1-2 business days.
           </p>
 
           {/* What Happens Next Section */}
@@ -55,7 +71,7 @@ export default async function SubmitSuccessPage() {
                 <div>
                   <h3 className="font-semibold text-brand-navy">Confirmation Email</h3>
                   <p className="mt-1 text-sm text-brand-navy/70">
-                    You will receive an email confirmation shortly with your Case ID (DVML-001).
+                    You will receive an email confirmation shortly with your Case ID ({caseIdDisplay}).
                   </p>
                 </div>
               </div>
