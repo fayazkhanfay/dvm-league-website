@@ -19,7 +19,7 @@ interface CaseSubmissionFormProps {
   userProfile: any
 }
 
-export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
+export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -47,7 +47,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
   const [files, setFiles] = useState<File[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const [error, setError] = useState<string | null>(null)
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -73,7 +72,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
           }
         }
 
-        setError(null)
         return [...prevFiles, ...newFiles]
       })
     }
@@ -86,7 +84,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
-    setError(null)
 
     try {
       console.log("[v0] Starting case submission...")
@@ -182,7 +179,10 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
       router.push("/gp-dashboard")
     } catch (err) {
       console.error("[v0] Submission error:", err)
-      setError(err instanceof Error ? err.message : "Failed to submit case. Please try again.")
+      toast.error("Failed to submit case", {
+        description: err instanceof Error ? err.message : "Please try again.",
+        duration: 5000,
+      })
       setIsSubmitting(false)
     }
   }
@@ -191,12 +191,6 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
     <AppLayout activePage="submitCase" userName={userProfile.full_name} userRole="gp">
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Submit New Case</h1>
-
-        {error && (
-          <div className="mb-6 rounded-md border-2 border-red-500 bg-red-50 p-4">
-            <p className="text-sm font-medium text-red-800">{error}</p>
-          </div>
-        )}
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Patient Information */}
@@ -497,8 +491,9 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
                   </div>
                 </div>
                 <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) and other non-viewable files into a single
-                  file. Supported: Images, PDF, Audio (MP3/M4A/WAV), Video. Max 25 files per submission.
+                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) and other
+                  non-viewable files into a single file. Supported: Images, PDF, Audio (MP3/M4A/WAV), Video. Max 25
+                  files per submission.
                 </p>
                 <div className="mt-2">
                   <label
@@ -559,3 +554,5 @@ export default function CaseSubmissionForm({ userProfile }: CaseSubmissionFormPr
     </AppLayout>
   )
 }
+
+export default CaseSubmissionForm
