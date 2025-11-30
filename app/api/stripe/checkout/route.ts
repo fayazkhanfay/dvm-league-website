@@ -87,32 +87,31 @@ export async function GET(request: NextRequest) {
     // Create Checkout Session
     const origin = request.nextUrl.origin
     const session = await stripe.checkout.sessions.create({
-      customer: customerId, // Explicitly pass the ID we found or created
+      customer: customerId,
       line_items: [
         {
           price_data: {
             currency: "usd",
             product_data: {
               name: "Complete Case Consult",
-              description: receiptDescription, // Patient name and specialty appear on invoice PDF
+              description: receiptDescription,
             },
-            unit_amount: 39500, // $395.00
+            unit_amount: 39500,
           },
           quantity: 1,
         },
       ],
       mode: "payment",
       payment_intent_data: {
-        setup_future_usage: "on_session", // This saves the card to the Customer ID
-        description: receiptDescription, // Appears in Stripe Dashboard transaction list
-      },
-      metadata: {
-        case_id: caseId,
-        patient_name: caseData.patient_name,
-        specialty: caseData.specialty_requested,
-        gp_id: user.id,
-        gp_name: profile?.full_name || "Unknown GP",
-        clinic_name: profile?.clinic_name || "N/A",
+        setup_future_usage: "on_session",
+        description: receiptDescription,
+        metadata: {
+          case_id: caseId,
+          patient_name: caseData.patient_name,
+          specialty: caseData.specialty_requested,
+          gp_name: profile?.full_name || "Unknown GP",
+          clinic_name: profile?.clinic_name || "N/A",
+        },
       },
       success_url: `${origin}/submit-success?case_id=${caseId}`,
       cancel_url: `${origin}/gp-dashboard`,
