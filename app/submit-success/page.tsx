@@ -29,14 +29,30 @@ export default async function SubmitSuccessPage({
   const params = await searchParams
   const caseId = params.case_id
 
+  console.log("[v0] Submit Success - Case ID from URL:", caseId)
+
   let caseData = null
   if (caseId) {
-    const { data } = await supabase.from("cases").select("*").eq("id", caseId).single()
-    caseData = data
+    const { data, error } = await supabase
+      .from("cases")
+      .select("id, patient_name, created_at")
+      .eq("id", caseId)
+      .single()
+
+    if (error) {
+      console.error("[v0] Error fetching case data:", error)
+    } else {
+      console.log("[v0] Case data fetched successfully:", data)
+      caseData = data
+    }
+  } else {
+    console.log("[v0] No case_id provided in URL")
   }
 
   const patientName = caseData?.patient_name || "Unknown Patient"
   const caseIdDisplay = caseId || "N/A"
+
+  console.log("[v0] Displaying - Patient:", patientName, "Case ID:", caseIdDisplay)
 
   return (
     <AppLayout activePage="submitCase" userRole="gp" userName={profile.full_name}>
