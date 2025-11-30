@@ -29,10 +29,17 @@ export async function GET(request: NextRequest) {
 
     console.log("[v0] Processing checkout for case:", caseId, "user:", user.id)
 
+    const { data: caseData, error: caseError } = await supabase.from("cases").select("*").eq("id", caseId).single()
+
+    if (caseError || !caseData) {
+      console.error("[v0] Case not found:", caseError)
+      return NextResponse.redirect(new URL("/gp-dashboard?error=case_not_found", request.url))
+    }
+
     // Get Customer ID: Query profiles table
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, stripe_customer_id")
+      .select("full_name, clinic_name, stripe_customer_id")
       .eq("id", user.id)
       .single()
 
@@ -75,6 +82,8 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Using existing Stripe customer:", customerId)
     }
 
+    const receiptDescription = `Patient: ${caseData.patient_name} - ${caseData.specialty_requested}`
+
     // Create Checkout Session
     const origin = request.nextUrl.origin
     const session = await stripe.checkout.sessions.create({
@@ -85,6 +94,7 @@ export async function GET(request: NextRequest) {
             currency: "usd",
             product_data: {
               name: "Complete Case Consult",
+              description: receiptDescription, // Patient name and specialty appear on invoice PDF
             },
             unit_amount: 39500, // $395.00
           },
@@ -94,10 +104,15 @@ export async function GET(request: NextRequest) {
       mode: "payment",
       payment_intent_data: {
         setup_future_usage: "on_session", // This saves the card to the Customer ID
+        description: receiptDescription, // Appears in Stripe Dashboard transaction list
       },
       metadata: {
         case_id: caseId,
+        patient_name: caseData.patient_name,
+        specialty: caseData.specialty_requested,
         gp_id: user.id,
+        gp_name: profile?.full_name || "Unknown GP",
+        clinic_name: profile?.clinic_name || "N/A",
       },
       success_url: `${origin}/submit-success?case_id=${caseId}`,
       cancel_url: `${origin}/gp-dashboard`,
