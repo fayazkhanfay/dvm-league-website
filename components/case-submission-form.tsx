@@ -88,6 +88,18 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
     try {
       console.log("[v0] Starting case submission...")
 
+      const { count: previousCaseCount, error: countError } = await supabase
+        .from("cases")
+        .select("*", { count: "exact", head: true })
+        .eq("gp_id", userProfile.id)
+
+      if (countError) {
+        console.error("[v0] Error checking previous cases:", countError)
+        throw new Error(`Failed to check case history: ${countError.message}`)
+      }
+
+      console.log("[v0] Previous case count:", previousCaseCount)
+
       const patientSignalment = {
         species,
         breed,
@@ -175,8 +187,17 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
         console.log("[v0] All files uploaded successfully:", uploadedCount)
       }
 
-      console.log("[v0] Case submission complete, redirecting...")
-      router.push("/gp-dashboard")
+      console.log("[v0] Case submission complete, routing to payment or success...")
+
+      if (previousCaseCount === 0) {
+        // First case - Founder's Circle freebie
+        console.log("[v0] First case detected - redirecting to success page (free case)")
+        router.push("/submit-success")
+      } else {
+        // Subsequent cases - requires payment
+        console.log("[v0] Subsequent case detected - redirecting to Stripe checkout")
+        router.push(`/api/stripe/checkout?case_id=${newCase.id}`)
+      }
     } catch (err) {
       console.error("[v0] Submission error:", err)
       toast.error("Failed to submit case", {
