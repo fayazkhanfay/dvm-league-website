@@ -35,11 +35,25 @@ export default async function GPDashboardPage() {
     .eq("gp_id", user.id)
     .order("created_at", { ascending: false })
 
-  const activeCases = allCases?.filter((c) => c.status !== "completed") || []
+  const draftCases = allCases?.filter((c) => c.status === "draft") || []
+  const activeCases =
+    allCases?.filter(
+      (c) =>
+        c.status === "pending_assignment" ||
+        c.status === "awaiting_phase1" ||
+        c.status === "awaiting_diagnostics" ||
+        c.status === "awaiting_phase2",
+    ) || []
   const completedCases = allCases?.filter((c) => c.status === "completed") || []
 
   const getStatusBadge = (status: string) => {
     switch (status) {
+      case "draft":
+        return (
+          <Badge variant="secondary" className="bg-gray-100 text-gray-800 hover:bg-gray-100">
+            Draft
+          </Badge>
+        )
       case "pending_assignment":
         return (
           <Badge variant="secondary" className="bg-brand-stone text-brand-navy">
@@ -76,6 +90,19 @@ export default async function GPDashboardPage() {
   }
 
   const getActionButton = (caseItem: any) => {
+    if (caseItem.status === "draft") {
+      return (
+        <Button
+          variant="default"
+          size="sm"
+          className="bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white"
+          asChild
+        >
+          <Link href={`/submit-case?id=${caseItem.id}`}>Resume Case</Link>
+        </Button>
+      )
+    }
+
     switch (caseItem.status) {
       case "pending_assignment":
         return (
@@ -109,6 +136,7 @@ export default async function GPDashboardPage() {
 
   const formatStatus = (status: string) => {
     const statusMap: Record<string, string> = {
+      draft: "Draft",
       pending_assignment: "Pending Assignment",
       awaiting_phase1: "Phase 1 Plan Ready",
       awaiting_diagnostics: "Awaiting Diagnostics",
@@ -132,10 +160,47 @@ export default async function GPDashboardPage() {
         </div>
 
         <Tabs defaultValue="active" className="w-full">
-          <TabsList className="mb-6 grid w-full max-w-md grid-cols-2">
+          <TabsList className="mb-6 grid w-full max-w-2xl grid-cols-3">
+            <TabsTrigger value="drafts">Drafts</TabsTrigger>
             <TabsTrigger value="active">Active Cases</TabsTrigger>
             <TabsTrigger value="completed">Completed Cases</TabsTrigger>
           </TabsList>
+
+          <TabsContent value="drafts">
+            <div className="overflow-x-auto rounded-lg bg-white shadow-lg">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="font-semibold text-brand-navy">Patient Name</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Case ID</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Last Updated</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Status</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Action</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {draftCases.map((caseItem) => (
+                    <TableRow key={caseItem.id}>
+                      <TableCell className="font-medium">{caseItem.patient_name || "Untitled"}</TableCell>
+                      <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
+                      <TableCell>{caseItem.specialty_requested || "Not specified"}</TableCell>
+                      <TableCell>{new Date(caseItem.updated_at || caseItem.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
+                      <TableCell>{getActionButton(caseItem)}</TableCell>
+                    </TableRow>
+                  ))}
+                  {draftCases.length === 0 && (
+                    <TableRow>
+                      <TableCell colSpan={6} className="text-center text-brand-navy/60">
+                        No draft cases
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+          </TabsContent>
 
           <TabsContent value="active">
             <div className="overflow-x-auto rounded-lg bg-white shadow-lg">

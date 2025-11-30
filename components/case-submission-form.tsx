@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { AppLayout } from "@/components/app-layout"
@@ -12,14 +12,15 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Upload, Loader2, AlertTriangle, X } from "lucide-react"
+import { Upload, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
 
 interface CaseSubmissionFormProps {
   userProfile: any
+  initialData?: any
 }
 
-export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
+export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionFormProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -45,16 +46,40 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
   const [specialtyRequested, setSpecialtyRequested] = useState("")
   const [preferredSpecialist, setPreferredSpecialist] = useState("")
   const [files, setFiles] = useState<File[]>([])
+  const [existingFiles, setExistingFiles] = useState<any[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
+
+  useEffect(() => {
+    if (initialData) {
+      setPatientName(initialData.patient_name || "")
+      setSpecies(initialData.patient_signalment?.species || "")
+      setBreed(initialData.patient_signalment?.breed || "")
+      setAge(initialData.patient_signalment?.age || "")
+      setSexStatus(initialData.patient_signalment?.sex_status || "")
+      setWeightKg(initialData.patient_signalment?.weight_kg?.toString() || "")
+      setPresentingComplaint(initialData.presenting_complaint || "")
+      setBriefHistory(initialData.brief_history || "")
+      setPeFindings(initialData.pe_findings || "")
+      setMedications(initialData.medications || "")
+      setDiagnosticsPerformed(initialData.diagnostics_performed || "")
+      setTreatmentsAttempted(initialData.treatments_attempted || "")
+      setGpQuestions(initialData.gp_questions || "")
+      setFinancialConstraints(initialData.financial_constraints || "")
+      setSpecialtyRequested(initialData.specialty_requested || "")
+      setPreferredSpecialist(initialData.preferred_specialist || "")
+      setExistingFiles(initialData.case_files || [])
+    }
+  }, [initialData])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
 
       setFiles((prevFiles) => {
-        // Check total file count limit
-        if (prevFiles.length + newFiles.length > 25) {
+        const totalFiles = prevFiles.length + existingFiles.length + newFiles.length
+        if (totalFiles > 25) {
           toast.warning("Limit reached: Max 25 files per submission.", {
             description: "Please zip larger sets of files.",
           })
@@ -81,6 +106,112 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
     setFiles(files.filter((_, i) => i !== index))
   }
 
+  const removeExistingFile = async (fileId: string) => {
+    try {
+      const { error } = await supabase.from("case_files").delete().eq("id", fileId)
+
+      if (error) throw error
+
+      setExistingFiles(existingFiles.filter((f) => f.id !== fileId))
+      toast.success("File removed successfully")
+    } catch (err) {
+      console.error("[v0] Error removing file:", err)
+      toast.error("Failed to remove file")
+    }
+  }
+
+  const handleSaveDraft = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setIsSavingDraft(true)
+
+    try {
+      console.log("[v0] Saving draft...")
+
+      const patientSignalment = {
+        species,
+        breed,
+        age,
+        sex_status: sexStatus,
+        weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
+      }
+
+      const caseData = {
+        gp_id: userProfile.id,
+        patient_name: patientName,
+        patient_signalment: patientSignalment,
+        presenting_complaint: presentingComplaint,
+        brief_history: briefHistory,
+        pe_findings: peFindings,
+        medications,
+        diagnostics_performed: diagnosticsPerformed || null,
+        treatments_attempted: treatmentsAttempted || null,
+        gp_questions: gpQuestions,
+        specialty_requested: specialtyRequested,
+        preferred_specialist: preferredSpecialist || null,
+        financial_constraints: financialConstraints || null,
+        status: "draft",
+      }
+
+      let caseId = initialData?.id
+
+      if (initialData?.id) {
+        // Update existing draft
+        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", initialData.id)
+
+        if (updateError) throw updateError
+      } else {
+        // Create new draft
+        const { data: newCase, error: insertError } = await supabase.from("cases").insert(caseData).select().single()
+
+        if (insertError) throw insertError
+        caseId = newCase.id
+      }
+
+      // Upload new files if any
+      if (files.length > 0) {
+        console.log("[v0] Uploading", files.length, "files to draft...")
+
+        for (const file of files) {
+          const fileExt = file.name.split(".").pop()
+          const fileName = `${caseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+
+          const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          })
+
+          if (uploadError) {
+            console.error("[v0] Error uploading file:", file.name, uploadError)
+            continue
+          }
+
+          await supabase.from("case_files").insert({
+            case_id: caseId,
+            uploader_id: userProfile.id,
+            file_name: file.name,
+            file_type: file.type,
+            storage_object_path: fileName,
+            upload_phase: "initial_submission",
+          })
+        }
+      }
+
+      toast.success("Draft saved successfully", {
+        description: "You can resume this case anytime from your dashboard.",
+      })
+
+      router.push("/gp-dashboard")
+    } catch (err) {
+      console.error("[v0] Draft save error:", err)
+      toast.error("Failed to save draft", {
+        description: err instanceof Error ? err.message : "Please try again.",
+        duration: 8000,
+      })
+    } finally {
+      setIsSavingDraft(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
@@ -92,6 +223,7 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
         .from("cases")
         .select("*", { count: "exact", head: true })
         .eq("gp_id", userProfile.id)
+        .neq("status", "draft") // Exclude draft cases from count
 
       if (countError) {
         console.error("[v0] Error checking previous cases:", countError)
@@ -108,34 +240,41 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
         weight_kg: Number.parseFloat(weightKg),
       }
 
-      const { data: newCase, error: caseError } = await supabase
-        .from("cases")
-        .insert({
-          gp_id: userProfile.id,
-          patient_name: patientName,
-          patient_signalment: patientSignalment,
-          presenting_complaint: presentingComplaint,
-          brief_history: briefHistory,
-          pe_findings: peFindings,
-          medications,
-          diagnostics_performed: diagnosticsPerformed || null,
-          treatments_attempted: treatmentsAttempted || null,
-          gp_questions: gpQuestions,
-          specialty_requested: specialtyRequested,
-          preferred_specialist: preferredSpecialist || null,
-          financial_constraints: financialConstraints || null,
-          status: "pending_assignment",
-        })
-        .select()
-        .single()
-
-      if (caseError) {
-        console.error("[v0] Error creating case:", caseError)
-        throw new Error(`Failed to create case: ${caseError.message}`)
+      const caseData = {
+        gp_id: userProfile.id,
+        patient_name: patientName,
+        patient_signalment: patientSignalment,
+        presenting_complaint: presentingComplaint,
+        brief_history: briefHistory,
+        pe_findings: peFindings,
+        medications,
+        diagnostics_performed: diagnosticsPerformed || null,
+        treatments_attempted: treatmentsAttempted || null,
+        gp_questions: gpQuestions,
+        specialty_requested: specialtyRequested,
+        preferred_specialist: preferredSpecialist || null,
+        financial_constraints: financialConstraints || null,
+        status: "awaiting_payment", // Set to awaiting_payment initially
       }
 
-      console.log("[v0] Case created successfully:", newCase.id)
+      let caseId = initialData?.id
 
+      if (initialData?.id) {
+        // Update existing case (from draft)
+        const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", initialData.id)
+
+        if (updateError) throw updateError
+        console.log("[v0] Case updated successfully:", initialData.id)
+      } else {
+        // Create new case
+        const { data: newCase, error: caseError } = await supabase.from("cases").insert(caseData).select().single()
+
+        if (caseError) throw caseError
+        caseId = newCase.id
+        console.log("[v0] Case created successfully:", caseId)
+      }
+
+      // Upload new files if any
       if (files.length > 0) {
         console.log("[v0] Uploading", files.length, "files...")
 
@@ -144,7 +283,7 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
 
         for (const file of files) {
           const fileExt = file.name.split(".").pop()
-          const fileName = `${newCase.id}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+          const fileName = `${caseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
           console.log("[v0] Uploading file:", file.name, "to path:", fileName)
           const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
@@ -160,7 +299,7 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
 
           console.log("[v0] File uploaded, creating database record...")
           const { error: fileRecordError } = await supabase.from("case_files").insert({
-            case_id: newCase.id,
+            case_id: caseId,
             uploader_id: userProfile.id,
             file_name: file.name,
             file_type: file.type,
@@ -191,12 +330,15 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
 
       if (previousCaseCount === 0) {
         // First case - Founder's Circle freebie
+        // Update status to pending_assignment
+        await supabase.from("cases").update({ status: "pending_assignment" }).eq("id", caseId)
+
         console.log("[v0] First case detected - redirecting to success page (free case)")
-        router.push(`/submit-success?case_id=${newCase.id}`)
+        router.push(`/submit-success?case_id=${caseId}`)
       } else {
         // Subsequent cases - requires payment
         console.log("[v0] Subsequent case detected - redirecting to Stripe checkout")
-        router.push(`/api/stripe/checkout?case_id=${newCase.id}`)
+        router.push(`/api/stripe/checkout?case_id=${caseId}`)
       }
     } catch (err) {
       console.error("[v0] Submission error:", err)
@@ -211,7 +353,9 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
   return (
     <AppLayout activePage="submitCase" userName={userProfile.full_name} userRole="gp">
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
-        <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Submit New Case</h1>
+        <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">
+          {initialData ? "Resume Case Submission" : "Submit New Case"}
+        </h1>
 
         <form onSubmit={handleSubmit} className="space-y-8">
           {/* Patient Information */}
@@ -476,78 +620,81 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
                   id="preferred-specialist"
                   value={preferredSpecialist}
                   onChange={(e) => setPreferredSpecialist(e.target.value)}
-                  placeholder="Enter name if you have a specific doctor in mind"
+                  placeholder="Leave blank for automatic assignment"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
-                <Label htmlFor="files" className="text-sm font-medium text-brand-navy">
+                <Label htmlFor="file-upload" className="text-sm font-medium text-brand-navy">
                   Upload Clinical Data Only
                 </Label>
-                <div className="rounded-md bg-amber-50 p-4 border border-amber-200 mb-6">
-                  <div className="flex items-start gap-3">
-                    <AlertTriangle className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <h4 className="text-sm font-bold text-amber-800">Strict Upload Exclusions</h4>
-                      <p className="text-xs text-amber-700 mt-1">
-                        To maintain Client Confidentiality and efficient triage, <strong>do not upload</strong>:
-                      </p>
-                      <ul className="list-disc list-outside ml-4 mt-2 text-xs text-amber-800 space-y-1">
-                        <li>
-                          <strong>Financial Documents:</strong> No invoices, estimates, receipts, or billing statements.
-                        </li>
-                        <li>
-                          <strong>Client Financial Data:</strong> No payment histories or insurance claims.
-                        </li>
-                        <li>
-                          <strong>Non-Medical Communications:</strong> No email chains regarding scheduling or admin.
-                        </li>
-                        <li>
-                          <strong>Excessive Identifying Data:</strong> Focus strictly on the patient's signalment and
-                          medical diagnostics.
-                        </li>
-                      </ul>
-                    </div>
-                  </div>
-                </div>
-                <p className="mt-1 text-xs text-brand-navy/70">
-                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) and other
-                  non-viewable files into a single file. Supported: Images, PDF, Audio (MP3/M4A/WAV), Video. Max 25
-                  files per submission.
+                <p className="mb-3 mt-1 text-sm text-brand-navy/70">
+                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
+                  file. Max 25 files per submission.
                 </p>
-                <div className="mt-2">
-                  <label
-                    htmlFor="files"
-                    className="flex cursor-pointer items-center justify-center gap-2 rounded-md border-2 border-dashed border-brand-stone bg-brand-offwhite px-6 py-8 transition-all hover:border-brand-gold hover:bg-brand-gold/5"
-                  >
-                    <Upload className="h-6 w-6 text-brand-navy/60" />
-                    <span className="text-sm font-medium text-brand-navy/80">
-                      {files.length > 0 ? `${files.length} file(s) selected` : "Click to upload files"}
-                    </span>
-                  </label>
-                  <input
-                    id="files"
-                    type="file"
-                    multiple
-                    onChange={handleFileChange}
-                    className="hidden"
-                    accept="image/*,application/pdf,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,.mp3,.wav,.m4a"
-                  />
+
+                <div className="flex items-center gap-4">
+                  <Button type="button" variant="outline" className="relative bg-transparent" asChild>
+                    <label htmlFor="file-upload" className="cursor-pointer">
+                      <Upload className="mr-2 h-4 w-4" />
+                      Choose Files
+                      <input
+                        id="file-upload"
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,audio/*"
+                        onChange={handleFileChange}
+                        className="sr-only"
+                      />
+                    </label>
+                  </Button>
+                  <span className="text-sm text-brand-navy/70">
+                    {files.length + existingFiles.length} file(s) selected
+                  </span>
                 </div>
 
-                {files.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {files.map((file, index) => (
-                      <div key={index} className="flex items-center justify-between rounded bg-brand-offwhite p-2">
-                        <p className="text-xs text-brand-navy/70">{file.name}</p>
-                        <button
+                {existingFiles.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-brand-navy">Previously uploaded files:</p>
+                    {existingFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
+                      >
+                        <span className="text-sm text-brand-navy">{file.file_name}</span>
+                        <Button
                           type="button"
-                          onClick={() => removeFile(index)}
-                          className="text-red-500 hover:text-red-700"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeExistingFile(file.id)}
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
                         >
                           <X className="h-4 w-4" />
-                        </button>
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
+                {files.length > 0 && (
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-brand-navy">New files to upload:</p>
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
+                      >
+                        <span className="text-sm text-brand-navy">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
                       </div>
                     ))}
                   </div>
@@ -556,20 +703,39 @@ export function CaseSubmissionForm({ userProfile }: CaseSubmissionFormProps) {
             </CardContent>
           </Card>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:scale-100"
-          >
-            {isSubmitting ? (
-              <>
-                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                Submitting Case...
-              </>
-            ) : (
-              "Submit Case"
-            )}
-          </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting || isSavingDraft}
+              className="flex-1 border-2 border-brand-stone px-6 py-3 font-semibold text-brand-navy transition-all hover:bg-brand-stone bg-transparent"
+            >
+              {isSavingDraft ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving Draft...
+                </>
+              ) : (
+                "Save Draft"
+              )}
+            </Button>
+
+            <Button
+              type="submit"
+              disabled={isSubmitting || isSavingDraft}
+              className="flex-1 transform rounded-md bg-brand-gold px-6 py-3 font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting Case...
+                </>
+              ) : (
+                "Submit Case"
+              )}
+            </Button>
+          </div>
         </form>
       </main>
     </AppLayout>
