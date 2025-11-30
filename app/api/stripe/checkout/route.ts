@@ -16,5 +16,9 @@ export async function GET(request: NextRequest) {
   // 4. Handle success/cancel callbacks
 
   // For now, redirect directly to success page for testing
-  return NextResponse.redirect(new URL("/submit-success", request.url))
+  const successUrl = new URL("/submit-success", request.url)
+  if (caseId) {
+    successUrl.searchParams.set("case_id", caseId)
+  }
+  return NextResponse.redirect(successUrl)
 }
