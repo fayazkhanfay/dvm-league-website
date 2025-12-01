@@ -328,22 +328,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    // Manual validation for required fields
-    const missingFields = []
-    if (!patientName) missingFields.push("Patient Name")
-    if (!species) missingFields.push("Species")
-    if (!breed) missingFields.push("Breed")
-    if (!age) missingFields.push("Age")
-    if (!sexStatus) missingFields.push("Sex/Status")
-    if (!weightKg) missingFields.push("Weight")
-    if (!presentingComplaint) missingFields.push("Presenting Complaint")
-    if (!specialtyRequested) missingFields.push("Specialty Requested")
-
-    if (missingFields.length > 0) {
-      toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
-      return
-    }
-
     // Show confirmation modal
     setShowConfirmModal(true)
   }
@@ -364,23 +348,22 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             <CardContent className="space-y-6 p-6">
               <div>
                 <Label htmlFor="patient-name" className="text-sm font-medium text-brand-navy">
-                  Patient Name *
+                  Patient Name
                 </Label>
                 <Input
                   id="patient-name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
-                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-2">
-                  <Label htmlFor="species" className="required-field">
+                  <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
                     Species
                   </Label>
-                  <Select value={species} onValueChange={setSpecies} required>
+                  <Select value={species} onValueChange={setSpecies}>
                     <SelectTrigger
                       id="species"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -396,13 +379,12 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
                 <div className="space-y-2">
                   <Label htmlFor="breed" className="text-sm font-medium text-brand-navy">
-                    Breed *
+                    Breed
                   </Label>
                   <Input
                     id="breed"
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
@@ -411,23 +393,21 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label htmlFor="age" className="text-sm font-medium text-brand-navy">
-                    Age *
+                    Age
                   </Label>
                   <Input
                     id="age"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    placeholder="e.g., 5 years"
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sex-status" className="required-field">
+                  <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
                     Sex/Status
                   </Label>
-                  <Select value={sexStatus} onValueChange={setSexStatus} required>
+                  <Select value={sexStatus} onValueChange={setSexStatus}>
                     <SelectTrigger
                       id="sex-status"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -445,7 +425,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
                 <div>
                   <Label htmlFor="weight" className="text-sm font-medium text-brand-navy">
-                    Weight (kg) *
+                    Weight (kg)
                   </Label>
                   <Input
                     id="weight"
@@ -453,7 +433,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
@@ -469,13 +448,12 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             <CardContent className="space-y-6 p-6">
               <div>
                 <Label htmlFor="presenting-complaint" className="text-sm font-medium text-brand-navy">
-                  Presenting Complaint *
+                  Presenting Complaint
                 </Label>
                 <Textarea
                   id="presenting-complaint"
                   value={presentingComplaint}
                   onChange={(e) => setPresentingComplaint(e.target.value)}
-                  required
                   rows={4}
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
@@ -529,7 +507,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   value={diagnosticsPerformed}
                   onChange={(e) => setDiagnosticsPerformed(e.target.value)}
                   rows={3}
-                  placeholder="e.g., CBC, Chemistry, Urinalysis, Radiographs, etc."
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -543,7 +520,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   value={treatmentsAttempted}
                   onChange={(e) => setTreatmentsAttempted(e.target.value)}
                   rows={3}
-                  placeholder="e.g., Antibiotics, Fluids, Pain management, etc."
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -557,7 +533,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   value={gpQuestions}
                   onChange={(e) => setGpQuestions(e.target.value)}
                   rows={3}
-                  placeholder="What do you need help with?"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -571,7 +546,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   value={financialConstraints}
                   onChange={(e) => setFinancialConstraints(e.target.value)}
                   rows={2}
-                  placeholder="Any budgetary considerations we should know about?"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -585,10 +559,10 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             </CardHeader>
             <CardContent className="space-y-6 p-6">
               <div className="space-y-2">
-                <Label htmlFor="specialty" className="required-field">
+                <Label htmlFor="specialty" className="text-sm font-medium text-brand-navy">
                   Specialty Requested
                 </Label>
-                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
+                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested}>
                   <SelectTrigger
                     id="specialty"
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
