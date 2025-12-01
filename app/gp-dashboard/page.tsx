@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import Link from "next/link"
+import { Trash2 } from "lucide-react"
 
 export default async function GPDashboardPage() {
   const supabase = await createClient()
@@ -161,7 +162,12 @@ export default async function GPDashboardPage() {
 
         <Tabs defaultValue="active" className="w-full">
           <TabsList className="mb-6 grid w-full max-w-2xl grid-cols-3">
-            <TabsTrigger value="drafts">Drafts</TabsTrigger>
+            <TabsTrigger value="drafts" className="relative">
+              Drafts
+              {draftCases.length > 0 && (
+                <Badge className="ml-2 bg-brand-gold text-brand-navy hover:bg-brand-gold">{draftCases.length}</Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value="active">Active Cases</TabsTrigger>
             <TabsTrigger value="completed">Completed Cases</TabsTrigger>
           </TabsList>
@@ -176,7 +182,7 @@ export default async function GPDashboardPage() {
                     <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
                     <TableHead className="font-semibold text-brand-navy">Last Updated</TableHead>
                     <TableHead className="font-semibold text-brand-navy">Status</TableHead>
-                    <TableHead className="font-semibold text-brand-navy">Action</TableHead>
+                    <TableHead className="font-semibold text-brand-navy">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -187,7 +193,36 @@ export default async function GPDashboardPage() {
                       <TableCell>{caseItem.specialty_requested || "Not specified"}</TableCell>
                       <TableCell>{new Date(caseItem.updated_at || caseItem.created_at).toLocaleDateString()}</TableCell>
                       <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                      <TableCell>{getActionButton(caseItem)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="default"
+                            size="sm"
+                            className="bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white"
+                            asChild
+                          >
+                            <Link href={`/submit-case?id=${caseItem.id}`}>Resume Case</Link>
+                          </Button>
+                          <form
+                            action={async () => {
+                              "use server"
+                              const supabase = await createClient()
+                              await supabase.from("cases").delete().eq("id", caseItem.id)
+                              redirect("/gp-dashboard")
+                            }}
+                          >
+                            <Button
+                              type="submit"
+                              variant="ghost"
+                              size="sm"
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                              title="Delete draft"
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </form>
+                        </div>
+                      </TableCell>
                     </TableRow>
                   ))}
                   {draftCases.length === 0 && (
