@@ -33,69 +33,34 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const supabase = createClient()
 
   // Patient Signalment
-  const [patientName, setPatientName] = useState("")
-  const [species, setSpecies] = useState("")
-  const [breed, setBreed] = useState("")
-  const [age, setAge] = useState("")
-  const [sexStatus, setSexStatus] = useState("")
-  const [weightKg, setWeightKg] = useState("")
+  const [patientName, setPatientName] = useState(initialData?.patient_name || "")
+  const [species, setSpecies] = useState(initialData?.patient_signalment?.species || "")
+  const [breed, setBreed] = useState(initialData?.patient_signalment?.breed || "")
+  const [age, setAge] = useState(initialData?.patient_signalment?.age || "")
+  const [sexStatus, setSexStatus] = useState(initialData?.patient_signalment?.sex_status || "")
+  const [weightKg, setWeightKg] = useState(initialData?.patient_signalment?.weight_kg?.toString() || "")
 
   // Case Details
-  const [presentingComplaint, setPresentingComplaint] = useState("")
-  const [briefHistory, setBriefHistory] = useState("")
-  const [peFindings, setPeFindings] = useState("")
-  const [medications, setMedications] = useState("")
-  const [diagnosticsPerformed, setDiagnosticsPerformed] = useState("")
-  const [treatmentsAttempted, setTreatmentsAttempted] = useState("")
-  const [gpQuestions, setGpQuestions] = useState("")
-  const [financialConstraints, setFinancialConstraints] = useState("")
+  const [presentingComplaint, setPresentingComplaint] = useState(initialData?.presenting_complaint || "")
+  const [briefHistory, setBriefHistory] = useState(initialData?.brief_history || "")
+  const [peFindings, setPeFindings] = useState(initialData?.pe_findings || "")
+  const [medications, setMedications] = useState(initialData?.medications || "")
+  const [diagnosticsPerformed, setDiagnosticsPerformed] = useState(initialData?.diagnostics_performed || "")
+  const [treatmentsAttempted, setTreatmentsAttempted] = useState(initialData?.treatments_attempted || "")
+  const [gpQuestions, setGpQuestions] = useState(initialData?.gp_questions || "")
+  const [financialConstraints, setFinancialConstraints] = useState(initialData?.financial_constraints || "")
 
   // Specialty & Files
-  const [specialtyRequested, setSpecialtyRequested] = useState("")
-  const [preferredSpecialist, setPreferredSpecialist] = useState("")
+  const [specialtyRequested, setSpecialtyRequested] = useState(initialData?.specialty_requested || "")
+  const [preferredSpecialist, setPreferredSpecialist] = useState(initialData?.preferred_specialist || "")
   const [files, setFiles] = useState<File[]>([])
-  const [existingFiles, setExistingFiles] = useState<any[]>([])
+  const [existingFiles, setExistingFiles] = useState<any[]>(initialData?.case_files || [])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [caseId, setCaseId] = useState<string | null>(initialData?.id || null)
   const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [previousCaseCount, setPreviousCaseCount] = useState<number | null>(null)
-
-  useEffect(() => {
-    if (initialData) {
-      console.log("[v0] Loading initial data:", initialData)
-      console.log("[v0] Patient signalment:", initialData.patient_signalment)
-      console.log("[v0] Specialty requested:", initialData.specialty_requested)
-
-      setCaseId(initialData.id)
-      setPatientName(initialData.patient_name || "")
-      setSpecies(initialData.patient_signalment?.species || "")
-      setBreed(initialData.patient_signalment?.breed || "")
-      setAge(initialData.patient_signalment?.age || "")
-      setSexStatus(initialData.patient_signalment?.sex_status || "")
-      setWeightKg(initialData.patient_signalment?.weight_kg?.toString() || "")
-      setPresentingComplaint(initialData.presenting_complaint || "")
-      setBriefHistory(initialData.brief_history || "")
-      setPeFindings(initialData.pe_findings || "")
-      setMedications(initialData.medications || "")
-      setDiagnosticsPerformed(initialData.diagnostics_performed || "")
-      setTreatmentsAttempted(initialData.treatments_attempted || "")
-      setGpQuestions(initialData.gp_questions || "")
-      setFinancialConstraints(initialData.financial_constraints || "")
-      setSpecialtyRequested(initialData.specialty_requested || "")
-      setPreferredSpecialist(initialData.preferred_specialist || "")
-      setExistingFiles(initialData.case_files || [])
-
-      setTimeout(() => {
-        console.log("[v0] State after initialization:", {
-          species: initialData.patient_signalment?.species,
-          sexStatus: initialData.patient_signalment?.sex_status,
-          specialtyRequested: initialData.specialty_requested,
-        })
-      }, 100)
-    }
-  }, [initialData])
 
   useEffect(() => {
     const fetchCaseCount = async () => {
@@ -168,13 +133,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
     setIsSavingDraft(true)
 
     try {
-      console.log("[v0] Saving draft...")
-      console.log("[v0] Dropdown values being saved:", {
-        species,
-        sexStatus,
-        specialtyRequested,
-      })
-
       const patientSignalment = {
         species,
         breed,
@@ -200,30 +158,23 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         status: "draft",
       }
 
-      console.log("[v0] Complete case data being saved:", caseData)
-
       let activeCaseId = caseId
 
       if (activeCaseId) {
-        console.log("[v0] Updating existing draft:", activeCaseId)
         const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", activeCaseId)
 
         if (updateError) throw updateError
       } else {
-        console.log("[v0] Creating new draft case")
         const { data: newCase, error: insertError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (insertError) throw insertError
 
         activeCaseId = newCase.id
         setCaseId(activeCaseId)
-        console.log("[v0] Draft created with ID:", activeCaseId)
       }
 
       // Upload new files if any
       if (files.length > 0) {
-        console.log("[v0] Uploading", files.length, "files to draft...")
-
         for (const file of files) {
           const fileExt = file.name.split(".").pop()
           const fileName = `${activeCaseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
@@ -272,8 +223,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
     setShowConfirmModal(false)
 
     try {
-      console.log("[v0] Starting case submission...")
-
       const patientSignalment = {
         species,
         breed,
@@ -302,25 +251,19 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       let activeCaseId = caseId
 
       if (activeCaseId) {
-        console.log("[v0] Updating existing case:", activeCaseId)
         const { error: updateError } = await supabase.from("cases").update(caseData).eq("id", activeCaseId)
 
         if (updateError) throw updateError
-        console.log("[v0] Case updated successfully:", activeCaseId)
       } else {
-        console.log("[v0] Creating new case")
         const { data: newCase, error: caseError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (caseError) throw caseError
         activeCaseId = newCase.id
         setCaseId(activeCaseId)
-        console.log("[v0] Case created successfully:", activeCaseId)
       }
 
       // Upload new files if any
       if (files.length > 0) {
-        console.log("[v0] Uploading", files.length, "files...")
-
         let uploadedCount = 0
         const uploadErrors: string[] = []
 
@@ -328,7 +271,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
           const fileExt = file.name.split(".").pop()
           const fileName = `${activeCaseId}/${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
 
-          console.log("[v0] Uploading file:", file.name, "to path:", fileName)
           const { error: uploadError } = await supabase.storage.from("case-bucket").upload(fileName, file, {
             cacheControl: "3600",
             upsert: false,
@@ -340,7 +282,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             continue
           }
 
-          console.log("[v0] File uploaded, creating database record...")
           const { error: fileRecordError } = await supabase.from("case_files").insert({
             case_id: activeCaseId,
             uploader_id: userProfile.id,
@@ -355,7 +296,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             uploadErrors.push(`${file.name} record: ${fileRecordError.message}`)
           } else {
             uploadedCount++
-            console.log("[v0] File record created successfully")
           }
         }
 
@@ -365,22 +305,14 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             `Case created but ${uploadErrors.length} file(s) failed to upload: ${uploadErrors.join(", ")}`,
           )
         }
-
-        console.log("[v0] All files uploaded successfully:", uploadedCount)
       }
-
-      console.log("[v0] Case submission complete, routing to payment or success...")
 
       if (previousCaseCount === 0) {
         // First case - Founder's Circle freebie
-        // Update status to pending_assignment
         await supabase.from("cases").update({ status: "pending_assignment" }).eq("id", activeCaseId)
-
-        console.log("[v0] First case detected - redirecting to success page (free case)")
         router.push(`/submit-success?case_id=${activeCaseId}`)
       } else {
         // Subsequent cases - requires payment
-        console.log("[v0] Subsequent case detected - redirecting to Stripe checkout")
         router.push(`/api/stripe/checkout?case_id=${activeCaseId}`)
       }
     } catch (err) {
@@ -448,7 +380,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   <Label htmlFor="species" className="required-field">
                     Species
                   </Label>
-                  {console.log("[v0] Species Select value:", species)}
                   <Select value={species} onValueChange={setSpecies} required>
                     <SelectTrigger
                       id="species"
@@ -496,7 +427,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   <Label htmlFor="sex-status" className="required-field">
                     Sex/Status
                   </Label>
-                  {console.log("[v0] Sex/Status Select value:", sexStatus)}
                   <Select value={sexStatus} onValueChange={setSexStatus} required>
                     <SelectTrigger
                       id="sex-status"
@@ -545,112 +475,103 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   id="presenting-complaint"
                   value={presentingComplaint}
                   onChange={(e) => setPresentingComplaint(e.target.value)}
-                  placeholder="Brief description of the main issue..."
-                  rows={3}
                   required
+                  rows={4}
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="brief-history" className="text-sm font-medium text-brand-navy">
-                  Brief History *
+                  Brief History
                 </Label>
                 <Textarea
                   id="brief-history"
                   value={briefHistory}
                   onChange={(e) => setBriefHistory(e.target.value)}
-                  placeholder="Relevant medical history..."
                   rows={4}
-                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="pe-findings" className="text-sm font-medium text-brand-navy">
-                  Physical Examination Findings *
+                  Physical Exam Findings
                 </Label>
                 <Textarea
                   id="pe-findings"
                   value={peFindings}
                   onChange={(e) => setPeFindings(e.target.value)}
-                  placeholder="Key physical examination findings..."
                   rows={4}
-                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="medications" className="text-sm font-medium text-brand-navy">
-                  Current Medications *
+                  Current Medications
                 </Label>
                 <Textarea
                   id="medications"
                   value={medications}
                   onChange={(e) => setMedications(e.target.value)}
-                  placeholder="List current medications and dosages..."
                   rows={3}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="financial-constraints" className="text-sm font-medium text-brand-navy">
-                  Client Financial Constraints (Optional)
-                </Label>
-                <Input
-                  id="financial-constraints"
-                  value={financialConstraints}
-                  onChange={(e) => setFinancialConstraints(e.target.value)}
-                  placeholder="e.g., Hard cap of $1,500, or 'No constraints'"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="diagnostics-performed" className="text-sm font-medium text-brand-navy">
-                  Diagnostics Performed *
+                  Diagnostics Already Performed
                 </Label>
                 <Textarea
                   id="diagnostics-performed"
                   value={diagnosticsPerformed}
                   onChange={(e) => setDiagnosticsPerformed(e.target.value)}
-                  placeholder="List any diagnostics already performed..."
                   rows={3}
-                  required
+                  placeholder="e.g., CBC, Chemistry, Urinalysis, Radiographs, etc."
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="treatments-attempted" className="text-sm font-medium text-brand-navy">
-                  Treatments Attempted *
+                  Treatments Already Attempted
                 </Label>
                 <Textarea
                   id="treatments-attempted"
                   value={treatmentsAttempted}
                   onChange={(e) => setTreatmentsAttempted(e.target.value)}
-                  placeholder="List any treatments already attempted..."
                   rows={3}
-                  required
+                  placeholder="e.g., Antibiotics, Fluids, Pain management, etc."
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="gp-questions" className="text-sm font-medium text-brand-navy">
-                  Your Questions for the Specialist *
+                  Your Specific Questions
                 </Label>
                 <Textarea
                   id="gp-questions"
                   value={gpQuestions}
                   onChange={(e) => setGpQuestions(e.target.value)}
-                  placeholder="What specific questions do you have for the specialist?"
-                  rows={4}
-                  required
+                  rows={3}
+                  placeholder="What do you need help with?"
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="financial-constraints" className="text-sm font-medium text-brand-navy">
+                  Financial Constraints
+                </Label>
+                <Textarea
+                  id="financial-constraints"
+                  value={financialConstraints}
+                  onChange={(e) => setFinancialConstraints(e.target.value)}
+                  rows={2}
+                  placeholder="Any budgetary considerations we should know about?"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -660,14 +581,13 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
           {/* Specialty & Files */}
           <Card className="border-brand-stone shadow-md">
             <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-              <CardTitle className="text-xl font-bold text-brand-navy">Specialty & Files</CardTitle>
+              <CardTitle className="text-xl font-bold text-brand-navy">Specialty & Supporting Documents</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
               <div className="space-y-2">
                 <Label htmlFor="specialty" className="required-field">
                   Specialty Requested
                 </Label>
-                {console.log("[v0] Specialty Select value:", specialtyRequested)}
                 <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
                   <SelectTrigger
                     id="specialty"
@@ -677,8 +597,15 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Internal Medicine">Internal Medicine</SelectItem>
+                    <SelectItem value="Surgery">Surgery</SelectItem>
                     <SelectItem value="Cardiology">Cardiology</SelectItem>
+                    <SelectItem value="Oncology">Oncology</SelectItem>
+                    <SelectItem value="Neurology">Neurology</SelectItem>
                     <SelectItem value="Dermatology">Dermatology</SelectItem>
+                    <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
+                    <SelectItem value="Emergency & Critical Care">Emergency & Critical Care</SelectItem>
+                    <SelectItem value="Radiology">Radiology</SelectItem>
+                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -691,116 +618,123 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   id="preferred-specialist"
                   value={preferredSpecialist}
                   onChange={(e) => setPreferredSpecialist(e.target.value)}
-                  placeholder="Leave blank for automatic assignment"
+                  placeholder="Leave blank for auto-assignment"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
-              <div>
-                <Label htmlFor="file-upload" className="text-sm font-medium text-brand-navy">
-                  Upload Clinical Data Only
-                </Label>
-                <p className="mb-3 mt-1 text-sm text-brand-navy/70">
-                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
-                  file. Max 25 files per submission.
-                </p>
-
-                <div className="flex items-center gap-4">
-                  <Button type="button" variant="outline" className="relative bg-transparent" asChild>
-                    <label htmlFor="file-upload" className="cursor-pointer">
+              <div className="space-y-4">
+                <div>
+                  <Label htmlFor="file-upload" className="text-sm font-medium text-brand-navy">
+                    Upload Clinical Data (Optional)
+                  </Label>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
+                    file. Max 25 files per submission.
+                  </p>
+                  <div className="mt-3 flex items-center gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => document.getElementById("file-upload")?.click()}
+                      className="border-2 border-brand-stone text-brand-navy hover:bg-brand-offwhite transition-colors"
+                    >
                       <Upload className="mr-2 h-4 w-4" />
                       Choose Files
-                      <input
-                        id="file-upload"
-                        type="file"
-                        multiple
-                        accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,audio/*"
-                        onChange={handleFileChange}
-                        className="sr-only"
-                      />
-                    </label>
-                  </Button>
-                  <span className="text-sm text-brand-navy/70">
-                    {files.length + existingFiles.length} file(s) selected
-                  </span>
+                    </Button>
+                    <Input
+                      id="file-upload"
+                      type="file"
+                      multiple
+                      onChange={handleFileChange}
+                      accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx"
+                      className="hidden"
+                    />
+                  </div>
                 </div>
 
+                {/* Existing Files */}
                 {existingFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium text-brand-navy">Previously uploaded files:</p>
-                    {existingFiles.map((file) => (
-                      <div
-                        key={file.id}
-                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
-                      >
-                        <span className="text-sm text-brand-navy">{file.file_name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeExistingFile(file.id)}
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-brand-navy">Existing Files</Label>
+                    <div className="space-y-2">
+                      {existingFiles.map((file: any) => (
+                        <div
+                          key={file.id}
+                          className="flex items-center justify-between rounded-lg border border-brand-stone bg-white p-3"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                          <span className="text-sm text-brand-navy">{file.file_name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeExistingFile(file.id)}
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
 
+                {/* New Files */}
                 {files.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium text-brand-navy">New files to upload:</p>
-                    {files.map((file, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
-                      >
-                        <span className="text-sm text-brand-navy">{file.name}</span>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeFile(index)}
-                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
+                  <div className="space-y-2">
+                    <Label className="text-sm font-medium text-brand-navy">New Files to Upload</Label>
+                    <div className="space-y-2">
+                      {files.map((file, index) => (
+                        <div
+                          key={index}
+                          className="flex items-center justify-between rounded-lg border border-brand-stone bg-white p-3"
                         >
-                          <X className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    ))}
+                          <span className="text-sm text-brand-navy">{file.name}</span>
+                          <Button
+                            type="button"
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => removeFile(index)}
+                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
+                          >
+                            <X className="h-4 w-4" />
+                          </Button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          <div className="flex items-center gap-4">
+          {/* Form Actions */}
+          <div className="flex justify-end gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleSaveDraft}
-              disabled={isSubmitting || isSavingDraft}
-              className="flex-1 border-2 border-brand-stone px-6 py-3 font-semibold text-brand-navy transition-all hover:bg-brand-stone bg-transparent"
+              disabled={isSavingDraft || isSubmitting}
+              className="border-2 border-brand-stone text-brand-navy hover:bg-brand-offwhite transition-colors bg-transparent"
             >
               {isSavingDraft ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Saving Draft...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Saving...
                 </>
               ) : (
                 "Save Draft"
               )}
             </Button>
-
             <Button
               type="submit"
               disabled={isSubmitting || isSavingDraft}
-              className="flex-1 transform rounded-md bg-brand-gold px-6 py-3 font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+              className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90 transition-colors font-semibold shadow-md"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Submitting Case...
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Submitting...
                 </>
               ) : (
                 "Submit Case"
@@ -811,63 +745,78 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
         {/* Confirmation Modal */}
         <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-          <DialogContent className="sm:max-w-md">
+          <DialogContent className="sm:max-w-[500px]">
             <DialogHeader>
-              <DialogTitle className="text-xl font-bold text-brand-navy">Confirm Case Submission</DialogTitle>
-              <DialogDescription className="text-sm text-brand-navy/70">
-                Please review the case details before submitting.
+              <DialogTitle className="text-2xl font-bold text-brand-navy">Confirm Case Submission</DialogTitle>
+              <DialogDescription className="text-base text-muted-foreground">
+                Please review your case details before submitting.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              <div className="space-y-2">
-                <div className="flex justify-between">
-                  <span className="font-semibold text-brand-navy">Patient:</span>
-                  <span className="text-brand-navy/80">
-                    {patientName} ({species}, {breed})
-                  </span>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-brand-navy">Patient Name</p>
+                  <p className="text-sm text-muted-foreground">{patientName}</p>
                 </div>
+                <div>
+                  <p className="text-sm font-medium text-brand-navy">Species</p>
+                  <p className="text-sm text-muted-foreground">{species}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-brand-navy">Breed</p>
+                  <p className="text-sm text-muted-foreground">{breed}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-brand-navy">Specialty</p>
+                  <p className="text-sm text-muted-foreground">{specialtyRequested}</p>
+                </div>
+              </div>
 
-                <div className="flex justify-between">
-                  <span className="font-semibold text-brand-navy">Specialty:</span>
-                  <span className="text-brand-navy/80">{specialtyRequested}</span>
-                </div>
+              <div>
+                <p className="text-sm font-medium text-brand-navy">Files Attached</p>
+                <p className="text-sm text-muted-foreground">
+                  {files.length + existingFiles.length} file{files.length + existingFiles.length !== 1 ? "s" : ""}
+                </p>
+              </div>
 
-                <div className="flex justify-between">
-                  <span className="font-semibold text-brand-navy">Files Attached:</span>
-                  <span className="text-brand-navy/80">{files.length + existingFiles.length} file(s)</span>
-                </div>
-
-                <div className="mt-4 rounded-md border-2 border-brand-gold bg-brand-offwhite p-4">
-                  <div className="flex justify-between">
-                    <span className="font-semibold text-brand-navy">Payment Status:</span>
-                    <span className="font-bold text-brand-gold">
-                      {previousCaseCount === 0 ? "Founder's Circle Credit (Free)" : "$395.00 (Complete Case Consult)"}
-                    </span>
-                  </div>
-                </div>
+              <div className="rounded-lg border border-brand-gold bg-brand-gold/10 p-4">
+                <p className="text-sm font-medium text-brand-navy mb-2">Payment</p>
+                <p className="text-2xl font-bold text-brand-navy">
+                  {previousCaseCount === 0 ? (
+                    <span className="text-green-600">Founder's Circle Credit (Free)</span>
+                  ) : (
+                    "$395.00"
+                  )}
+                </p>
+                {previousCaseCount === 0 && (
+                  <p className="text-xs text-muted-foreground mt-1">
+                    Your first case is complimentary. Subsequent cases are $395 each.
+                  </p>
+                )}
               </div>
             </div>
 
-            <DialogFooter className="gap-2 sm:gap-0">
+            <DialogFooter className="gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowConfirmModal(false)}
-                className="border-2 border-brand-stone bg-transparent text-brand-navy hover:bg-brand-stone"
+                disabled={isSubmitting}
+                className="border-2 border-brand-stone"
               >
-                Cancel
+                Go Back
               </Button>
               <Button
                 type="button"
                 onClick={executeSubmission}
                 disabled={isSubmitting}
-                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+                className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90 font-semibold"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Submitting...
+                    Processing...
                   </>
                 ) : (
                   "Confirm & Submit"
