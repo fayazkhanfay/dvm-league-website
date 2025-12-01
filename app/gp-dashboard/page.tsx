@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation"
+import { revalidatePath } from "next/cache"
 import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
@@ -147,6 +148,27 @@ export default async function GPDashboardPage() {
     return statusMap[status] || status
   }
 
+  async function deleteDraft(formData: FormData) {
+    "use server"
+    const caseId = formData.get("caseId") as string
+
+    console.log("[v0] Deleting draft case:", caseId)
+
+    const supabase = await createClient()
+
+    // Delete the case
+    const { error } = await supabase.from("cases").delete().eq("id", caseId)
+
+    if (error) {
+      console.error("[v0] Error deleting draft:", error)
+    } else {
+      console.log("[v0] Draft deleted successfully")
+    }
+
+    // Revalidate the dashboard page to show updated data
+    revalidatePath("/gp-dashboard")
+  }
+
   return (
     <AppLayout activePage="myCases" userRole="gp" userName={profile.full_name}>
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
@@ -203,14 +225,8 @@ export default async function GPDashboardPage() {
                           >
                             <Link href={`/submit-case?id=${caseItem.id}`}>Resume Case</Link>
                           </Button>
-                          <form
-                            action={async () => {
-                              "use server"
-                              const supabase = await createClient()
-                              await supabase.from("cases").delete().eq("id", caseItem.id)
-                              redirect("/gp-dashboard")
-                            }}
-                          >
+                          <form action={deleteDraft}>
+                            <input type="hidden" name="caseId" value={caseItem.id} />
                             <Button
                               type="submit"
                               variant="ghost"
