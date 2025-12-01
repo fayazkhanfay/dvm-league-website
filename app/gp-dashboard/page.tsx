@@ -152,15 +152,23 @@ export default async function GPDashboardPage() {
     "use server"
     const caseId = formData.get("caseId") as string
 
-    console.log("[v0] Deleting draft case:", caseId)
+    console.log("[v0] Attempting to delete draft case:", caseId)
 
     const supabase = await createClient()
 
-    // Delete the case
-    const { error } = await supabase.from("cases").delete().eq("id", caseId)
+    const {
+      data: { user },
+    } = await supabase.auth.getUser()
+
+    if (!user) {
+      console.error("[v0] User not authenticated")
+      return
+    }
+
+    const { error } = await supabase.from("cases").delete().eq("id", caseId).eq("gp_id", user.id)
 
     if (error) {
-      console.error("[v0] Error deleting draft:", error)
+      console.error("[v0] Error deleting draft:", error.message, error.details, error.hint)
     } else {
       console.log("[v0] Draft deleted successfully")
     }
