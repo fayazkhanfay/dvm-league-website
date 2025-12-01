@@ -51,10 +51,10 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const [financialConstraints, setFinancialConstraints] = useState(initialData?.financial_constraints || "")
 
   // Specialty & Files
-  const [specialtyRequested, setSpecialtyRequested] = useState(initialData?.specialty_requested || "")
-  const [preferredSpecialist, setPreferredSpecialist] = useState(initialData?.preferred_specialist || "")
+  const [specialtyRequested, setSpecialtyRequested] = useState("")
+  const [preferredSpecialist, setPreferredSpecialist] = useState("")
   const [files, setFiles] = useState<File[]>([])
-  const [existingFiles, setExistingFiles] = useState<any[]>(initialData?.case_files || [])
+  const [existingFiles, setExistingFiles] = useState<any[]>([])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
@@ -168,7 +168,6 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         const { data: newCase, error: insertError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (insertError) throw insertError
-
         activeCaseId = newCase.id
         setCaseId(activeCaseId)
       }
@@ -328,6 +327,22 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
+    // Manual validation for required fields
+    const missingFields = []
+    if (!patientName) missingFields.push("Patient Name")
+    if (!species) missingFields.push("Species")
+    if (!breed) missingFields.push("Breed")
+    if (!age) missingFields.push("Age")
+    if (!sexStatus) missingFields.push("Sex/Status")
+    if (!weightKg) missingFields.push("Weight")
+    if (!presentingComplaint) missingFields.push("Presenting Complaint")
+    if (!specialtyRequested) missingFields.push("Specialty Requested")
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
+      return
+    }
+
     // Show confirmation modal
     setShowConfirmModal(true)
   }
@@ -348,22 +363,23 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             <CardContent className="space-y-6 p-6">
               <div>
                 <Label htmlFor="patient-name" className="text-sm font-medium text-brand-navy">
-                  Patient Name
+                  Patient Name *
                 </Label>
                 <Input
                   id="patient-name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="space-y-2">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
                   <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
-                    Species
+                    Species *
                   </Label>
-                  <Select value={species} onValueChange={setSpecies}>
+                  <Select value={species} onValueChange={setSpecies} required>
                     <SelectTrigger
                       id="species"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -377,37 +393,40 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   </Select>
                 </div>
 
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="breed" className="text-sm font-medium text-brand-navy">
-                    Breed
+                    Breed *
                   </Label>
                   <Input
                     id="breed"
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
+                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
                 <div>
                   <Label htmlFor="age" className="text-sm font-medium text-brand-navy">
-                    Age
+                    Age *
                   </Label>
                   <Input
                     id="age"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
+                    placeholder="e.g., 5 years"
+                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
 
-                <div className="space-y-2">
+                <div>
                   <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
-                    Sex/Status
+                    Sex/Status *
                   </Label>
-                  <Select value={sexStatus} onValueChange={setSexStatus}>
+                  <Select value={sexStatus} onValueChange={setSexStatus} required>
                     <SelectTrigger
                       id="sex-status"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -425,7 +444,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
                 <div>
                   <Label htmlFor="weight" className="text-sm font-medium text-brand-navy">
-                    Weight (kg)
+                    Weight (kg) *
                   </Label>
                   <Input
                     id="weight"
@@ -433,6 +452,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
+                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
@@ -448,104 +468,118 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             <CardContent className="space-y-6 p-6">
               <div>
                 <Label htmlFor="presenting-complaint" className="text-sm font-medium text-brand-navy">
-                  Presenting Complaint
+                  Presenting Complaint *
                 </Label>
                 <Textarea
                   id="presenting-complaint"
                   value={presentingComplaint}
                   onChange={(e) => setPresentingComplaint(e.target.value)}
-                  rows={4}
+                  placeholder="Brief description of the main issue..."
+                  rows={3}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="brief-history" className="text-sm font-medium text-brand-navy">
-                  Brief History
+                  Brief History *
                 </Label>
                 <Textarea
                   id="brief-history"
                   value={briefHistory}
                   onChange={(e) => setBriefHistory(e.target.value)}
+                  placeholder="Relevant medical history..."
                   rows={4}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="pe-findings" className="text-sm font-medium text-brand-navy">
-                  Physical Exam Findings
+                  Physical Examination Findings *
                 </Label>
                 <Textarea
                   id="pe-findings"
                   value={peFindings}
                   onChange={(e) => setPeFindings(e.target.value)}
+                  placeholder="Key physical examination findings..."
                   rows={4}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="medications" className="text-sm font-medium text-brand-navy">
-                  Current Medications
+                  Current Medications *
                 </Label>
                 <Textarea
                   id="medications"
                   value={medications}
                   onChange={(e) => setMedications(e.target.value)}
+                  placeholder="List current medications and dosages..."
                   rows={3}
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="diagnostics-performed" className="text-sm font-medium text-brand-navy">
-                  Diagnostics Already Performed
-                </Label>
-                <Textarea
-                  id="diagnostics-performed"
-                  value={diagnosticsPerformed}
-                  onChange={(e) => setDiagnosticsPerformed(e.target.value)}
-                  rows={3}
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="treatments-attempted" className="text-sm font-medium text-brand-navy">
-                  Treatments Already Attempted
-                </Label>
-                <Textarea
-                  id="treatments-attempted"
-                  value={treatmentsAttempted}
-                  onChange={(e) => setTreatmentsAttempted(e.target.value)}
-                  rows={3}
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="gp-questions" className="text-sm font-medium text-brand-navy">
-                  Your Specific Questions
-                </Label>
-                <Textarea
-                  id="gp-questions"
-                  value={gpQuestions}
-                  onChange={(e) => setGpQuestions(e.target.value)}
-                  rows={3}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="financial-constraints" className="text-sm font-medium text-brand-navy">
-                  Financial Constraints
+                  Client Financial Constraints (Optional)
                 </Label>
-                <Textarea
+                <Input
                   id="financial-constraints"
                   value={financialConstraints}
                   onChange={(e) => setFinancialConstraints(e.target.value)}
-                  rows={2}
+                  placeholder="e.g., Hard cap of $1,500, or 'No constraints'"
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="diagnostics-performed" className="text-sm font-medium text-brand-navy">
+                  Diagnostics Performed *
+                </Label>
+                <Textarea
+                  id="diagnostics-performed"
+                  value={diagnosticsPerformed}
+                  onChange={(e) => setDiagnosticsPerformed(e.target.value)}
+                  placeholder="List any diagnostics already performed..."
+                  rows={3}
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="treatments-attempted" className="text-sm font-medium text-brand-navy">
+                  Treatments Attempted *
+                </Label>
+                <Textarea
+                  id="treatments-attempted"
+                  value={treatmentsAttempted}
+                  onChange={(e) => setTreatmentsAttempted(e.target.value)}
+                  placeholder="List any treatments already attempted..."
+                  rows={3}
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="gp-questions" className="text-sm font-medium text-brand-navy">
+                  Your Questions for the Specialist *
+                </Label>
+                <Textarea
+                  id="gp-questions"
+                  value={gpQuestions}
+                  onChange={(e) => setGpQuestions(e.target.value)}
+                  placeholder="What specific questions do you have for the specialist?"
+                  rows={4}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -555,14 +589,14 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
           {/* Specialty & Files */}
           <Card className="border-brand-stone shadow-md">
             <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-              <CardTitle className="text-xl font-bold text-brand-navy">Specialty & Supporting Documents</CardTitle>
+              <CardTitle className="text-xl font-bold text-brand-navy">Specialty & Files</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div className="space-y-2">
+              <div>
                 <Label htmlFor="specialty" className="text-sm font-medium text-brand-navy">
-                  Specialty Requested
+                  Specialty Requested *
                 </Label>
-                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested}>
+                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
                   <SelectTrigger
                     id="specialty"
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -571,15 +605,8 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="Internal Medicine">Internal Medicine</SelectItem>
-                    <SelectItem value="Surgery">Surgery</SelectItem>
                     <SelectItem value="Cardiology">Cardiology</SelectItem>
-                    <SelectItem value="Oncology">Oncology</SelectItem>
-                    <SelectItem value="Neurology">Neurology</SelectItem>
                     <SelectItem value="Dermatology">Dermatology</SelectItem>
-                    <SelectItem value="Ophthalmology">Ophthalmology</SelectItem>
-                    <SelectItem value="Emergency & Critical Care">Emergency & Critical Care</SelectItem>
-                    <SelectItem value="Radiology">Radiology</SelectItem>
-                    <SelectItem value="Other">Other</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -592,123 +619,116 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   id="preferred-specialist"
                   value={preferredSpecialist}
                   onChange={(e) => setPreferredSpecialist(e.target.value)}
-                  placeholder="Leave blank for auto-assignment"
+                  placeholder="Leave blank for automatic assignment"
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
-              <div className="space-y-4">
-                <div>
-                  <Label htmlFor="file-upload" className="text-sm font-medium text-brand-navy">
-                    Upload Clinical Data (Optional)
-                  </Label>
-                  <p className="text-sm text-muted-foreground mt-1">
-                    Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
-                    file. Max 25 files per submission.
-                  </p>
-                  <div className="mt-3 flex items-center gap-2">
-                    <Button
-                      type="button"
-                      variant="outline"
-                      onClick={() => document.getElementById("file-upload")?.click()}
-                      className="border-2 border-brand-stone text-brand-navy hover:bg-brand-offwhite transition-colors"
-                    >
+              <div>
+                <Label htmlFor="file-upload" className="text-sm font-medium text-brand-navy">
+                  Upload Clinical Data Only
+                </Label>
+                <p className="mb-3 mt-1 text-sm text-brand-navy/70">
+                  Upload PDFs individually for instant viewing. Please ZIP large image series (DICOMs) into a single
+                  file. Max 25 files per submission.
+                </p>
+
+                <div className="flex items-center gap-4">
+                  <Button type="button" variant="outline" className="relative bg-transparent" asChild>
+                    <label htmlFor="file-upload" className="cursor-pointer">
                       <Upload className="mr-2 h-4 w-4" />
                       Choose Files
-                    </Button>
-                    <Input
-                      id="file-upload"
-                      type="file"
-                      multiple
-                      onChange={handleFileChange}
-                      accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx"
-                      className="hidden"
-                    />
-                  </div>
+                      <input
+                        id="file-upload"
+                        type="file"
+                        multiple
+                        accept="image/*,application/pdf,.dcm,.zip,.mp4,.mov,.avi,.xlsx,.csv,.doc,.docx,audio/*"
+                        onChange={handleFileChange}
+                        className="sr-only"
+                      />
+                    </label>
+                  </Button>
+                  <span className="text-sm text-brand-navy/70">
+                    {files.length + existingFiles.length} file(s) selected
+                  </span>
                 </div>
 
-                {/* Existing Files */}
                 {existingFiles.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-brand-navy">Existing Files</Label>
-                    <div className="space-y-2">
-                      {existingFiles.map((file: any) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center justify-between rounded-lg border border-brand-stone bg-white p-3"
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-brand-navy">Previously uploaded files:</p>
+                    {existingFiles.map((file) => (
+                      <div
+                        key={file.id}
+                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
+                      >
+                        <span className="text-sm text-brand-navy">{file.file_name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeExistingFile(file.id)}
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
                         >
-                          <span className="text-sm text-brand-navy">{file.file_name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeExistingFile(file.id)}
-                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
 
-                {/* New Files */}
                 {files.length > 0 && (
-                  <div className="space-y-2">
-                    <Label className="text-sm font-medium text-brand-navy">New Files to Upload</Label>
-                    <div className="space-y-2">
-                      {files.map((file, index) => (
-                        <div
-                          key={index}
-                          className="flex items-center justify-between rounded-lg border border-brand-stone bg-white p-3"
+                  <div className="mt-4 space-y-2">
+                    <p className="text-sm font-medium text-brand-navy">New files to upload:</p>
+                    {files.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between rounded-md border border-brand-stone bg-brand-offwhite p-3"
+                      >
+                        <span className="text-sm text-brand-navy">{file.name}</span>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeFile(index)}
+                          className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
                         >
-                          <span className="text-sm text-brand-navy">{file.name}</span>
-                          <Button
-                            type="button"
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => removeFile(index)}
-                            className="h-8 w-8 p-0 text-red-600 hover:bg-red-50 hover:text-red-700"
-                          >
-                            <X className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      ))}
-                    </div>
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
                   </div>
                 )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Form Actions */}
-          <div className="flex justify-end gap-4">
+          <div className="flex items-center gap-4">
             <Button
               type="button"
               variant="outline"
               onClick={handleSaveDraft}
-              disabled={isSavingDraft || isSubmitting}
-              className="border-2 border-brand-stone text-brand-navy hover:bg-brand-offwhite transition-colors bg-transparent"
+              disabled={isSubmitting || isSavingDraft}
+              className="flex-1 border-2 border-brand-stone px-6 py-3 font-semibold text-brand-navy transition-all hover:bg-brand-stone bg-transparent"
             >
               {isSavingDraft ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Saving...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving Draft...
                 </>
               ) : (
                 "Save Draft"
               )}
             </Button>
+
             <Button
               type="submit"
               disabled={isSubmitting || isSavingDraft}
-              className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90 transition-colors font-semibold shadow-md"
+              className="flex-1 transform rounded-md bg-brand-gold px-6 py-3 font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
             >
               {isSubmitting ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                  Submitting...
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting Case...
                 </>
               ) : (
                 "Submit Case"
@@ -719,78 +739,63 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
         {/* Confirmation Modal */}
         <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
-          <DialogContent className="sm:max-w-[500px]">
+          <DialogContent className="sm:max-w-md">
             <DialogHeader>
-              <DialogTitle className="text-2xl font-bold text-brand-navy">Confirm Case Submission</DialogTitle>
-              <DialogDescription className="text-base text-muted-foreground">
-                Please review your case details before submitting.
+              <DialogTitle className="text-xl font-bold text-brand-navy">Confirm Case Submission</DialogTitle>
+              <DialogDescription className="text-sm text-brand-navy/70">
+                Please review the case details before submitting.
               </DialogDescription>
             </DialogHeader>
 
             <div className="space-y-4 py-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <p className="text-sm font-medium text-brand-navy">Patient Name</p>
-                  <p className="text-sm text-muted-foreground">{patientName}</p>
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Patient:</span>
+                  <span className="text-brand-navy/80">
+                    {patientName} ({species}, {breed})
+                  </span>
                 </div>
-                <div>
-                  <p className="text-sm font-medium text-brand-navy">Species</p>
-                  <p className="text-sm text-muted-foreground">{species}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-brand-navy">Breed</p>
-                  <p className="text-sm text-muted-foreground">{breed}</p>
-                </div>
-                <div>
-                  <p className="text-sm font-medium text-brand-navy">Specialty</p>
-                  <p className="text-sm text-muted-foreground">{specialtyRequested}</p>
-                </div>
-              </div>
 
-              <div>
-                <p className="text-sm font-medium text-brand-navy">Files Attached</p>
-                <p className="text-sm text-muted-foreground">
-                  {files.length + existingFiles.length} file{files.length + existingFiles.length !== 1 ? "s" : ""}
-                </p>
-              </div>
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Specialty:</span>
+                  <span className="text-brand-navy/80">{specialtyRequested}</span>
+                </div>
 
-              <div className="rounded-lg border border-brand-gold bg-brand-gold/10 p-4">
-                <p className="text-sm font-medium text-brand-navy mb-2">Payment</p>
-                <p className="text-2xl font-bold text-brand-navy">
-                  {previousCaseCount === 0 ? (
-                    <span className="text-green-600">Founder's Circle Credit (Free)</span>
-                  ) : (
-                    "$395.00"
-                  )}
-                </p>
-                {previousCaseCount === 0 && (
-                  <p className="text-xs text-muted-foreground mt-1">
-                    Your first case is complimentary. Subsequent cases are $395 each.
-                  </p>
-                )}
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Files Attached:</span>
+                  <span className="text-brand-navy/80">{files.length + existingFiles.length} file(s)</span>
+                </div>
+
+                <div className="mt-4 rounded-md border-2 border-brand-gold bg-brand-offwhite p-4">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-brand-navy">Payment Status:</span>
+                    <span className="font-bold text-brand-gold">
+                      {previousCaseCount === 0 ? "Founder's Circle Credit (Free)" : "$395.00 (Complete Case Consult)"}
+                    </span>
+                  </div>
+                </div>
               </div>
             </div>
 
-            <DialogFooter className="gap-2">
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => setShowConfirmModal(false)}
-                disabled={isSubmitting}
-                className="border-2 border-brand-stone"
+                className="border-2 border-brand-stone bg-transparent text-brand-navy hover:bg-brand-stone"
               >
-                Go Back
+                Cancel
               </Button>
               <Button
                 type="button"
                 onClick={executeSubmission}
                 disabled={isSubmitting}
-                className="bg-brand-gold text-brand-navy hover:bg-brand-gold/90 font-semibold"
+                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
               >
                 {isSubmitting ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Processing...
+                    Submitting...
                   </>
                 ) : (
                   "Confirm & Submit"
