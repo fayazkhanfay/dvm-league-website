@@ -51,10 +51,10 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const [financialConstraints, setFinancialConstraints] = useState(initialData?.financial_constraints || "")
 
   // Specialty & Files
-  const [specialtyRequested, setSpecialtyRequested] = useState("")
-  const [preferredSpecialist, setPreferredSpecialist] = useState("")
+  const [specialtyRequested, setSpecialtyRequested] = useState(initialData?.specialty_requested || "")
+  const [preferredSpecialist, setPreferredSpecialist] = useState(initialData?.preferred_specialist || "")
   const [files, setFiles] = useState<File[]>([])
-  const [existingFiles, setExistingFiles] = useState<any[]>([])
+  const [existingFiles, setExistingFiles] = useState<any[]>(initialData?.case_files || [])
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
