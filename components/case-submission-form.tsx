@@ -225,6 +225,19 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
     try {
       console.log("[v0] Starting case submission...")
 
+      // Manual validation for required fields
+      const missingFields = []
+      if (!species) missingFields.push("Species")
+      if (!age) missingFields.push("Age")
+      if (!sexStatus) missingFields.push("Sex/Status")
+      if (!specialtyRequested) missingFields.push("Specialty Requested")
+
+      if (missingFields.length > 0) {
+        toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
+        setIsSubmitting(false)
+        return
+      }
+
       const { count: previousCaseCount, error: countError } = await supabase
         .from("cases")
         .select("*", { count: "exact", head: true })
@@ -551,7 +564,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
               <div>
                 <Label htmlFor="diagnostics-performed" className="text-sm font-medium text-brand-navy">
-                  Diagnostics Performed
+                  Diagnostics Performed *
                 </Label>
                 <Textarea
                   id="diagnostics-performed"
@@ -559,13 +572,14 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   onChange={(e) => setDiagnosticsPerformed(e.target.value)}
                   placeholder="List any diagnostics already performed..."
                   rows={3}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
               <div>
                 <Label htmlFor="treatments-attempted" className="text-sm font-medium text-brand-navy">
-                  Treatments Attempted
+                  Treatments Attempted *
                 </Label>
                 <Textarea
                   id="treatments-attempted"
@@ -573,6 +587,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   onChange={(e) => setTreatmentsAttempted(e.target.value)}
                   placeholder="List any treatments already attempted..."
                   rows={3}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
