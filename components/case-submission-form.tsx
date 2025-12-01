@@ -86,6 +86,14 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       setSpecialtyRequested(initialData.specialty_requested || "")
       setPreferredSpecialist(initialData.preferred_specialist || "")
       setExistingFiles(initialData.case_files || [])
+
+      setTimeout(() => {
+        console.log("[v0] State after initialization:", {
+          species: initialData.patient_signalment?.species,
+          sexStatus: initialData.patient_signalment?.sex_status,
+          specialtyRequested: initialData.specialty_requested,
+        })
+      }, 100)
     }
   }, [initialData])
 
