@@ -260,7 +260,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         specialty_requested: specialtyRequested,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,
-        status: "awaiting_payment", // Set to awaiting_payment initially
+        status: "draft", // Keep as draft until payment is confirmed
       }
 
       let activeCaseId = caseId

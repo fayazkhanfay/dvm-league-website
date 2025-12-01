@@ -66,11 +66,12 @@ export default async function SubmitSuccessPage({
             .update({ status: "pending_assignment" })
             .eq("id", caseId)
             .eq("gp_id", user.id)
+            .eq("status", "draft")
 
           if (updateError) {
             console.error("[v0] Error updating case status:", updateError)
           } else {
-            console.log("[v0] Case status updated to pending_assignment")
+            console.log("[v0] Case status updated from draft to pending_assignment")
             paymentConfirmed = true
 
             try {
