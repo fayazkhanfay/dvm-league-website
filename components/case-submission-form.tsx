@@ -443,11 +443,12 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                 />
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-                <div>
-                  <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
-                    Species *
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-2">
+                  <Label htmlFor="species" className="required-field">
+                    Species
                   </Label>
+                  {console.log("[v0] Species Select value:", species)}
                   <Select value={species} onValueChange={setSpecies} required>
                     <SelectTrigger
                       id="species"
@@ -462,7 +463,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   </Select>
                 </div>
 
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="breed" className="text-sm font-medium text-brand-navy">
                     Breed *
                   </Label>
@@ -476,7 +477,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 gap-6 md:grid-cols-3">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div>
                   <Label htmlFor="age" className="text-sm font-medium text-brand-navy">
                     Age *
@@ -491,10 +492,11 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
                   />
                 </div>
 
-                <div>
-                  <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
-                    Sex/Status *
+                <div className="space-y-2">
+                  <Label htmlFor="sex-status" className="required-field">
+                    Sex/Status
                   </Label>
+                  {console.log("[v0] Sex/Status Select value:", sexStatus)}
                   <Select value={sexStatus} onValueChange={setSexStatus} required>
                     <SelectTrigger
                       id="sex-status"
@@ -661,10 +663,11 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
               <CardTitle className="text-xl font-bold text-brand-navy">Specialty & Files</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6 p-6">
-              <div>
-                <Label htmlFor="specialty" className="text-sm font-medium text-brand-navy">
-                  Specialty Requested *
+              <div className="space-y-2">
+                <Label htmlFor="specialty" className="required-field">
+                  Specialty Requested
                 </Label>
+                {console.log("[v0] Specialty Select value:", specialtyRequested)}
                 <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
                   <SelectTrigger
                     id="specialty"
