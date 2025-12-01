@@ -12,6 +12,14 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+  DialogDescription,
+} from "@/components/ui/dialog"
 import { Upload, Loader2, X } from "lucide-react"
 import { toast } from "sonner"
 
@@ -51,6 +59,8 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [caseId, setCaseId] = useState<string | null>(initialData?.id || null)
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
+  const [previousCaseCount, setPreviousCaseCount] = useState<number | null>(null)
 
   useEffect(() => {
     if (initialData) {
@@ -74,6 +84,25 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       setExistingFiles(initialData.case_files || [])
     }
   }, [initialData])
+
+  useEffect(() => {
+    const fetchCaseCount = async () => {
+      try {
+        const { count, error } = await supabase
+          .from("cases")
+          .select("*", { count: "exact", head: true })
+          .eq("gp_id", userProfile.id)
+          .neq("status", "draft")
+
+        if (error) throw error
+        setPreviousCaseCount(count || 0)
+      } catch (err) {
+        console.error("[v0] Error fetching case count:", err)
+      }
+    }
+
+    fetchCaseCount()
+  }, [userProfile.id, supabase])
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
@@ -218,38 +247,12 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
     }
   }
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const executeSubmission = async () => {
     setIsSubmitting(true)
+    setShowConfirmModal(false)
 
     try {
       console.log("[v0] Starting case submission...")
-
-      // Manual validation for required fields
-      const missingFields = []
-      if (!species) missingFields.push("Species")
-      if (!age) missingFields.push("Age")
-      if (!sexStatus) missingFields.push("Sex/Status")
-      if (!specialtyRequested) missingFields.push("Specialty Requested")
-
-      if (missingFields.length > 0) {
-        toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
-        setIsSubmitting(false)
-        return
-      }
-
-      const { count: previousCaseCount, error: countError } = await supabase
-        .from("cases")
-        .select("*", { count: "exact", head: true })
-        .eq("gp_id", userProfile.id)
-        .neq("status", "draft") // Exclude draft cases from count
-
-      if (countError) {
-        console.error("[v0] Error checking previous cases:", countError)
-        throw new Error(`Failed to check case history: ${countError.message}`)
-      }
-
-      console.log("[v0] Previous case count:", previousCaseCount)
 
       const patientSignalment = {
         species,
@@ -273,7 +276,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         specialty_requested: specialtyRequested,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,
-        status: "draft", // Keep as draft until payment is confirmed
+        status: "draft",
       }
 
       let activeCaseId = caseId
@@ -368,6 +371,29 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       })
       setIsSubmitting(false)
     }
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+
+    // Manual validation for required fields
+    const missingFields = []
+    if (!patientName) missingFields.push("Patient Name")
+    if (!species) missingFields.push("Species")
+    if (!breed) missingFields.push("Breed")
+    if (!age) missingFields.push("Age")
+    if (!sexStatus) missingFields.push("Sex/Status")
+    if (!weightKg) missingFields.push("Weight")
+    if (!presentingComplaint) missingFields.push("Presenting Complaint")
+    if (!specialtyRequested) missingFields.push("Specialty Requested")
+
+    if (missingFields.length > 0) {
+      toast.error(`Please fill in all required fields: ${missingFields.join(", ")}`)
+      return
+    }
+
+    // Show confirmation modal
+    setShowConfirmModal(true)
   }
 
   return (
@@ -759,6 +785,74 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
             </Button>
           </div>
         </form>
+
+        {/* Confirmation Modal */}
+        <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+          <DialogContent className="sm:max-w-md">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-brand-navy">Confirm Case Submission</DialogTitle>
+              <DialogDescription className="text-sm text-brand-navy/70">
+                Please review the case details before submitting.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Patient:</span>
+                  <span className="text-brand-navy/80">
+                    {patientName} ({species}, {breed})
+                  </span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Specialty:</span>
+                  <span className="text-brand-navy/80">{specialtyRequested}</span>
+                </div>
+
+                <div className="flex justify-between">
+                  <span className="font-semibold text-brand-navy">Files Attached:</span>
+                  <span className="text-brand-navy/80">{files.length + existingFiles.length} file(s)</span>
+                </div>
+
+                <div className="mt-4 rounded-md border-2 border-brand-gold bg-brand-offwhite p-4">
+                  <div className="flex justify-between">
+                    <span className="font-semibold text-brand-navy">Payment Status:</span>
+                    <span className="font-bold text-brand-gold">
+                      {previousCaseCount === 0 ? "Founder's Circle Credit (Free)" : "$395.00 (Complete Case Consult)"}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowConfirmModal(false)}
+                className="border-2 border-brand-stone bg-transparent text-brand-navy hover:bg-brand-stone"
+              >
+                Cancel
+              </Button>
+              <Button
+                type="button"
+                onClick={executeSubmission}
+                disabled={isSubmitting}
+                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Submitting...
+                  </>
+                ) : (
+                  "Confirm & Submit"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </main>
     </AppLayout>
   )
