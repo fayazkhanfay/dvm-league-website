@@ -165,6 +165,28 @@ export default async function GPDashboardPage() {
       return
     }
 
+    const { data: caseFiles, error: fetchError } = await supabase
+      .from("case_files")
+      .select("storage_object_path")
+      .eq("case_id", caseId)
+
+    if (fetchError) {
+      console.error("[v0] Error fetching case files:", fetchError.message)
+    }
+
+    if (caseFiles && caseFiles.length > 0) {
+      const filePaths = caseFiles.map((file) => file.storage_object_path)
+      console.log("[v0] Deleting", filePaths.length, "files from storage")
+
+      const { error: storageError } = await supabase.storage.from("case-files").remove(filePaths)
+
+      if (storageError) {
+        console.error("[v0] Error deleting files from storage:", storageError.message)
+      } else {
+        console.log("[v0] Storage files deleted successfully")
+      }
+    }
+
     const { error } = await supabase.from("cases").delete().eq("id", caseId).eq("gp_id", user.id)
 
     if (error) {
