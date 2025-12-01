@@ -64,6 +64,10 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
   useEffect(() => {
     if (initialData) {
+      console.log("[v0] Loading initial data:", initialData)
+      console.log("[v0] Patient signalment:", initialData.patient_signalment)
+      console.log("[v0] Specialty requested:", initialData.specialty_requested)
+
       setCaseId(initialData.id)
       setPatientName(initialData.patient_name || "")
       setSpecies(initialData.patient_signalment?.species || "")
@@ -157,6 +161,11 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
 
     try {
       console.log("[v0] Saving draft...")
+      console.log("[v0] Dropdown values being saved:", {
+        species,
+        sexStatus,
+        specialtyRequested,
+      })
 
       const patientSignalment = {
         species,
@@ -183,6 +192,8 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         status: "draft",
       }
 
+      console.log("[v0] Complete case data being saved:", caseData)
+
       let activeCaseId = caseId
 
       if (activeCaseId) {
@@ -195,9 +206,10 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
         const { data: newCase, error: insertError } = await supabase.from("cases").insert(caseData).select().single()
 
         if (insertError) throw insertError
+
         activeCaseId = newCase.id
         setCaseId(activeCaseId)
-        console.log("[v0] New draft created with ID:", activeCaseId)
+        console.log("[v0] Draft created with ID:", activeCaseId)
       }
 
       // Upload new files if any
