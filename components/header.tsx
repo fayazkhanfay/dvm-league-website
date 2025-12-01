@@ -40,11 +40,14 @@ export function Header() {
       setIsLoading(false)
     }
 
+    // Run initial check
     checkAuth()
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("[v0] Auth state changed:", event)
+
       if (session?.user) {
         setIsAuthenticated(true)
         // Re-fetch profile to ensure role is correct
@@ -55,11 +58,10 @@ export function Header() {
           .single()
         if (profile) setUserProfile(profile as UserProfile)
       } else {
-        // Handle Logout
+        // Handle logout or session expiration
         setIsAuthenticated(false)
         setUserProfile(null)
       }
-      setIsLoading(false)
     })
 
     return () => {
