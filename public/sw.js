@@ -1,4 +1,4 @@
-const CACHE_NAME = "dvm-league-v6"
+const CACHE_NAME = "dvm-league-v7"
 const urlsToCache = [
   "/manifest.json",
   "/favicon.ico",
@@ -10,7 +10,7 @@ const urlsToCache = [
 ]
 
 self.addEventListener("install", (event) => {
-  console.log("[SW] Installing v6...")
+  console.log("[SW] Installing v7 - fetch interception disabled...")
   self.skipWaiting()
 
   event.waitUntil(
@@ -24,7 +24,7 @@ self.addEventListener("install", (event) => {
 })
 
 self.addEventListener("activate", (event) => {
-  console.log("[SW] Activating v6...")
+  console.log("[SW] Activating v7...")
   event.waitUntil(
     Promise.all([
       // Clear old caches
@@ -46,43 +46,5 @@ self.addEventListener("activate", (event) => {
   )
 })
 
-self.addEventListener("fetch", (event) => {
-  const url = new URL(event.request.url)
-
-  // Skip all navigation requests - let Next.js handle routing
-  if (event.request.mode === "navigate") {
-    console.log("[SW] Skipping navigation request:", url.pathname)
-    return
-  }
-
-  // Skip all API and dynamic requests
-  if (url.pathname.startsWith("/api/") || url.pathname.startsWith("/_next/") || url.search.includes("_rsc=")) {
-    return
-  }
-
-  // Only cache manifest and icon files from our whitelist
-  const shouldCache = urlsToCache.some((path) => url.pathname === path)
-
-  if (!shouldCache) {
-    return
-  }
-
-  // Cache-first strategy for static assets only
-  event.respondWith(
-    caches.match(event.request).then((response) => {
-      if (response) {
-        return response
-      }
-
-      return fetch(event.request).then((fetchResponse) => {
-        if (fetchResponse && fetchResponse.status === 200) {
-          const responseToCache = fetchResponse.clone()
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache)
-          })
-        }
-        return fetchResponse
-      })
-    }),
-  )
-})
+// Fetch event listener removed to stop interfering with navigation
+// Next.js will handle all navigation and routing without interference
