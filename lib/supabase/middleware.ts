@@ -29,9 +29,37 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser()
+  let user = null
+  try {
+    const { data, error } = await supabase.auth.getUser()
+
+    // If there's an auth error (invalid token, expired session, etc), clear cookies
+    if (error) {
+      console.log("[v0] Auth error in middleware:", error.message)
+      // Clear all Supabase auth cookies
+      const response = NextResponse.next({ request })
+      const cookiesToClear = request.cookies
+        .getAll()
+        .filter((cookie) => cookie.name.includes("supabase") || cookie.name.includes("auth"))
+      cookiesToClear.forEach(({ name }) => {
+        response.cookies.delete(name)
+      })
+      supabaseResponse = response
+    } else {
+      user = data.user
+    }
+  } catch (error) {
+    console.error("[v0] Unexpected error checking session:", error)
+    // Clear cookies on unexpected errors too
+    const response = NextResponse.next({ request })
+    const cookiesToClear = request.cookies
+      .getAll()
+      .filter((cookie) => cookie.name.includes("supabase") || cookie.name.includes("auth"))
+    cookiesToClear.forEach(({ name }) => {
+      response.cookies.delete(name)
+    })
+    supabaseResponse = response
+  }
 
   // Protect dashboard routes - redirect to login if not authenticated
   if (

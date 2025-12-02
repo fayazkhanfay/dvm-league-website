@@ -42,7 +42,14 @@ export default function LoginPage() {
         clearTimeout(timeoutId)
         console.log("[v0] Login page: User check result:", user ? "authenticated" : "not authenticated", userError)
 
-        if (userError || !user) {
+        if (userError) {
+          console.log("[v0] Login page: Auth error detected, signing out:", userError.message)
+          await supabase.auth.signOut()
+          setCheckingSession(false)
+          return
+        }
+
+        if (!user) {
           // No user found, show login form
           console.log("[v0] Login page: No user, showing login form")
           setCheckingSession(false)
@@ -74,9 +81,14 @@ export default function LoginPage() {
           router.push("/")
         }
       } catch (err) {
-        // On any error, show login form
         clearTimeout(timeoutId)
         console.error("[v0] Login page: Session check error:", err)
+        try {
+          const supabase = createClient()
+          await supabase.auth.signOut()
+        } catch (signOutError) {
+          console.error("[v0] Login page: Error signing out:", signOutError)
+        }
         setCheckingSession(false)
       }
     }
