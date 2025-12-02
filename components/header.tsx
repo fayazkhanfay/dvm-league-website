@@ -20,113 +20,56 @@ export function Header() {
   useEffect(() => {
     const supabase = createClient()
 
-    console.log("[v0] Header: Initializing auth check")
-
-    const loadingTimeout = setTimeout(() => {
-      console.log("[v0] Header: Auth check timeout reached, forcing loading to false")
-      setIsLoading(false)
-    }, 3000) // 3 second timeout
-
     const checkAuth = async () => {
       try {
-        console.log("[v0] Header: Starting auth check...")
-
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Auth check timeout")), 2500),
-        )
-
-        const authPromise = supabase.auth.getUser()
-
-        const result = (await Promise.race([authPromise, timeoutPromise]).catch(async (err) => {
-          console.error("[v0] Header: Auth check timed out or failed, clearing session:", err)
-          // If auth check fails, sign out to clear corrupted cookies
-          await supabase.auth.signOut()
-          return { data: { user: null }, error: err }
-        })) as any
-
-        const user = result?.data?.user
-        const userError = result?.error
-
-        console.log("[v0] Header: Auth check result:", {
-          hasUser: !!user,
-          userId: user?.id,
-          error: userError?.message,
-        })
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
         if (user) {
           setIsAuthenticated(true)
-          console.log("[v0] Header: User authenticated, fetching profile...")
 
-          // Fetch user profile to get role with timeout
-          const profilePromise = supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
-
-          const profileTimeout = new Promise((_, reject) =>
-            setTimeout(() => reject(new Error("Profile fetch timeout")), 2000),
-          )
-
-          const { data: profile, error: profileError } = (await Promise.race([profilePromise, profileTimeout]).catch(
-            (err) => {
-              console.error("[v0] Header: Profile fetch failed:", err)
-              return { data: null, error: err }
-            },
-          )) as any
-
-          console.log("[v0] Header: Profile fetch result:", {
-            hasProfile: !!profile,
-            role: profile?.role,
-            error: profileError?.message,
-          })
+          const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
 
           if (profile) {
             setUserProfile(profile as UserProfile)
           }
         } else {
-          console.log("[v0] Header: No user found, setting unauthenticated state")
           setIsAuthenticated(false)
           setUserProfile(null)
         }
       } catch (error) {
-        console.error("[v0] Header: Auth check error:", error)
+        console.error("Auth check error:", error)
         setIsAuthenticated(false)
         setUserProfile(null)
       } finally {
-        clearTimeout(loadingTimeout)
         setIsLoading(false)
-        console.log("[v0] Header: Auth check complete, isLoading set to false")
       }
     }
 
-    // Run initial check
-    checkAuth()
+    const timeout = setTimeout(() => {
+      setIsLoading(false)
+    }, 2000)
+
+    checkAuth().finally(() => {
+      clearTimeout(timeout)
+    })
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("[v0] Header: Auth state changed:", {
-        event,
-        hasSession: !!session,
-        userId: session?.user?.id,
-      })
-
       if (session?.user) {
         setIsAuthenticated(true)
-        // Re-fetch profile to ensure role is correct
         const { data: profile } = await supabase
           .from("profiles")
           .select("role, full_name")
           .eq("id", session.user.id)
           .single()
 
-        console.log("[v0] Header: Profile updated after auth change:", {
-          hasProfile: !!profile,
-          role: profile?.role,
-        })
-
         if (profile) {
           setUserProfile(profile as UserProfile)
         }
       } else {
-        console.log("[v0] Header: No session, clearing auth state")
         setIsAuthenticated(false)
         setUserProfile(null)
       }
@@ -134,8 +77,7 @@ export function Header() {
     })
 
     return () => {
-      console.log("[v0] Header: Cleanup - unsubscribing from auth changes")
-      clearTimeout(loadingTimeout)
+      clearTimeout(timeout)
       subscription.unsubscribe()
     }
   }, [])
@@ -147,13 +89,6 @@ export function Header() {
     await supabase.auth.signOut()
     window.location.href = "/login"
   }
-
-  console.log("[v0] Header: Rendering with state:", {
-    isLoading,
-    isAuthenticated,
-    hasProfile: !!userProfile,
-    role: userProfile?.role,
-  })
 
   return (
     <>

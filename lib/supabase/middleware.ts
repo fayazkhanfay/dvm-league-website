@@ -35,34 +35,9 @@ export async function updateSession(request: NextRequest) {
     },
   })
 
-  let user = null
-  try {
-    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error("Auth check timeout")), 2000))
-    const userPromise = supabase.auth.getUser()
-
-    const result = (await Promise.race([userPromise, timeoutPromise]).catch((err) => {
-      console.error("[v0] Middleware: Auth check failed, session may be corrupted:", err)
-      return { data: { user: null }, error: err }
-    })) as any
-
-    user = result?.data?.user || null
-
-    // If there's an error but cookies exist, clear them (corrupted session)
-    if (!user && result?.error) {
-      const hasCookies = request.cookies.getAll().some((cookie) => cookie.name.startsWith("sb-"))
-      if (hasCookies) {
-        console.log("[v0] Middleware: Detected corrupted session, clearing cookies")
-        // Clear all Supabase cookies
-        request.cookies.getAll().forEach((cookie) => {
-          if (cookie.name.startsWith("sb-")) {
-            supabaseResponse.cookies.delete(cookie.name)
-          }
-        })
-      }
-    }
-  } catch (error) {
-    console.error("[v0] Middleware: Error checking session:", error)
-  }
+  const {
+    data: { user },
+  } = await supabase.auth.getUser()
 
   // Protect dashboard routes - redirect to login if not authenticated
   if (

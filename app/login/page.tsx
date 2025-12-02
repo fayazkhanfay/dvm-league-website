@@ -23,33 +23,14 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      setCheckingSession(true)
-
-      const sessionTimeout = setTimeout(() => {
-        console.log("[v0] Login: Session check timeout, showing login form")
-        setCheckingSession(false)
-      }, 3000)
-
       try {
         const supabase = createClient()
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error("Session check timeout")), 2500),
-        )
-
-        const userPromise = supabase.auth.getUser()
-
-        const result = (await Promise.race([userPromise, timeoutPromise]).catch(async (err) => {
-          console.error("[v0] Login: Session check failed, clearing potentially corrupted session:", err)
-          // If auth check fails, explicitly sign out to clear cookies
-          await supabase.auth.signOut()
-          return { data: { user: null } }
-        })) as any
-
-        const user = result?.data?.user
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
         if (!user) {
-          clearTimeout(sessionTimeout)
           setCheckingSession(false)
           return
         }
@@ -58,13 +39,11 @@ export default function LoginPage() {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
         if (!profile) {
-          clearTimeout(sessionTimeout)
           setCheckingSession(false)
           return
         }
 
         // Redirect based on role
-        clearTimeout(sessionTimeout)
         if (profile.role === "specialist") {
           router.push("/specialist-dashboard")
         } else if (profile.role === "gp") {
@@ -73,16 +52,21 @@ export default function LoginPage() {
           router.push("/")
         }
       } catch (err) {
-        console.error("[v0] Login page: Session check error, clearing session:", err)
-        // Clear any corrupted session
-        const supabase = createClient()
-        await supabase.auth.signOut()
-        clearTimeout(sessionTimeout)
+        console.error("Session check error:", err)
         setCheckingSession(false)
       }
     }
 
-    checkSession()
+    // Add simple timeout to prevent hanging UI
+    const timeout = setTimeout(() => {
+      setCheckingSession(false)
+    }, 3000)
+
+    checkSession().finally(() => {
+      clearTimeout(timeout)
+    })
+
+    return () => clearTimeout(timeout)
   }, [router])
 
   useEffect(() => {
