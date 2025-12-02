@@ -206,6 +206,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
       })
 
       router.push("/gp-dashboard")
+      router.refresh()
     } catch (err) {
       console.error("[v0] Draft save error:", err)
       toast.error("Failed to save draft", {
