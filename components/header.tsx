@@ -96,7 +96,7 @@ export function Header() {
       <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <a href="/" className="flex-shrink-0 group">
+            <Link href="/" className="flex-shrink-0 group">
               <div className="transition-transform duration-200 group-hover:scale-[1.02]">
                 <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy tracking-tight">
                   DVM League
@@ -105,10 +105,10 @@ export function Header() {
                   American Specialists. American Standards.
                 </p>
               </div>
-            </a>
+            </Link>
 
             <nav className="flex items-center gap-2 sm:gap-3">
-              {isAuthenticated && !isLoading ? (
+              {!isLoading && isAuthenticated ? (
                 <>
                   <Button
                     asChild
@@ -131,18 +131,16 @@ export function Header() {
                     Logout
                   </Button>
                 </>
-              ) : (
-                !isLoading && (
-                  <Button
-                    asChild
-                    variant="ghost"
-                    size="sm"
-                    className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-                  >
-                    <a href="/login">Login</a>
-                  </Button>
-                )
-              )}
+              ) : !isLoading ? (
+                <Button
+                  asChild
+                  variant="ghost"
+                  size="sm"
+                  className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+                >
+                  <Link href="/login">Login</Link>
+                </Button>
+              ) : null}
 
               <Link
                 href="/specialists"
@@ -177,7 +175,7 @@ export function Header() {
                 American Specialists. American Standards.
               </p>
 
-              {isAuthenticated && !isLoading ? (
+              {!isLoading && isAuthenticated ? (
                 <>
                   <Button
                     asChild
@@ -204,19 +202,17 @@ export function Header() {
                     Logout
                   </Button>
                 </>
-              ) : (
-                !isLoading && (
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="default"
-                    className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <a href="/login">Login</a>
-                  </Button>
-                )
-              )}
+              ) : !isLoading ? (
+                <Button
+                  asChild
+                  variant="outline"
+                  size="default"
+                  className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <Link href="/login">Login</Link>
+                </Button>
+              ) : null}
 
               <Link
                 href="/specialists"
