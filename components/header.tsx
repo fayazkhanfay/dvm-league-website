@@ -2,7 +2,8 @@
 
 import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, LayoutDashboard } from "lucide-react"
+import { Badge } from "@/components/ui/badge"
+import { Menu, X, LayoutDashboard, LifeBuoy } from "lucide-react"
 import Link from "next/link"
 import { createClient } from "@/lib/supabase/client"
 
@@ -98,9 +99,14 @@ export function Header() {
           <div className="flex justify-between items-center h-20">
             <Link href="/" className="flex-shrink-0 group">
               <div className="transition-transform duration-200 group-hover:scale-[1.02]">
-                <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy tracking-tight">
-                  DVM League
-                </span>
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy tracking-tight">
+                    DVM League
+                  </span>
+                  <Badge className="bg-brand-gold text-brand-navy hover:bg-brand-gold text-[10px] font-bold px-2 py-0.5 rounded-full">
+                    BETA
+                  </Badge>
+                </div>
                 <p className="text-[10px] sm:text-xs font-semibold text-brand-navy/60 tracking-[0.08em] uppercase -mt-0.5 hidden sm:block">
                   American Specialists. American Standards.
                 </p>
@@ -141,6 +147,18 @@ export function Header() {
                   <Link href="/login">Login</Link>
                 </Button>
               ) : null}
+
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+              >
+                <a href="mailto:khan@dvmleague.com?subject=DVM League Support Request">
+                  <LifeBuoy className="w-4 h-4 mr-2" />
+                  Support
+                </a>
+              </Button>
 
               <Link
                 href="/specialists"
@@ -213,6 +231,19 @@ export function Header() {
                   <Link href="/login">Login</Link>
                 </Button>
               ) : null}
+
+              <Button
+                asChild
+                variant="outline"
+                size="default"
+                className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <a href="mailto:khan@dvmleague.com?subject=DVM League Support Request">
+                  <LifeBuoy className="w-4 h-4 mr-2" />
+                  Support
+                </a>
+              </Button>
 
               <Link
                 href="/specialists"
