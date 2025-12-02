@@ -20,30 +20,54 @@ export function Header() {
   useEffect(() => {
     const supabase = createClient()
 
+    console.log("[v0] Header: Initializing auth check")
+
     const checkAuth = async () => {
       try {
+        console.log("[v0] Header: Starting auth check...")
         const {
           data: { user },
+          error: userError,
         } = await supabase.auth.getUser()
+
+        console.log("[v0] Header: Auth check result:", {
+          hasUser: !!user,
+          userId: user?.id,
+          error: userError?.message,
+        })
 
         if (user) {
           setIsAuthenticated(true)
+          console.log("[v0] Header: User authenticated, fetching profile...")
+
           // Fetch user profile to get role
-          const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+          const { data: profile, error: profileError } = await supabase
+            .from("profiles")
+            .select("role, full_name")
+            .eq("id", user.id)
+            .single()
+
+          console.log("[v0] Header: Profile fetch result:", {
+            hasProfile: !!profile,
+            role: profile?.role,
+            error: profileError?.message,
+          })
 
           if (profile) {
             setUserProfile(profile as UserProfile)
           }
         } else {
+          console.log("[v0] Header: No user found, setting unauthenticated state")
           setIsAuthenticated(false)
           setUserProfile(null)
         }
       } catch (error) {
-        console.error("[v0] Header auth check error:", error)
+        console.error("[v0] Header: Auth check error:", error)
         setIsAuthenticated(false)
         setUserProfile(null)
       } finally {
         setIsLoading(false)
+        console.log("[v0] Header: Auth check complete, isLoading set to false")
       }
     }
 
@@ -53,6 +77,12 @@ export function Header() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("[v0] Header: Auth state changed:", {
+        event,
+        hasSession: !!session,
+        userId: session?.user?.id,
+      })
+
       if (session?.user) {
         setIsAuthenticated(true)
         // Re-fetch profile to ensure role is correct
@@ -61,11 +91,18 @@ export function Header() {
           .select("role, full_name")
           .eq("id", session.user.id)
           .single()
+
+        console.log("[v0] Header: Profile updated after auth change:", {
+          hasProfile: !!profile,
+          role: profile?.role,
+        })
+
         if (profile) {
           setUserProfile(profile as UserProfile)
         }
       } else {
         // Handle logout or session expiration
+        console.log("[v0] Header: No session, clearing auth state")
         setIsAuthenticated(false)
         setUserProfile(null)
       }
@@ -73,6 +110,7 @@ export function Header() {
     })
 
     return () => {
+      console.log("[v0] Header: Cleanup - unsubscribing from auth changes")
       subscription.unsubscribe()
     }
   }, [])
@@ -84,6 +122,13 @@ export function Header() {
     await supabase.auth.signOut()
     window.location.href = "/login"
   }
+
+  console.log("[v0] Header: Rendering with state:", {
+    isLoading,
+    isAuthenticated,
+    hasProfile: !!userProfile,
+    role: userProfile?.role,
+  })
 
   return (
     <>
