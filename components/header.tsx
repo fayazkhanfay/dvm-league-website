@@ -22,13 +22,28 @@ export function Header() {
 
     console.log("[v0] Header: Initializing auth check")
 
+    const loadingTimeout = setTimeout(() => {
+      console.log("[v0] Header: Auth check timeout reached, forcing loading to false")
+      setIsLoading(false)
+    }, 3000) // 3 second timeout
+
     const checkAuth = async () => {
       try {
         console.log("[v0] Header: Starting auth check...")
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Auth check timeout")), 2500),
+        )
+
+        const authPromise = supabase.auth.getUser()
+
         const {
           data: { user },
           error: userError,
-        } = await supabase.auth.getUser()
+        } = (await Promise.race([authPromise, timeoutPromise]).catch((err) => {
+          console.error("[v0] Header: Auth check timed out or failed:", err)
+          return { data: { user: null }, error: err }
+        })) as any
 
         console.log("[v0] Header: Auth check result:", {
           hasUser: !!user,
@@ -40,12 +55,19 @@ export function Header() {
           setIsAuthenticated(true)
           console.log("[v0] Header: User authenticated, fetching profile...")
 
-          // Fetch user profile to get role
-          const { data: profile, error: profileError } = await supabase
-            .from("profiles")
-            .select("role, full_name")
-            .eq("id", user.id)
-            .single()
+          // Fetch user profile to get role with timeout
+          const profilePromise = supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+
+          const profileTimeout = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error("Profile fetch timeout")), 2000),
+          )
+
+          const { data: profile, error: profileError } = (await Promise.race([profilePromise, profileTimeout]).catch(
+            (err) => {
+              console.error("[v0] Header: Profile fetch failed:", err)
+              return { data: null, error: err }
+            },
+          )) as any
 
           console.log("[v0] Header: Profile fetch result:", {
             hasProfile: !!profile,
@@ -66,6 +88,7 @@ export function Header() {
         setIsAuthenticated(false)
         setUserProfile(null)
       } finally {
+        clearTimeout(loadingTimeout)
         setIsLoading(false)
         console.log("[v0] Header: Auth check complete, isLoading set to false")
       }
@@ -101,7 +124,6 @@ export function Header() {
           setUserProfile(profile as UserProfile)
         }
       } else {
-        // Handle logout or session expiration
         console.log("[v0] Header: No session, clearing auth state")
         setIsAuthenticated(false)
         setUserProfile(null)
@@ -111,6 +133,7 @@ export function Header() {
 
     return () => {
       console.log("[v0] Header: Cleanup - unsubscribing from auth changes")
+      clearTimeout(loadingTimeout)
       subscription.unsubscribe()
     }
   }, [])

@@ -25,14 +25,29 @@ export default function LoginPage() {
     const checkSession = async () => {
       setCheckingSession(true)
 
+      const sessionTimeout = setTimeout(() => {
+        console.log("[v0] Login: Session check timeout, showing login form")
+        setCheckingSession(false)
+      }, 3000) // 3 second timeout
+
       try {
         const supabase = createClient()
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error("Session check timeout")), 2500),
+        )
+
+        const userPromise = supabase.auth.getUser()
+
         const {
           data: { user },
-        } = await supabase.auth.getUser()
+        } = (await Promise.race([userPromise, timeoutPromise]).catch((err) => {
+          console.error("[v0] Login: Session check failed:", err)
+          return { data: { user: null } }
+        })) as any
 
         if (!user) {
-          // No user found, show login form
+          clearTimeout(sessionTimeout)
           setCheckingSession(false)
           return
         }
@@ -41,12 +56,13 @@ export default function LoginPage() {
         const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
         if (!profile) {
-          // Profile not found, show login form
+          clearTimeout(sessionTimeout)
           setCheckingSession(false)
           return
         }
 
         // Redirect based on role
+        clearTimeout(sessionTimeout)
         if (profile.role === "specialist") {
           router.push("/specialist-dashboard")
         } else if (profile.role === "gp") {
@@ -56,6 +72,7 @@ export default function LoginPage() {
         }
       } catch (err) {
         console.error("[v0] Login page: Session check error:", err)
+        clearTimeout(sessionTimeout)
         setCheckingSession(false)
       }
     }
