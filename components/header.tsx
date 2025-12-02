@@ -21,23 +21,33 @@ export function Header() {
     const supabase = createClient()
 
     const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+      try {
+        const {
+          data: { user },
+        } = await supabase.auth.getUser()
 
-      if (user) {
-        setIsAuthenticated(true)
-        // Fetch user profile to get role
-        const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+        console.log("[v0] Header initial auth check, user:", user ? "authenticated" : "not authenticated")
 
-        if (profile) {
-          setUserProfile(profile as UserProfile)
+        if (user) {
+          setIsAuthenticated(true)
+          // Fetch user profile to get role
+          const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
+
+          if (profile) {
+            setUserProfile(profile as UserProfile)
+            console.log("[v0] Header profile loaded, role:", profile.role)
+          }
+        } else {
+          setIsAuthenticated(false)
+          setUserProfile(null)
         }
-      } else {
+      } catch (error) {
+        console.error("[v0] Header auth check error:", error)
         setIsAuthenticated(false)
         setUserProfile(null)
+      } finally {
+        setIsLoading(false)
       }
-      setIsLoading(false)
     }
 
     // Run initial check
@@ -46,7 +56,7 @@ export function Header() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("[v0] Auth state changed:", event)
+      console.log("[v0] Header auth state changed:", event, session ? "has session" : "no session")
 
       if (session?.user) {
         setIsAuthenticated(true)
@@ -56,12 +66,16 @@ export function Header() {
           .select("role, full_name")
           .eq("id", session.user.id)
           .single()
-        if (profile) setUserProfile(profile as UserProfile)
+        if (profile) {
+          setUserProfile(profile as UserProfile)
+          console.log("[v0] Header profile updated, role:", profile.role)
+        }
       } else {
         // Handle logout or session expiration
         setIsAuthenticated(false)
         setUserProfile(null)
       }
+      setIsLoading(false)
     })
 
     return () => {
@@ -94,42 +108,40 @@ export function Header() {
             </a>
 
             <nav className="flex items-center gap-2 sm:gap-3">
-              {!isLoading && (
+              {isAuthenticated && !isLoading ? (
                 <>
-                  {isAuthenticated ? (
-                    <>
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-                      >
-                        <Link href={dashboardUrl}>
-                          <LayoutDashboard className="w-4 h-4 mr-2" />
-                          My Dashboard
-                        </Link>
-                      </Button>
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+                  >
+                    <Link href={dashboardUrl}>
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      My Dashboard
+                    </Link>
+                  </Button>
 
-                      <Button
-                        onClick={handleLogout}
-                        variant="ghost"
-                        size="sm"
-                        className="hidden md:inline-flex text-brand-navy hover:text-brand-red hover:bg-red-50 font-semibold transition-all duration-200"
-                      >
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-                    >
-                      <a href="/login">Login</a>
-                    </Button>
-                  )}
+                  <Button
+                    onClick={handleLogout}
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:inline-flex text-brand-navy hover:text-brand-red hover:bg-red-50 font-semibold transition-all duration-200"
+                  >
+                    Logout
+                  </Button>
                 </>
+              ) : (
+                !isLoading && (
+                  <Button
+                    asChild
+                    variant="ghost"
+                    size="sm"
+                    className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+                  >
+                    <a href="/login">Login</a>
+                  </Button>
+                )
               )}
 
               <Link
@@ -165,47 +177,45 @@ export function Header() {
                 American Specialists. American Standards.
               </p>
 
-              {!isLoading && (
+              {isAuthenticated && !isLoading ? (
                 <>
-                  {isAuthenticated ? (
-                    <>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="default"
-                        className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Link href={dashboardUrl}>
-                          <LayoutDashboard className="w-4 h-4 mr-2" />
-                          My Dashboard
-                        </Link>
-                      </Button>
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="default"
+                    className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Link href={dashboardUrl}>
+                      <LayoutDashboard className="w-4 h-4 mr-2" />
+                      My Dashboard
+                    </Link>
+                  </Button>
 
-                      <Button
-                        onClick={() => {
-                          setMobileMenuOpen(false)
-                          handleLogout()
-                        }}
-                        variant="outline"
-                        size="default"
-                        className="w-full border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red font-semibold transition-all duration-200 bg-transparent"
-                      >
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="default"
-                      className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <a href="/login">Login</a>
-                    </Button>
-                  )}
+                  <Button
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      handleLogout()
+                    }}
+                    variant="outline"
+                    size="default"
+                    className="w-full border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red font-semibold transition-all duration-200 bg-transparent"
+                  >
+                    Logout
+                  </Button>
                 </>
+              ) : (
+                !isLoading && (
+                  <Button
+                    asChild
+                    variant="outline"
+                    size="default"
+                    className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <a href="/login">Login</a>
+                  </Button>
+                )
               )}
 
               <Link
