@@ -1,64 +1,18 @@
 "use client"
 
 import { Button } from "@/components/ui/button"
-import { Menu, X, LayoutDashboard } from "lucide-react"
-import { useState, useEffect } from "react"
-import { createBrowserClient } from "@supabase/ssr"
-
-interface UserProfile {
-  role: "gp" | "specialist"
-  full_name: string
-}
+import { Menu, X } from "lucide-react"
+import { useState } from "react"
+import Link from "next/link"
 
 export function SpecialistHeader() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        setIsAuthenticated(true)
-        // Fetch user profile to get role
-        const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
-
-        if (profile) {
-          setUserProfile(profile as UserProfile)
-        }
-      }
-      setIsLoading(false)
-    }
-
-    checkAuth()
-  }, [])
-
-  const dashboardUrl = userProfile?.role === "specialist" ? "/specialist-dashboard" : "/gp-dashboard"
-
-  const handleLogout = async () => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    )
-    await supabase.auth.signOut()
-    window.location.href = "/login"
-  }
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
       <div className="mx-auto max-w-7xl px-6 py-4">
         <div className="flex justify-between items-center">
-          {/* Logo */}
-          <a href="/" className="group">
+          <Link href="/" className="group">
             <div>
               <span className="text-2xl font-serif font-bold text-brand-navy group-hover:text-brand-red transition-colors">
                 DVM League
@@ -67,55 +21,25 @@ export function SpecialistHeader() {
                 American Specialists. American Standards.
               </p>
             </div>
-          </a>
+          </Link>
 
-          {/* Desktop Navigation */}
           <nav className="hidden md:flex items-center gap-4">
-            {!isLoading && (
-              <>
-                {isAuthenticated ? (
-                  <>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
-                    >
-                      <a href={dashboardUrl}>
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        My Dashboard
-                      </a>
-                    </Button>
-                    <Button
-                      onClick={handleLogout}
-                      variant="outline"
-                      size="sm"
-                      className="border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red transition-all duration-300 shadow-sm bg-transparent"
-                    >
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
-                  >
-                    <a href="/login">Login</a>
-                  </Button>
-                )}
-              </>
-            )}
-            <a
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 shadow-sm bg-transparent"
+            >
+              <Link href="/login">Login</Link>
+            </Button>
+            <Link
               href="/"
               className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors tracking-wide"
             >
               For General Practices →
-            </a>
+            </Link>
           </nav>
 
-          {/* Mobile Menu Button */}
           <button
             onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
             className="md:hidden p-2 text-brand-navy hover:text-brand-red transition-colors"
@@ -125,57 +49,25 @@ export function SpecialistHeader() {
           </button>
         </div>
 
-        {/* Mobile Menu */}
         {mobileMenuOpen && (
           <nav className="md:hidden mt-4 pt-4 border-t border-brand-navy/10 flex flex-col gap-3 animate-in slide-in-from-top-2 duration-300">
-            <a
+            <Link
               href="/"
               className="text-sm font-semibold text-brand-navy hover:text-brand-red transition-colors py-2"
               onClick={() => setMobileMenuOpen(false)}
             >
               For General Practices →
-            </a>
-            {!isLoading && (
-              <>
-                {isAuthenticated ? (
-                  <>
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="sm"
-                      className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
-                    >
-                      <a href={dashboardUrl} onClick={() => setMobileMenuOpen(false)}>
-                        <LayoutDashboard className="w-4 h-4 mr-2" />
-                        My Dashboard
-                      </a>
-                    </Button>
-                    <Button
-                      onClick={() => {
-                        setMobileMenuOpen(false)
-                        handleLogout()
-                      }}
-                      variant="outline"
-                      size="sm"
-                      className="border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red transition-all duration-300 w-full justify-center bg-transparent"
-                    >
-                      Logout
-                    </Button>
-                  </>
-                ) : (
-                  <Button
-                    asChild
-                    variant="outline"
-                    size="sm"
-                    className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
-                  >
-                    <a href="/login" onClick={() => setMobileMenuOpen(false)}>
-                      Login
-                    </a>
-                  </Button>
-                )}
-              </>
-            )}
+            </Link>
+            <Button
+              asChild
+              variant="outline"
+              size="sm"
+              className="border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white transition-all duration-300 w-full justify-center bg-transparent"
+            >
+              <Link href="/login" onClick={() => setMobileMenuOpen(false)}>
+                Login
+              </Link>
+            </Button>
           </nav>
         )}
       </div>

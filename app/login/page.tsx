@@ -27,29 +27,20 @@ export default function LoginPage() {
         const supabase = createClient()
         const {
           data: { user },
-          error: userError,
         } = await supabase.auth.getUser()
 
-        if (userError || !user) {
-          // No user found, show login form
+        if (!user) {
           setCheckingSession(false)
           return
         }
 
-        // User found, fetch their profile to get role
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single()
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
-        if (profileError || !profile) {
-          // Profile not found, show login form
+        if (!profile) {
           setCheckingSession(false)
           return
         }
 
-        // Redirect based on role
         if (profile.role === "specialist") {
           router.push("/specialist-dashboard")
         } else if (profile.role === "gp") {
@@ -58,7 +49,7 @@ export default function LoginPage() {
           router.push("/")
         }
       } catch (err) {
-        // On any error, show login form
+        console.error("Session check error:", err)
         setCheckingSession(false)
       }
     }
@@ -220,9 +211,9 @@ export default function LoginPage() {
         </div>
 
         <div className="mt-6 text-center">
-          <a href="/" className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline">
+          <Link href="/" className="text-sm text-brand-navy/70 transition-colors hover:text-brand-navy hover:underline">
             ← Back to dvmleague.com
-          </a>
+          </Link>
         </div>
       </div>
     </div>

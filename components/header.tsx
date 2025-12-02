@@ -1,86 +1,19 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
-import { Menu, X, LayoutDashboard } from "lucide-react"
+import { Menu, X } from "lucide-react"
 import Link from "next/link"
-import { createClient } from "@/lib/supabase/client"
-
-interface UserProfile {
-  role: "gp" | "specialist"
-  full_name: string
-}
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
-  const [userProfile, setUserProfile] = useState<UserProfile | null>(null)
-  const [isLoading, setIsLoading] = useState(true)
-
-  useEffect(() => {
-    const supabase = createClient()
-
-    const checkAuth = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
-
-      if (user) {
-        setIsAuthenticated(true)
-        // Fetch user profile to get role
-        const { data: profile } = await supabase.from("profiles").select("role, full_name").eq("id", user.id).single()
-
-        if (profile) {
-          setUserProfile(profile as UserProfile)
-        }
-      } else {
-        setIsAuthenticated(false)
-        setUserProfile(null)
-      }
-      setIsLoading(false)
-    }
-
-    checkAuth()
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        setIsAuthenticated(true)
-        // Re-fetch profile to ensure role is correct
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role, full_name")
-          .eq("id", session.user.id)
-          .single()
-        if (profile) setUserProfile(profile as UserProfile)
-      } else {
-        // Handle Logout
-        setIsAuthenticated(false)
-        setUserProfile(null)
-      }
-      setIsLoading(false)
-    })
-
-    return () => {
-      subscription.unsubscribe()
-    }
-  }, [])
-
-  const dashboardUrl = userProfile?.role === "specialist" ? "/specialist-dashboard" : "/gp-dashboard"
-
-  const handleLogout = async () => {
-    const supabase = createClient()
-    await supabase.auth.signOut()
-    window.location.href = "/login"
-  }
 
   return (
     <>
       <header className="fixed top-0 left-0 w-full z-50 bg-white/80 backdrop-blur-md border-b border-brand-navy/10">
         <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-20">
-            <a href="/" className="flex-shrink-0 group">
+            <Link href="/" className="flex-shrink-0 group">
               <div className="transition-transform duration-200 group-hover:scale-[1.02]">
                 <span className="text-2xl sm:text-3xl font-serif font-bold text-brand-navy tracking-tight">
                   DVM League
@@ -89,46 +22,17 @@ export function Header() {
                   American Specialists. American Standards.
                 </p>
               </div>
-            </a>
+            </Link>
 
             <nav className="flex items-center gap-2 sm:gap-3">
-              {!isLoading && (
-                <>
-                  {isAuthenticated ? (
-                    <>
-                      <Button
-                        asChild
-                        variant="ghost"
-                        size="sm"
-                        className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-                      >
-                        <Link href={dashboardUrl}>
-                          <LayoutDashboard className="w-4 h-4 mr-2" />
-                          My Dashboard
-                        </Link>
-                      </Button>
-
-                      <Button
-                        onClick={handleLogout}
-                        variant="ghost"
-                        size="sm"
-                        className="hidden md:inline-flex text-brand-navy hover:text-brand-red hover:bg-red-50 font-semibold transition-all duration-200"
-                      >
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      asChild
-                      variant="ghost"
-                      size="sm"
-                      className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
-                    >
-                      <a href="/login">Login</a>
-                    </Button>
-                  )}
-                </>
-              )}
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden md:inline-flex text-brand-navy hover:text-brand-navy hover:bg-brand-navy/5 font-semibold transition-all duration-200"
+              >
+                <Link href="/login">Login</Link>
+              </Button>
 
               <Link
                 href="/specialists"
@@ -163,48 +67,15 @@ export function Header() {
                 American Specialists. American Standards.
               </p>
 
-              {!isLoading && (
-                <>
-                  {isAuthenticated ? (
-                    <>
-                      <Button
-                        asChild
-                        variant="outline"
-                        size="default"
-                        className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                        onClick={() => setMobileMenuOpen(false)}
-                      >
-                        <Link href={dashboardUrl}>
-                          <LayoutDashboard className="w-4 h-4 mr-2" />
-                          My Dashboard
-                        </Link>
-                      </Button>
-
-                      <Button
-                        onClick={() => {
-                          setMobileMenuOpen(false)
-                          handleLogout()
-                        }}
-                        variant="outline"
-                        size="default"
-                        className="w-full border-red-200 text-brand-navy hover:bg-red-50 hover:text-brand-red font-semibold transition-all duration-200 bg-transparent"
-                      >
-                        Logout
-                      </Button>
-                    </>
-                  ) : (
-                    <Button
-                      asChild
-                      variant="outline"
-                      size="default"
-                      className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
-                      onClick={() => setMobileMenuOpen(false)}
-                    >
-                      <a href="/login">Login</a>
-                    </Button>
-                  )}
-                </>
-              )}
+              <Button
+                asChild
+                variant="outline"
+                size="default"
+                className="w-full border-brand-navy/20 text-brand-navy hover:bg-brand-navy hover:text-white font-semibold transition-all duration-200 bg-transparent"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Link href="/login">Login</Link>
+              </Button>
 
               <Link
                 href="/specialists"

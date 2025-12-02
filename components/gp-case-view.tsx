@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { AppLayout } from "@/components/app-layout"
@@ -28,13 +28,23 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
   const supabase = createClient()
 
-  const signalment = caseData.patient_signalment
-  const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
-  const existingDiagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+  const signalment = useMemo(() => caseData.patient_signalment, [caseData.patient_signalment])
+  const initialFiles = useMemo(
+    () => caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || [],
+    [caseData.case_files],
+  )
+  const existingDiagnosticFiles = useMemo(
+    () => caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || [],
+    [caseData.case_files],
+  )
 
-  const allDiagnosticFiles = [...existingDiagnosticFiles, ...uploadedDiagnosticFiles]
+  const allDiagnosticFiles = useMemo(
+    () => [...existingDiagnosticFiles, ...uploadedDiagnosticFiles],
+    [existingDiagnosticFiles, uploadedDiagnosticFiles],
+  )
 
   useEffect(() => {
+    console.log("[v0] Generating signed URLs...")
     const generateSignedUrls = async () => {
       const allFiles = [...initialFiles, ...allDiagnosticFiles]
       const urls: Record<string, string> = {}
@@ -52,10 +62,11 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
       }
 
       setFileUrls(urls)
+      console.log("[v0] Signed URLs generated:", Object.keys(urls).length)
     }
 
     generateSignedUrls()
-  }, [initialFiles, uploadedDiagnosticFiles, supabase])
+  }, [caseData.case_files]) // Updated to depend on caseData.case_files
 
   const getFileUrl = (fileId: string) => {
     return fileUrls[fileId] || "#"

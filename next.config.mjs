@@ -11,6 +11,23 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/.well-known/:path*',
+          destination: '/api/not-found',
+          has: [
+            {
+              type: 'header',
+              key: 'user-agent',
+              value: '.*Chrome.*',
+            },
+          ],
+        },
+      ],
+    }
+  },
 }
 
 export default withSentryConfig(nextConfig, {

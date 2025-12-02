@@ -24,7 +24,13 @@ export async function updateSession(request: NextRequest) {
         supabaseResponse = NextResponse.next({
           request,
         })
-        cookiesToSet.forEach(({ name, value, options }) => supabaseResponse.cookies.set(name, value, options))
+        cookiesToSet.forEach(({ name, value, options }) =>
+          supabaseResponse.cookies.set(name, value, {
+            ...options,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+          }),
+        )
       },
     },
   })
@@ -40,7 +46,8 @@ export async function updateSession(request: NextRequest) {
       request.nextUrl.pathname.startsWith("/specialist-dashboard") ||
       request.nextUrl.pathname.startsWith("/submit-case") ||
       request.nextUrl.pathname.startsWith("/gp/case") ||
-      request.nextUrl.pathname.startsWith("/specialist/case"))
+      request.nextUrl.pathname.startsWith("/specialist/case") ||
+      request.nextUrl.pathname.startsWith("/settings"))
   ) {
     const url = request.nextUrl.clone()
     url.pathname = "/login"

@@ -1,4 +1,5 @@
 import { socialLinks } from "@/lib/social-links"
+import Link from "next/link"
 
 export function Footer() {
   return (
@@ -25,21 +26,21 @@ export function Footer() {
         <div className="text-center text-sm">
           <p>&copy; 2025 DVM League, LLC. All Rights Reserved.</p>
           <p className="mt-2 space-x-4">
-            <a href="/login" className="hover:text-white transition-colors">
+            <Link href="/login" className="hover:text-white transition-colors">
               Login
-            </a>
+            </Link>
             <span className="text-white/20">|</span>
-            <a href="/specialists" className="hover:text-white transition-colors">
+            <Link href="/specialists" className="hover:text-white transition-colors">
               For Specialists: Join The League
-            </a>
+            </Link>
             <span className="text-white/20">|</span>
-            <a href="/privacy-policy" className="hover:text-white transition-colors">
+            <Link href="/privacy-policy" className="hover:text-white transition-colors">
               Privacy Policy
-            </a>
+            </Link>
             <span className="text-white/20">|</span>
-            <a href="/terms-of-service" className="hover:text-white transition-colors">
+            <Link href="/terms-of-service" className="hover:text-white transition-colors">
               Terms of Service
-            </a>
+            </Link>
             <span className="text-white/20">|</span>
             <a href="mailto:khan@DVMLeague.com" className="hover:text-white transition-colors">
               khan@DVMLeague.com

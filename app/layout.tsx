@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next"
 import { Suspense } from "react"
 import Script from "next/script"
 import "./globals.css"
+import { Toaster } from "sonner"
 
 const ebGaramond = EB_Garamond({
   subsets: ["latin"],
@@ -89,9 +90,7 @@ export const metadata: Metadata = {
       { url: "/favicon-96x96.png", sizes: "96x96" },
     ],
     apple: "/apple-touch-icon.png",
-    other: [
-      { rel: "mask-icon", url: "/favicon.svg", color: "#0A2240" },
-    ],
+    other: [{ rel: "mask-icon", url: "/favicon.svg", color: "#0A2240" }],
   },
   appleWebApp: {
     capable: true,
@@ -167,23 +166,7 @@ export default function RootLayout({
       <body className="font-sans">
         <Suspense fallback={<div>Loading...</div>}>{children}</Suspense>
         <Analytics />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js')
-                    .then(function(registration) {
-                      console.log('SW registered: ', registration);
-                    })
-                    .catch(function(registrationError) {
-                      console.log('SW registration failed: ', registrationError);
-                    });
-                });
-              }
-            `,
-          }}
-        />
+        <Toaster position="top-center" expand={true} richColors={true} duration={6000} closeButton={true} />
       </body>
     </html>
   )
