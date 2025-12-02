@@ -28,7 +28,7 @@ export default function LoginPage() {
       const sessionTimeout = setTimeout(() => {
         console.log("[v0] Login: Session check timeout, showing login form")
         setCheckingSession(false)
-      }, 3000) // 3 second timeout
+      }, 3000)
 
       try {
         const supabase = createClient()
@@ -39,12 +39,14 @@ export default function LoginPage() {
 
         const userPromise = supabase.auth.getUser()
 
-        const {
-          data: { user },
-        } = (await Promise.race([userPromise, timeoutPromise]).catch((err) => {
-          console.error("[v0] Login: Session check failed:", err)
+        const result = (await Promise.race([userPromise, timeoutPromise]).catch(async (err) => {
+          console.error("[v0] Login: Session check failed, clearing potentially corrupted session:", err)
+          // If auth check fails, explicitly sign out to clear cookies
+          await supabase.auth.signOut()
           return { data: { user: null } }
         })) as any
+
+        const user = result?.data?.user
 
         if (!user) {
           clearTimeout(sessionTimeout)
@@ -71,7 +73,10 @@ export default function LoginPage() {
           router.push("/")
         }
       } catch (err) {
-        console.error("[v0] Login page: Session check error:", err)
+        console.error("[v0] Login page: Session check error, clearing session:", err)
+        // Clear any corrupted session
+        const supabase = createClient()
+        await supabase.auth.signOut()
         clearTimeout(sessionTimeout)
         setCheckingSession(false)
       }

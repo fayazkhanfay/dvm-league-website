@@ -37,13 +37,15 @@ export function Header() {
 
         const authPromise = supabase.auth.getUser()
 
-        const {
-          data: { user },
-          error: userError,
-        } = (await Promise.race([authPromise, timeoutPromise]).catch((err) => {
-          console.error("[v0] Header: Auth check timed out or failed:", err)
+        const result = (await Promise.race([authPromise, timeoutPromise]).catch(async (err) => {
+          console.error("[v0] Header: Auth check timed out or failed, clearing session:", err)
+          // If auth check fails, sign out to clear corrupted cookies
+          await supabase.auth.signOut()
           return { data: { user: null }, error: err }
         })) as any
+
+        const user = result?.data?.user
+        const userError = result?.error
 
         console.log("[v0] Header: Auth check result:", {
           hasUser: !!user,
