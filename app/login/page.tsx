@@ -23,56 +23,30 @@ export default function LoginPage() {
 
   useEffect(() => {
     const checkSession = async () => {
-      console.log("[v0] Login page: Starting session check")
-
-      const timeoutId = setTimeout(() => {
-        console.log("[v0] Login page: Session check timeout, showing login form")
-        setCheckingSession(false)
-      }, 5000) // 5 second timeout
+      setCheckingSession(true)
 
       try {
         const supabase = createClient()
-        console.log("[v0] Login page: Supabase client created")
-
         const {
           data: { user },
-          error: userError,
         } = await supabase.auth.getUser()
-
-        clearTimeout(timeoutId)
-        console.log("[v0] Login page: User check result:", user ? "authenticated" : "not authenticated", userError)
-
-        if (userError) {
-          console.log("[v0] Login page: Auth error detected, signing out:", userError.message)
-          await supabase.auth.signOut()
-          setCheckingSession(false)
-          return
-        }
 
         if (!user) {
           // No user found, show login form
-          console.log("[v0] Login page: No user, showing login form")
           setCheckingSession(false)
           return
         }
 
         // User found, fetch their profile to get role
-        console.log("[v0] Login page: Fetching profile for user:", user.id)
-        const { data: profile, error: profileError } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", user.id)
-          .single()
+        const { data: profile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
 
-        if (profileError || !profile) {
+        if (!profile) {
           // Profile not found, show login form
-          console.log("[v0] Login page: Profile not found, showing login form", profileError)
           setCheckingSession(false)
           return
         }
 
         // Redirect based on role
-        console.log("[v0] Login page: Redirecting to dashboard for role:", profile.role)
         if (profile.role === "specialist") {
           router.push("/specialist-dashboard")
         } else if (profile.role === "gp") {
@@ -81,14 +55,7 @@ export default function LoginPage() {
           router.push("/")
         }
       } catch (err) {
-        clearTimeout(timeoutId)
         console.error("[v0] Login page: Session check error:", err)
-        try {
-          const supabase = createClient()
-          await supabase.auth.signOut()
-        } catch (signOutError) {
-          console.error("[v0] Login page: Error signing out:", signOutError)
-        }
         setCheckingSession(false)
       }
     }

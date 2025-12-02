@@ -26,8 +26,6 @@ export function Header() {
           data: { user },
         } = await supabase.auth.getUser()
 
-        console.log("[v0] Header initial auth check, user:", user ? "authenticated" : "not authenticated")
-
         if (user) {
           setIsAuthenticated(true)
           // Fetch user profile to get role
@@ -35,7 +33,6 @@ export function Header() {
 
           if (profile) {
             setUserProfile(profile as UserProfile)
-            console.log("[v0] Header profile loaded, role:", profile.role)
           }
         } else {
           setIsAuthenticated(false)
@@ -56,8 +53,6 @@ export function Header() {
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("[v0] Header auth state changed:", event, session ? "has session" : "no session")
-
       if (session?.user) {
         setIsAuthenticated(true)
         // Re-fetch profile to ensure role is correct
@@ -68,7 +63,6 @@ export function Header() {
           .single()
         if (profile) {
           setUserProfile(profile as UserProfile)
-          console.log("[v0] Header profile updated, role:", profile.role)
         }
       } else {
         // Handle logout or session expiration
