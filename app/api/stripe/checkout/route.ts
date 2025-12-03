@@ -104,6 +104,17 @@ export async function GET(request: NextRequest) {
       mode: "payment",
       invoice_creation: {
         enabled: true,
+        invoice_data: {
+          description: receiptDescription,
+          metadata: {
+            case_id: caseId,
+            patient_name: caseData.patient_name,
+          },
+          custom_fields: [
+            { name: "Patient", value: caseData.patient_name },
+            { name: "Case ID", value: caseId.slice(0, 8).toUpperCase() },
+          ],
+        },
       },
       payment_intent_data: {
         setup_future_usage: "on_session",
