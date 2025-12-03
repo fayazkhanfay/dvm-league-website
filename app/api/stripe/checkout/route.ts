@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Using existing Stripe customer:", customerId)
     }
 
-    const receiptDescription = `Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
+    const receiptDescription = `Complete Case Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
 
     // Create Checkout Session
     const origin = request.nextUrl.origin
@@ -93,8 +93,7 @@ export async function GET(request: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: "Complete Case Consult",
-              description: receiptDescription,
+              name: receiptDescription,
             },
             unit_amount: 39500,
           },
