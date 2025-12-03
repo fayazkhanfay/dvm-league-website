@@ -102,6 +102,9 @@ export async function GET(request: NextRequest) {
         },
       ],
       mode: "payment",
+      invoice_creation: {
+        enabled: true,
+      },
       payment_intent_data: {
         setup_future_usage: "on_session",
         description: receiptDescription,
