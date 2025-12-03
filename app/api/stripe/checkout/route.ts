@@ -82,7 +82,7 @@ export async function GET(request: NextRequest) {
       console.log("[v0] Using existing Stripe customer:", customerId)
     }
 
-    const receiptDescription = `Patient: ${caseData.patient_name} - ${caseData.specialty_requested}`
+    const receiptDescription = `Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
 
     // Create Checkout Session
     const origin = request.nextUrl.origin
