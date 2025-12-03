@@ -1,9 +1,8 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
-import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { ExternalLink } from "lucide-react"
+import { BillingButton } from "@/components/billing-button"
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -58,12 +57,7 @@ export default async function SettingsPage() {
               Manage your saved payment methods and view your complete invoice history securely through our payment
               partner, Stripe.
             </p>
-            <Button variant="outline" asChild>
-              <a href="#" className="flex items-center gap-2">
-                Manage Billing & View Invoices
-                <ExternalLink className="h-4 w-4" />
-              </a>
-            </Button>
+            <BillingButton />
           </CardContent>
         </Card>
       </div>
