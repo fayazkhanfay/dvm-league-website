@@ -3,11 +3,9 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { ExternalLink } from "lucide-react"
-import { useToast } from "@/hooks/use-toast"
 
 export function BillingButton() {
   const [isLoading, setIsLoading] = useState(false)
-  const { toast } = useToast()
 
   const handleManageBilling = async () => {
     try {
@@ -20,28 +18,16 @@ export function BillingButton() {
       const data = await response.json()
 
       if (!response.ok) {
-        if (response.status === 400 && data.error === "No billing history found.") {
-          toast({
-            title: "No Billing History",
-            description: "You have no billing history yet. Submit a paid case to activate your billing portal.",
-            variant: "destructive",
-          })
-          return
-        }
-
-        throw new Error(data.error || "Failed to open billing portal")
+        alert("Failed to open billing portal. Please try again.")
+        return
       }
 
       if (data.url) {
         window.location.href = data.url
       }
     } catch (error) {
-      console.error("[v0] Error opening billing portal:", error)
-      toast({
-        title: "Error",
-        description: "Failed to open billing portal. Please try again.",
-        variant: "destructive",
-      })
+      console.error("Error opening billing portal:", error)
+      alert("Failed to open billing portal. Please try again.")
     } finally {
       setIsLoading(false)
     }

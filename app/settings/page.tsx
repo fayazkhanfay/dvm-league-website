@@ -3,6 +3,8 @@ import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { BillingButton } from "@/components/billing-button"
+import { Button } from "@/components/ui/button"
+import { ExternalLink } from "lucide-react"
 
 export default async function SettingsPage() {
   const supabase = await createClient()
@@ -20,6 +22,8 @@ export default async function SettingsPage() {
   if (!profile || profile.role !== "gp") {
     redirect("/login")
   }
+
+  const hasBillingHistory = !!profile.stripe_customer_id
 
   return (
     <AppLayout activePage="settings" userRole="gp" userName={profile.full_name}>
@@ -53,11 +57,25 @@ export default async function SettingsPage() {
             <CardTitle className="text-xl font-semibold text-brand-navy">Billing Management</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <p className="text-sm text-brand-navy/80">
-              Manage your saved payment methods and view your complete invoice history securely through our payment
-              partner, Stripe.
-            </p>
-            <BillingButton />
+            {hasBillingHistory ? (
+              <>
+                <p className="text-sm text-brand-navy/80">
+                  Manage your saved payment methods and view your complete invoice history securely through our payment
+                  partner, Stripe.
+                </p>
+                <BillingButton />
+              </>
+            ) : (
+              <>
+                <p className="text-sm text-brand-navy/80">
+                  Complete your first paid case to access billing management and view invoice history.
+                </p>
+                <Button variant="outline" disabled className="flex items-center gap-2 bg-transparent">
+                  Manage Billing & View Invoices
+                  <ExternalLink className="h-4 w-4" />
+                </Button>
+              </>
+            )}
           </CardContent>
         </Card>
       </div>
