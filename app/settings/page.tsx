@@ -68,7 +68,7 @@ export default async function SettingsPage() {
             ) : (
               <>
                 <p className="text-sm text-brand-navy/80">
-                  Complete your first paid case to access billing management and view invoice history.
+                  Complete your first paid case to access billing management and view invoice history on Stripe.
                 </p>
                 <Button variant="outline" disabled className="flex items-center gap-2 bg-transparent">
                   Manage Billing & View Invoices

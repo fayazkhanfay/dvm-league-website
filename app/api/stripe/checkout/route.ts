@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
 
     // Initialize Stripe
     const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
-      apiVersion: "2024-12-18.acacia",
+      apiVersion: "2025-11-17.clover",
     })
 
     let customerId = profile?.stripe_customer_id
@@ -94,13 +94,29 @@ export async function GET(request: NextRequest) {
             currency: "usd",
             product_data: {
               name: receiptDescription,
+              // CRITICAL: Explicitly set tax code for 'General Professional Services'
+              // This ensures PA tax is $0.00
+              tax_code: 'txcd_20030000',
             },
-            unit_amount: 39500,
+            unit_amount: 39500, // $395.00
           },
           quantity: 1,
         },
       ],
       mode: "payment",
+
+      // CRITICAL: Enable Stripe Tax Calculation & Monitoring
+      automatic_tax: { enabled: true },
+
+      // CRITICAL: Force address collection so Stripe knows which state to monitor
+      billing_address_collection: 'required',
+
+      // Save the address they enter to the Stripe Customer for future use
+      customer_update: {
+        address: 'auto',
+        name: 'auto',
+      },
+
       invoice_creation: {
         enabled: true,
         invoice_data: {
@@ -115,6 +131,7 @@ export async function GET(request: NextRequest) {
           ],
         },
       },
+      // Metadata for your records (Cleaned up)
       payment_intent_data: {
         setup_future_usage: "on_session",
         description: receiptDescription,
