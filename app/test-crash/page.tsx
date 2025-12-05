@@ -3,8 +3,13 @@
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { AlertTriangle } from "lucide-react"
+import { notFound } from "next/navigation"
 
 export default function TestCrashPage() {
+  if (process.env.NODE_ENV === "production") {
+    notFound()
+  }
+
   const [shouldCrash, setShouldCrash] = useState(false)
 
   // The Crash: Throw error when shouldCrash is true
