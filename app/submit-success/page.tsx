@@ -116,8 +116,8 @@ export default async function SubmitSuccessPage({
                 console.log("[v0] Confirmation email sent successfully")
 
                 await notifySlack(
-                  `Case Confirmed & Email Sent | Patient: ${data.patient_name} | GP: ${profile.full_name} | Case ID: ${data.id.slice(0, 8).toUpperCase()}`,
-                  "info",
+                  `💰 PAYMENT SUCCESS ($395): Case Confirmed for Patient: ${data.patient_name} (Ref: ${data.id.slice(0, 8).toUpperCase()}). Email sent to GP.`,
+                  "money",
                 )
               } else {
                 console.error("[v0] Failed to send confirmation email:", emailResult.error)

@@ -155,8 +155,8 @@ export async function GET(request: NextRequest) {
     }
 
     await notifySlack(
-      `New Paid Case ($395)! GP: ${profile?.full_name || "Unknown"} | Patient: ${caseData.patient_name} | Ref: ${caseId.slice(0, 8).toUpperCase()}`,
-      "money",
+      `💳 Checkout Initiated: GP ${profile?.full_name || "Unknown"} is attempting to pay for ${caseData.patient_name}`,
+      "info",
     )
 
     return NextResponse.redirect(session.url)
