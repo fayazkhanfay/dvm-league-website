@@ -87,7 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     const receiptDescription = `Complete Case Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
-    const demoSuffix = profile?.is_demo ? " [TEST MODE: Use Card 4242 4242 4242 4242]" : ""
+    const demoSuffix = profile?.is_demo ? " [TEST MODE: Use Card 4242 4242 4242 4242 - Any Date/CVC]" : ""
 
     // Create Checkout Session
     const origin = request.nextUrl.origin

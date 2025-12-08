@@ -18,7 +18,7 @@ export function DemoModeBanner({ userName }: DemoModeBannerProps) {
           </span>
           <span className="text-brand-navy/70">•</span>
           <span className="text-brand-navy/80">
-            Use Test Card:{" "}
+            Use Test Credit Card:{" "}
             <span className="font-mono font-bold select-all bg-brand-navy/10 px-1.5 py-0.5 rounded">
               4242 4242 4242 4242
             </span>
