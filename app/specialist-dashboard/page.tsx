@@ -86,7 +86,7 @@ export default async function SpecialistDashboard() {
   }
 
   return (
-    <AppLayout activePage="myCases" userName={profile.full_name}>
+    <AppLayout activePage="myCases" userRole="specialist" userName={profile.full_name} isDemoUser={profile.is_demo}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-10">
         <h1 className="font-serif text-3xl font-bold text-brand-navy mb-8">Specialist Dashboard</h1>
 

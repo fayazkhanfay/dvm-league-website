@@ -26,7 +26,7 @@ export default async function SettingsPage() {
   const hasBillingHistory = !!profile.stripe_customer_id
 
   return (
-    <AppLayout activePage="settings" userRole="gp" userName={profile.full_name}>
+    <AppLayout activePage="settings" userRole="gp" userName={profile.full_name} isDemoUser={profile.is_demo}>
       <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Account Settings</h1>
 
       <div className="space-y-6">

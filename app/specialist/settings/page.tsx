@@ -21,10 +21,9 @@ export default async function SpecialistSettingsPage() {
   if (!profile || profile.role !== "specialist") {
     redirect("/login")
   }
-  // </CHANGE>
 
   return (
-    <AppLayout activePage="settings" userRole="specialist" userName={profile.full_name}>
+    <AppLayout activePage="settings" userRole="specialist" userName={profile.full_name} isDemoUser={profile.is_demo}>
       <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">Account Settings</h1>
 
       <div className="space-y-6">
