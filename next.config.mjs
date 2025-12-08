@@ -1,5 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  compiler: {
+    // Remove console.log in production, but keep console.error for critical bugs
+    removeConsole: process.env.NODE_ENV === "production" ? { exclude: ["error"] } : false,
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
