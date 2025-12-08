@@ -1,0 +1,19 @@
+// Stripe configuration helper that selects keys based on user's demo status
+
+export function getStripeKeys(isDemoUser: boolean) {
+  // If user is marked as demo, use test keys, otherwise use live keys
+  const secretKey = isDemoUser ? process.env.STRIPE_SECRET_KEY_TEST : process.env.STRIPE_SECRET_KEY
+
+  // Validate that the required secret key exists
+  if (!secretKey) {
+    const keyName = isDemoUser ? "STRIPE_SECRET_KEY_TEST" : "STRIPE_SECRET_KEY"
+    throw new Error(
+      `Missing required environment variable: ${keyName}. ` + `Please add it to your Vercel project settings.`,
+    )
+  }
+
+  return {
+    secretKey,
+    isDemo: isDemoUser,
+  }
+}

@@ -50,5 +50,5 @@ export default async function SubmitCasePage({
     }
   }
 
-  return <CaseSubmissionForm userProfile={profile} initialData={initialData} />
+  return <CaseSubmissionForm userProfile={profile} initialData={initialData} isDemoUser={profile.is_demo} />
 }

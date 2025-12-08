@@ -26,6 +26,8 @@ export default async function GPDashboardPage() {
     redirect("/login")
   }
 
+  console.log("[v0] Profile is_demo value:", profile.is_demo)
+
   const { data: allCases } = await supabase
     .from("cases")
     .select(
@@ -200,7 +202,7 @@ export default async function GPDashboardPage() {
   }
 
   return (
-    <AppLayout activePage="myCases" userRole="gp" userName={profile.full_name}>
+    <AppLayout activePage="myCases" userRole="gp" userName={profile.full_name} isDemoUser={profile.is_demo}>
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="mb-8 flex items-center justify-between">
           <h1 className="font-serif text-3xl font-bold text-brand-navy">Case Dashboard</h1>

@@ -26,9 +26,10 @@ import { toast } from "sonner"
 interface CaseSubmissionFormProps {
   userProfile: any
   initialData?: any
+  isDemoUser?: boolean // Add isDemoUser prop
 }
 
-export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionFormProps) {
+export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = false }: CaseSubmissionFormProps) {
   const router = useRouter()
   const supabase = createClient()
 
@@ -349,7 +350,7 @@ export function CaseSubmissionForm({ userProfile, initialData }: CaseSubmissionF
   }
 
   return (
-    <AppLayout activePage="submitCase" userName={userProfile.full_name} userRole="gp">
+    <AppLayout activePage="submitCase" userName={userProfile.full_name} userRole="gp" isDemoUser={isDemoUser}>
       <main className="mx-auto max-w-4xl px-4 py-10 sm:px-6 lg:px-8">
         <h1 className="mb-8 font-serif text-3xl font-bold text-brand-navy">
           {initialData ? "Resume Case Submission" : "Submit New Case"}

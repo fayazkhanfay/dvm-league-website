@@ -2,6 +2,7 @@ import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
 import { notifySlack } from "@/lib/notifications"
+import { getStripeKeys } from "@/lib/stripe-config"
 
 export async function GET(request: NextRequest) {
   try {
@@ -40,7 +41,7 @@ export async function GET(request: NextRequest) {
     // Get Customer ID: Query profiles table
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
-      .select("full_name, clinic_name, stripe_customer_id")
+      .select("full_name, clinic_name, stripe_customer_id, is_demo")
       .eq("id", user.id)
       .single()
 
@@ -48,8 +49,10 @@ export async function GET(request: NextRequest) {
       console.error("[v0] Error fetching profile:", profileError)
     }
 
-    // Initialize Stripe
-    const stripe = new Stripe(process.env.STRIPE_SECRET_KEY!, {
+    const { secretKey, isDemo } = getStripeKeys(profile?.is_demo || false)
+
+    // Initialize Stripe with the correct key
+    const stripe = new Stripe(secretKey, {
       apiVersion: "2025-11-17.clover",
     })
 
@@ -84,6 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     const receiptDescription = `Complete Case Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
+    const demoSuffix = profile?.is_demo ? " [TEST MODE: Use Card 4242 4242 4242 4242 - Any Date/CVC]" : ""
 
     // Create Checkout Session
     const origin = request.nextUrl.origin
@@ -94,7 +98,7 @@ export async function GET(request: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: receiptDescription,
+              name: receiptDescription + demoSuffix,
               // CRITICAL: Explicitly set tax code for 'General Professional Services'
               // This ensures PA tax is $0.00
               tax_code: "txcd_20030000",
@@ -149,13 +153,14 @@ export async function GET(request: NextRequest) {
     })
 
     console.log("[v0] Stripe checkout session created:", session.id)
+    console.log("[v0] Demo mode:", isDemo ? "YES (test keys)" : "NO (live keys)")
 
     if (!session.url) {
       throw new Error("No checkout URL returned from Stripe")
     }
 
     await notifySlack(
-      `💳 Checkout Initiated: GP ${profile?.full_name || "Unknown"} is attempting to pay for ${caseData.patient_name}`,
+      `💳 Checkout Initiated${isDemo ? " [DEMO]" : ""}: GP ${profile?.full_name || "Unknown"} is attempting to pay for ${caseData.patient_name}`,
       "info",
     )
 

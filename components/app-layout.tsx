@@ -2,17 +2,27 @@ import type React from "react"
 import Link from "next/link"
 import { ShieldCheck, PlusCircle, LayoutList, Settings } from "lucide-react"
 import { LogoutButton } from "./logout-button"
+import { DemoModeBanner } from "./demo-mode-banner"
 
 interface AppLayoutProps {
   children: React.ReactNode
   activePage: "submitCase" | "myCases" | "settings"
   userName?: string
-  userRole: "gp" | "specialist" // Pages using this layout must pass userRole="gp" or userRole="specialist"
+  userRole: "gp" | "specialist"
+  isDemoUser?: boolean
 }
 
-export function AppLayout({ children, activePage, userName = "No user logged in", userRole }: AppLayoutProps) {
+export function AppLayout({
+  children,
+  activePage,
+  userName = "No user logged in",
+  userRole,
+  isDemoUser = false,
+}: AppLayoutProps) {
   return (
     <div className="min-h-screen bg-brand-offwhite">
+      {isDemoUser && <DemoModeBanner userName={userName} />}
+
       {/* Simplified App Header */}
       <header className="border-b border-brand-stone bg-white shadow-sm">
         <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6 lg:px-8">

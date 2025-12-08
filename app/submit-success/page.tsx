@@ -158,7 +158,7 @@ export default async function SubmitSuccessPage({
   console.log("[v0] Rendering success page - Patient:", patientName, "Case ID:", caseIdDisplay)
 
   return (
-    <AppLayout activePage="submitCase" userRole="gp" userName={userName}>
+    <AppLayout activePage="submitCase" userRole="gp" userName={userName} isDemoUser={profile?.is_demo}>
       <div className="mx-auto max-w-2xl px-4 py-12 sm:px-6 lg:px-8">
         <div className="rounded-lg border-2 border-brand-gold bg-white p-8 text-center shadow-2xl md:p-12">
           <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-full bg-brand-gold/20">
