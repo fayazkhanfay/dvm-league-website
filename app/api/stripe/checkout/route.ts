@@ -87,6 +87,7 @@ export async function GET(request: NextRequest) {
     }
 
     const receiptDescription = `Complete Case Consult: ${caseData.patient_name} (${caseData.specialty_requested}) - Ref: ${caseId.slice(0, 8).toUpperCase()}`
+    const demoSuffix = profile?.is_demo ? " [TEST MODE: Use Card 4242 4242 4242 4242]" : ""
 
     // Create Checkout Session
     const origin = request.nextUrl.origin
@@ -97,7 +98,7 @@ export async function GET(request: NextRequest) {
           price_data: {
             currency: "usd",
             product_data: {
-              name: receiptDescription,
+              name: receiptDescription + demoSuffix,
               // CRITICAL: Explicitly set tax code for 'General Professional Services'
               // This ensures PA tax is $0.00
               tax_code: "txcd_20030000",

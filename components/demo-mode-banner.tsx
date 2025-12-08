@@ -14,9 +14,16 @@ export function DemoModeBanner({ userName }: DemoModeBannerProps) {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-brand-navy opacity-75"></span>
               <span className="relative inline-flex rounded-full h-2 w-2 bg-brand-navy"></span>
             </span>
-            DEMO MODE
+            <span className="hidden sm:inline">⚠️</span> DEMO MODE
           </span>
-          <span className="hidden sm:inline text-brand-navy/70">• Test payments only • No real charges</span>
+          <span className="text-brand-navy/70">•</span>
+          <span className="text-brand-navy/80">
+            Use Test Card:{" "}
+            <span className="font-mono font-bold select-all bg-brand-navy/10 px-1.5 py-0.5 rounded">
+              4242 4242 4242 4242
+            </span>
+          </span>
+          <span className="hidden md:inline text-brand-navy/70">• Any Date/CVC</span>
         </div>
       </div>
     </div>
