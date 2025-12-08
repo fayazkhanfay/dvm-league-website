@@ -154,6 +154,11 @@ export async function GET(request: NextRequest) {
       throw new Error("No checkout URL returned from Stripe")
     }
 
+    await notifySlack(
+      `💳 Checkout Initiated: GP ${profile?.full_name || "Unknown"} is attempting to pay for ${caseData.patient_name}`,
+      "info",
+    )
+
     return NextResponse.redirect(session.url)
   } catch (error) {
     console.error("[v0] Stripe checkout error:", error)
