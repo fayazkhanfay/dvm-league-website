@@ -1,6 +1,7 @@
 import { type NextRequest, NextResponse } from "next/server"
 import Stripe from "stripe"
 import { createClient } from "@/lib/supabase/server"
+import { notifySlack } from "@/lib/notifications"
 
 export async function GET(request: NextRequest) {
   try {
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
               name: receiptDescription,
               // CRITICAL: Explicitly set tax code for 'General Professional Services'
               // This ensures PA tax is $0.00
-              tax_code: 'txcd_20030000',
+              tax_code: "txcd_20030000",
             },
             unit_amount: 39500, // $395.00
           },
@@ -109,12 +110,12 @@ export async function GET(request: NextRequest) {
       automatic_tax: { enabled: true },
 
       // CRITICAL: Force address collection so Stripe knows which state to monitor
-      billing_address_collection: 'required',
+      billing_address_collection: "required",
 
       // Save the address they enter to the Stripe Customer for future use
       customer_update: {
-        address: 'auto',
-        name: 'auto',
+        address: "auto",
+        name: "auto",
       },
 
       invoice_creation: {
@@ -153,9 +154,31 @@ export async function GET(request: NextRequest) {
       throw new Error("No checkout URL returned from Stripe")
     }
 
+    await notifySlack(
+      `💳 Checkout Initiated: GP ${profile?.full_name || "Unknown"} is attempting to pay for ${caseData.patient_name}`,
+      "info",
+    )
+
     return NextResponse.redirect(session.url)
   } catch (error) {
     console.error("[v0] Stripe checkout error:", error)
+
+    const errorMessage = error instanceof Error ? error.message : "Unknown error"
+    const userEmail = "Unknown" // We may not have user context in catch block
+
+    try {
+      // Try to get user email if possible
+      const supabase = await createClient()
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+
+      await notifySlack(`Stripe Checkout Failed! User: ${user?.email || userEmail} | Error: ${errorMessage}`, "error")
+    } catch (notifyError) {
+      // If notification fails, just log it
+      console.error("[v0] Failed to send error notification:", notifyError)
+    }
+
     return NextResponse.redirect(new URL("/gp-dashboard?error=checkout_failed", request.url))
   }
 }
