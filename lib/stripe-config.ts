@@ -6,13 +6,8 @@ export function getStripeKeys(isDemoUser: boolean) {
     ? process.env.STRIPE_SECRET_KEY_TEST! // Test secret key
     : process.env.STRIPE_SECRET_KEY! // Live secret key
 
-  const publishableKey = isDemoUser
-    ? process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY_TEST! // Test publishable key
-    : process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY! // Live publishable key
-
   return {
     secretKey,
-    publishableKey,
     isDemo: isDemoUser,
   }
 }
