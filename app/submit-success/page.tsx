@@ -3,7 +3,7 @@ import { revalidatePath } from "next/cache"
 import { Button } from "@/components/ui/button"
 import { CheckCircle, Trophy } from "lucide-react"
 import { AppLayout } from "@/components/app-layout"
-import { sendCaseConfirmation } from "@/lib/email"
+import { sendCaseConfirmation, notifyMatchingSpecialists } from "@/lib/email"
 import { notifySlack } from "@/lib/notifications"
 import Link from "next/link"
 
@@ -94,7 +94,7 @@ export default async function SubmitSuccessPage({
         try {
           const { data, error } = await supabase
             .from("cases")
-            .select("id, patient_name, created_at")
+            .select("id, patient_name, created_at, specialty_requested, patient_signalment, presenting_complaint")
             .eq("id", caseId)
             .single()
 
@@ -103,7 +103,7 @@ export default async function SubmitSuccessPage({
             caseData = data
 
             if (profile?.email && profile?.full_name && data.patient_name) {
-              console.log("[v0] Sending confirmation email to:", profile.email)
+              console.log("[v0] Sending confirmation email to GP:", profile.email)
               const emailResult = await sendCaseConfirmation(
                 profile.email,
                 profile.full_name,
@@ -113,7 +113,7 @@ export default async function SubmitSuccessPage({
 
               if (emailResult.success) {
                 emailSent = true
-                console.log("[v0] Confirmation email sent successfully")
+                console.log("[v0] Confirmation email sent successfully to GP")
 
                 await notifySlack(
                   `💰 PAYMENT SUCCESS ($395): Case Confirmed for Patient: ${data.patient_name} (Ref: ${data.id.slice(0, 8).toUpperCase()}). Email sent to GP.`,
@@ -121,6 +121,34 @@ export default async function SubmitSuccessPage({
                 )
               } else {
                 console.error("[v0] Failed to send confirmation email:", emailResult.error)
+              }
+
+              if (data.specialty_requested && paymentConfirmed) {
+                console.log("[v0] Notifying specialists for specialty:", data.specialty_requested)
+
+                const signalment = data.patient_signalment
+                const signalmentString = `${signalment.species}, ${signalment.breed}, ${signalment.age}, ${signalment.sex_status}, ${signalment.weight_kg}kg`
+
+                const specialistNotifResult = await notifyMatchingSpecialists(
+                  data.specialty_requested,
+                  data.id,
+                  data.patient_name,
+                  signalmentString,
+                  data.presenting_complaint,
+                )
+
+                if (specialistNotifResult.success) {
+                  console.log(
+                    `[v0] Specialist notifications sent: ${specialistNotifResult.sent} sent, ${specialistNotifResult.failed} failed`,
+                  )
+
+                  await notifySlack(
+                    `📧 SPECIALIST NOTIFIED: ${specialistNotifResult.sent} ${data.specialty_requested} specialist(s) notified about case ${data.id.slice(0, 8).toUpperCase()}`,
+                    "email",
+                  )
+                } else {
+                  console.error("[v0] Failed to notify specialists:", specialistNotifResult.error)
+                }
               }
             }
           } else {
