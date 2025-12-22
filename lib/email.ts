@@ -47,12 +47,13 @@ export async function notifyMatchingSpecialists(
 
     console.log("[Email] Looking for specialists with specialty:", specialty)
 
-    // Find all specialists with matching specialty (case-insensitive)
+    // Find all specialists with matching specialty (case-insensitive contains search)
+    // This handles comma-separated specialties like "Internal Medicine, Cardiology, Dermatology"
     const { data: specialists, error: fetchError } = await supabase
       .from("profiles")
       .select("id, email, full_name, specialty")
       .eq("role", "specialist")
-      .ilike("specialty", specialty) // Case-insensitive match
+      .ilike("specialty", `%${specialty}%`) // Wildcard search to find specialty anywhere in the string
 
     if (fetchError) {
       console.error("[Email] Error fetching specialists:", fetchError)
@@ -66,7 +67,7 @@ export async function notifyMatchingSpecialists(
     }
 
     console.log(`[Email] ✓ Found ${specialists.length} specialist(s) for ${specialty}:`)
-    specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email})`))
+    specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email}) - Specialties: ${s.specialty}`))
 
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
 

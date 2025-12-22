@@ -145,9 +145,10 @@ export default async function SubmitSuccessPage({
                   const env = process.env.NODE_ENV === "production" ? "PROD" : "DEV"
                   const specialistCount = specialistNotifResult.sent || 0
                   const caseRef = data.id.slice(0, 8).toUpperCase()
+                  const patientNameDisplay = data.patient_name
 
                   await notifySlack(
-                    `📧 [${env}] SPECIALIST NOTIFIED: ${specialistCount} ${data.specialty_requested} specialist(s) notified about case ${caseRef} for ${data.patient_name}`,
+                    `📧 [${env}] SPECIALIST NOTIFIED: ${specialistCount} ${data.specialty_requested} specialist(s) notified about case ${caseRef} for ${patientNameDisplay}`,
                     "email",
                   )
                 } else {
