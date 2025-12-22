@@ -45,12 +45,14 @@ export async function notifyMatchingSpecialists(
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = await createClient()
 
-    // Find all specialists with matching specialty
+    console.log("[Email] Looking for specialists with specialty:", specialty)
+
+    // Find all specialists with matching specialty (case-insensitive)
     const { data: specialists, error: fetchError } = await supabase
       .from("profiles")
-      .select("id, email, full_name")
+      .select("id, email, full_name, specialty")
       .eq("role", "specialist")
-      .eq("specialty", specialty)
+      .ilike("specialty", specialty) // Case-insensitive match
 
     if (fetchError) {
       console.error("[Email] Error fetching specialists:", fetchError)
@@ -58,11 +60,13 @@ export async function notifyMatchingSpecialists(
     }
 
     if (!specialists || specialists.length === 0) {
-      console.log("[Email] No specialists found for specialty:", specialty)
-      return { success: true, message: "No specialists found" }
+      console.log("[Email] ⚠️ No specialists found for specialty:", specialty)
+      console.log("[Email] Tip: Check that specialist profiles have the 'specialty' field set correctly")
+      return { success: true, message: "No specialists found", sent: 0, failed: 0 }
     }
 
-    console.log(`[Email] Notifying ${specialists.length} specialist(s) for ${specialty} case`)
+    console.log(`[Email] ✓ Found ${specialists.length} specialist(s) for ${specialty}:`)
+    specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email})`))
 
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
 
@@ -90,7 +94,12 @@ export async function notifyMatchingSpecialists(
     const successCount = results.filter((r) => r.status === "fulfilled").length
     const failCount = results.filter((r) => r.status === "rejected").length
 
-    console.log(`[Email] Specialist notifications: ${successCount} sent, ${failCount} failed`)
+    console.log(`[Email] ✓ Specialist notifications: ${successCount} sent, ${failCount} failed`)
+    results.forEach((result, index) => {
+      if (result.status === "rejected") {
+        console.error(`[Email] Failed to send to ${specialists[index].email}:`, result.reason)
+      }
+    })
 
     return {
       success: true,
