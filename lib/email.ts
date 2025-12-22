@@ -42,8 +42,8 @@ export async function notifyMatchingSpecialists(
   presentingComplaint: string,
 ) {
   try {
-    const { createClient } = await import("@/lib/supabase/server")
-    const supabase = await createClient()
+    const { createAdminClient } = await import("@/lib/supabase/server")
+    const supabase = createAdminClient()
 
     console.log("[Email] ========== SPECIALIST NOTIFICATION DEBUG ==========")
     console.log("[Email] Input specialty:", specialty)
