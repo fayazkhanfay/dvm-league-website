@@ -42,25 +42,21 @@ export async function notifyMatchingSpecialists(
   presentingComplaint: string,
 ) {
   try {
-    const { createAdminClient } = await import("@/lib/supabase/server")
-    const supabase = createAdminClient()
+    const { createClient } = await import("@/lib/supabase/server")
+    const supabase = await createClient()
 
     console.log("[Email] ========== SPECIALIST NOTIFICATION DEBUG ==========")
     console.log("[Email] Input specialty:", specialty)
     console.log("[Email] Input caseId:", caseId)
     console.log("[Email] Input patientName:", patientName)
 
-    // Find all specialists with matching specialty (case-insensitive contains search)
-    // This handles comma-separated specialties like "Internal Medicine, Cardiology, Dermatology"
     const { data: specialists, error: fetchError } = await supabase
       .from("profiles")
       .select("id, email, full_name, specialty, role")
       .eq("role", "specialist")
-      .ilike("specialty", `%${specialty}%`) // Wildcard search to find specialty anywhere in the string
+      .eq("specialty", specialty) // Exact match on specialty field
 
-    console.log(
-      "[Email] Query executed: profiles.select().eq('role', 'specialist').ilike('specialty', '%${specialty}%')",
-    )
+    console.log("[Email] Query executed: profiles.select().eq('role', 'specialist').eq('specialty', '${specialty}')")
     console.log("[Email] Query returned error:", fetchError)
     console.log("[Email] Query returned data:", specialists)
     console.log("[Email] Number of specialists found:", specialists?.length || 0)
