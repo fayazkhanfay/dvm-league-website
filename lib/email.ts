@@ -45,24 +45,37 @@ export async function notifyMatchingSpecialists(
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = await createClient()
 
-    console.log("[Email] Looking for specialists with specialty:", specialty)
+    console.log("[Email] ========== SPECIALIST NOTIFICATION DEBUG ==========")
+    console.log("[Email] Input specialty:", specialty)
+    console.log("[Email] Input caseId:", caseId)
+    console.log("[Email] Input patientName:", patientName)
 
     // Find all specialists with matching specialty (case-insensitive contains search)
     // This handles comma-separated specialties like "Internal Medicine, Cardiology, Dermatology"
     const { data: specialists, error: fetchError } = await supabase
       .from("profiles")
-      .select("id, email, full_name, specialty")
+      .select("id, email, full_name, specialty, role")
       .eq("role", "specialist")
       .ilike("specialty", `%${specialty}%`) // Wildcard search to find specialty anywhere in the string
 
+    console.log(
+      "[Email] Query executed: profiles.select().eq('role', 'specialist').ilike('specialty', '%${specialty}%')",
+    )
+    console.log("[Email] Query returned error:", fetchError)
+    console.log("[Email] Query returned data:", specialists)
+    console.log("[Email] Number of specialists found:", specialists?.length || 0)
+
     if (fetchError) {
-      console.error("[Email] Error fetching specialists:", fetchError)
+      console.error("[Email] ❌ Error fetching specialists:", fetchError)
       return { success: false, error: fetchError }
     }
 
     if (!specialists || specialists.length === 0) {
       console.log("[Email] ⚠️ No specialists found for specialty:", specialty)
       console.log("[Email] Tip: Check that specialist profiles have the 'specialty' field set correctly")
+      console.log(
+        "[Email] Run this SQL to check: SELECT id, full_name, email, specialty, role FROM profiles WHERE role = 'specialist';",
+      )
       return { success: true, message: "No specialists found", sent: 0, failed: 0 }
     }
 
@@ -70,6 +83,7 @@ export async function notifyMatchingSpecialists(
     specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email}) - Specialties: ${s.specialty}`))
 
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
+    console.log("[Email] Case link being sent:", caseLink)
 
     // Send emails to all matching specialists
     const emailPromises = specialists.map((specialist) =>
@@ -99,8 +113,11 @@ export async function notifyMatchingSpecialists(
     results.forEach((result, index) => {
       if (result.status === "rejected") {
         console.error(`[Email] Failed to send to ${specialists[index].email}:`, result.reason)
+      } else {
+        console.log(`[Email] ✓ Email sent to ${specialists[index].email}`)
       }
     })
+    console.log("[Email] ========== END DEBUG ==========")
 
     return {
       success: true,
@@ -108,7 +125,7 @@ export async function notifyMatchingSpecialists(
       failed: failCount,
     }
   } catch (error) {
-    console.error("[Email] Unexpected error notifying specialists:", error)
+    console.error("[Email] ❌ Unexpected error notifying specialists:", error)
     return { success: false, error }
   }
 }
