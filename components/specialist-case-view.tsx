@@ -11,6 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, FileText, ImageIcon, CheckCircle2 } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
+import { submitPhase1 } from "@/app/actions/submit-phase1"
+import { submitPhase2 } from "@/app/actions/submit-phase2"
 import { useToast } from "@/hooks/use-toast"
 
 interface SpecialistCaseViewProps {
@@ -22,6 +24,8 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const router = useRouter()
   const { toast } = useToast()
   const [isAccepting, setIsAccepting] = useState(false)
+  const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
+  const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
   const [phase1Plan, setPhase1Plan] = useState(caseData.phase1_plan || "")
   const [phase2Assessment, setPhase2Assessment] = useState(caseData.phase2_assessment || "")
   const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState(caseData.phase2_treatment_plan || "")
@@ -62,16 +66,74 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
     }
   }
 
-  const handleSubmitPhase1 = () => {
-    // TODO: Implement Supabase update
-    console.log("[v0] Submitting Phase 1 Plan:", phase1Plan)
-    router.push("/specialist-dashboard")
+  const handleSubmitPhase1 = async () => {
+    if (!phase1Plan.trim()) {
+      toast({
+        title: "Missing Information",
+        description: "Please provide a diagnostic plan before submitting.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmittingPhase1(true)
+    const result = await submitPhase1(caseData.id, phase1Plan)
+
+    if (result.success) {
+      toast({
+        title: "Phase 1 Submitted",
+        description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
+      })
+      router.push("/specialist-dashboard")
+      router.refresh()
+    } else {
+      toast({
+        title: "Submission Failed",
+        description: result.error || "Failed to submit Phase 1 plan. Please try again.",
+        variant: "destructive",
+      })
+      setIsSubmittingPhase1(false)
+    }
   }
 
-  const handleSubmitPhase2 = () => {
-    // TODO: Implement Supabase update
-    console.log("[v0] Submitting Phase 2 Report")
-    router.push("/specialist-dashboard")
+  const handleSubmitPhase2 = async () => {
+    if (
+      !phase2Assessment.trim() ||
+      !phase2TreatmentPlan.trim() ||
+      !phase2Prognosis.trim() ||
+      !phase2ClientSummary.trim()
+    ) {
+      toast({
+        title: "Missing Information",
+        description: "Please complete all fields before submitting the Phase 2 report.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    setIsSubmittingPhase2(true)
+    const result = await submitPhase2(caseData.id, {
+      assessment: phase2Assessment,
+      treatmentPlan: phase2TreatmentPlan,
+      prognosis: phase2Prognosis,
+      clientSummary: phase2ClientSummary,
+    })
+
+    if (result.success) {
+      toast({
+        title: "Phase 2 Submitted",
+        description: "Your final report has been submitted successfully. The case is now complete.",
+      })
+      router.push("/specialist-dashboard")
+      router.refresh()
+    } else {
+      toast({
+        title: "Submission Failed",
+        description: result.error || "Failed to submit Phase 2 report. Please try again.",
+        variant: "destructive",
+      })
+      setIsSubmittingPhase2(false)
+    }
   }
 
   const getStatusBadge = (status: string) => {
@@ -304,9 +366,10 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
 
                   <Button
                     onClick={handleSubmitPhase1}
-                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+                    disabled={isSubmittingPhase1}
+                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                   >
-                    Submit Phase 1 Plan
+                    {isSubmittingPhase1 ? "Submitting..." : "Submit Phase 1 Plan"}
                   </Button>
                 </CardContent>
               </Card>
@@ -409,9 +472,10 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
 
                     <Button
                       onClick={handleSubmitPhase2}
-                      className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white"
+                      disabled={isSubmittingPhase2}
+                      className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      Submit Final Report
+                      {isSubmittingPhase2 ? "Submitting..." : "Submit Final Report"}
                     </Button>
                   </CardContent>
                 </Card>
