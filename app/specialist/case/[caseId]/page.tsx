@@ -30,10 +30,17 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
     `,
     )
     .eq("id", caseId)
-    .eq("specialist_id", user.id)
     .single()
 
   if (error || !caseData) {
+    redirect("/specialist-dashboard")
+  }
+
+  const isAssignedToCurrentUser = caseData.specialist_id === user.id
+  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+
+  if (!isAssignedToCurrentUser && !isUnassigned) {
+    // Case is assigned to another specialist
     redirect("/specialist-dashboard")
   }
 
