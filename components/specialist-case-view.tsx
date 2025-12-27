@@ -9,7 +9,9 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, FileText, ImageIcon } from "lucide-react"
+import { ArrowLeft, FileText, ImageIcon, CheckCircle2 } from "lucide-react"
+import { acceptCase } from "@/app/actions/accept-case"
+import { useToast } from "@/hooks/use-toast"
 
 interface SpecialistCaseViewProps {
   caseData: any
@@ -18,6 +20,8 @@ interface SpecialistCaseViewProps {
 
 export default function SpecialistCaseView({ caseData, userProfile }: SpecialistCaseViewProps) {
   const router = useRouter()
+  const { toast } = useToast()
+  const [isAccepting, setIsAccepting] = useState(false)
   const [phase1Plan, setPhase1Plan] = useState(caseData.phase1_plan || "")
   const [phase2Assessment, setPhase2Assessment] = useState(caseData.phase2_assessment || "")
   const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState(caseData.phase2_treatment_plan || "")
@@ -27,6 +31,32 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const signalment = caseData.patient_signalment
   const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
   const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+
+  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+
+  const handleAcceptCase = async () => {
+    setIsAccepting(true)
+    const result = await acceptCase(caseData.id)
+
+    if (result.success) {
+      toast({
+        title: "Case Accepted",
+        description: "You have successfully claimed this case. You can now begin working on it.",
+      })
+      router.refresh()
+    } else {
+      toast({
+        title: "Failed to Accept Case",
+        description: result.error || "Another specialist may have already claimed this case.",
+        variant: "destructive",
+      })
+      setIsAccepting(false)
+      // Redirect back to dashboard if case was taken
+      if (result.error?.includes("already assigned")) {
+        setTimeout(() => router.push("/specialist-dashboard"), 2000)
+      }
+    }
+  }
 
   const handleSubmitPhase1 = () => {
     // TODO: Implement Supabase update
@@ -217,6 +247,35 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               </h1>
               <div className="mt-3">{getStatusBadge(caseData.status)}</div>
             </div>
+
+            {isUnassigned && (
+              <Card className="mb-6 border-2 border-brand-gold shadow-lg">
+                <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Available Case</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 p-6">
+                  <div className="rounded-md bg-blue-50 p-4">
+                    <p className="text-sm text-blue-900">
+                      This case is available for you to accept. Review the case details on the left, and if you'd like
+                      to work on this case, click the button below to claim it.
+                    </p>
+                  </div>
+
+                  <Button
+                    onClick={handleAcceptCase}
+                    disabled={isAccepting}
+                    className="w-full transform rounded-md bg-brand-gold px-8 py-6 text-xl font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    <CheckCircle2 className="mr-2 h-6 w-6" />
+                    {isAccepting ? "Accepting Case..." : "Accept & Claim This Case"}
+                  </Button>
+
+                  <p className="text-center text-xs text-brand-navy/60">
+                    Once you accept this case, it will no longer be visible to other specialists
+                  </p>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Phase 1 Form */}
             {isAwaitingPhase1 && (
