@@ -104,9 +104,19 @@ export default async function SpecialistDashboard() {
 
         <Tabs defaultValue="active" className="mb-8">
           <TabsList className="grid w-full max-w-3xl grid-cols-3">
-            <TabsTrigger value="active">Active Cases</TabsTrigger>
-            <TabsTrigger value="available">Available Cases</TabsTrigger>
-            <TabsTrigger value="completed">Completed Cases</TabsTrigger>
+            <TabsTrigger value="active">
+              Active Cases {activeCases.length > 0 && <span className="ml-1.5 text-xs">({activeCases.length})</span>}
+            </TabsTrigger>
+            <TabsTrigger value="available">
+              Available Cases{" "}
+              {availableCases && availableCases.length > 0 && (
+                <span className="ml-1.5 text-xs">({availableCases.length})</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Completed Cases{" "}
+              {completedCases.length > 0 && <span className="ml-1.5 text-xs">({completedCases.length})</span>}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
