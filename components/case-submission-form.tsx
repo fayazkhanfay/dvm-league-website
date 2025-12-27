@@ -606,9 +606,9 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     <SelectValue placeholder="Select specialty" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="internal medicine">Internal Medicine</SelectItem>
-                    <SelectItem value="cardiology">Cardiology</SelectItem>
-                    <SelectItem value="dermatology">Dermatology</SelectItem>
+                    <SelectItem value="Internal Medicine">Internal Medicine</SelectItem>
+                    <SelectItem value="Cardiology">Cardiology</SelectItem>
+                    <SelectItem value="Dermatology">Dermatology</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
