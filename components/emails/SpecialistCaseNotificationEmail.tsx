@@ -49,7 +49,7 @@ export default function SpecialistCaseNotificationEmail({
 
             <Section style={buttonContainer}>
               <Button style={button} href={caseLink}>
-                View Case & Accept
+                View Case
               </Button>
             </Section>
 
