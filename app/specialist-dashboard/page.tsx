@@ -49,6 +49,7 @@ export default async function SpecialistDashboard() {
     )
     .eq("status", "pending_assignment")
     .is("specialist_id", null)
+    .eq("specialty_requested", profile.specialty)
     .order("created_at", { ascending: false })
 
   const getStatusBadge = (status: string) => {
