@@ -54,7 +54,7 @@ export async function notifyMatchingSpecialists(
       .from("profiles")
       .select("id, email, full_name, specialty, role")
       .eq("role", "specialist")
-      .eq("specialty", specialty) // Exact match on specialty field
+      .eq("specialty", specialty)
 
     console.log("[Email] Query executed: profiles.select().eq('role', 'specialist').eq('specialty', '${specialty}')")
     console.log("[Email] Query returned error:", fetchError)
@@ -69,9 +69,6 @@ export async function notifyMatchingSpecialists(
     if (!specialists || specialists.length === 0) {
       console.log("[Email] ⚠️ No specialists found for specialty:", specialty)
       console.log("[Email] Tip: Check that specialist profiles have the 'specialty' field set correctly")
-      console.log(
-        "[Email] Run this SQL to check: SELECT id, full_name, email, specialty, role FROM profiles WHERE role = 'specialist';",
-      )
       return { success: true, message: "No specialists found", sent: 0, failed: 0 }
     }
 
@@ -81,36 +78,52 @@ export async function notifyMatchingSpecialists(
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
     console.log("[Email] Case link being sent:", caseLink)
 
-    // Send emails to all matching specialists
-    const emailPromises = specialists.map((specialist) =>
-      resend.emails.send({
-        from: "DVM League <notifications@mail.dvmleague.com>",
-        to: specialist.email,
-        replyTo: "khan@dvmleague.com",
-        subject: `New ${specialty} Case Available - ${patientName}`,
-        react: SpecialistCaseNotificationEmail({
-          specialistName: specialist.full_name,
-          patientName,
-          specialty,
-          caseId,
-          caseLink,
-          patientSignalment,
-          presentingComplaint,
-        }),
-      }),
-    )
+    const emailResults = []
 
-    const results = await Promise.allSettled(emailPromises)
+    for (const specialist of specialists) {
+      try {
+        console.log(`[Email] Sending to ${specialist.email}...`)
 
-    const successCount = results.filter((r) => r.status === "fulfilled").length
-    const failCount = results.filter((r) => r.status === "rejected").length
+        const { data, error } = await resend.emails.send({
+          from: "DVM League <notifications@mail.dvmleague.com>",
+          to: specialist.email,
+          replyTo: "khan@dvmleague.com",
+          subject: `New ${specialty} Case Available - ${patientName}`,
+          react: SpecialistCaseNotificationEmail({
+            specialistName: specialist.full_name,
+            patientName,
+            specialty,
+            caseId,
+            caseLink,
+            patientSignalment,
+            presentingComplaint,
+          }),
+        })
+
+        if (error) {
+          console.error(`[Email] ❌ Resend API error for ${specialist.email}:`, error)
+          emailResults.push({ email: specialist.email, success: false, error })
+        } else {
+          console.log(`[Email] ✓ Email sent to ${specialist.email} - ID: ${data?.id}`)
+          emailResults.push({ email: specialist.email, success: true, id: data?.id })
+        }
+
+        if (specialists.indexOf(specialist) < specialists.length - 1) {
+          await new Promise((resolve) => setTimeout(resolve, 100))
+        }
+      } catch (error) {
+        console.error(`[Email] ❌ Exception sending to ${specialist.email}:`, error)
+        emailResults.push({ email: specialist.email, success: false, error })
+      }
+    }
+
+    const successCount = emailResults.filter((r) => r.success).length
+    const failCount = emailResults.filter((r) => !r.success).length
 
     console.log(`[Email] ✓ Specialist notifications: ${successCount} sent, ${failCount} failed`)
-    results.forEach((result, index) => {
-      if (result.status === "rejected") {
-        console.error(`[Email] Failed to send to ${specialists[index].email}:`, result.reason)
-      } else {
-        console.log(`[Email] ✓ Email sent to ${specialists[index].email}`)
+    emailResults.forEach((result) => {
+      if (!result.success) {
+        console.error(`[Email] ❌ Failed to send to ${result.email}:`, result.error)
       }
     })
     console.log("[Email] ========== END DEBUG ==========")
@@ -119,6 +132,7 @@ export async function notifyMatchingSpecialists(
       success: true,
       sent: successCount,
       failed: failCount,
+      details: emailResults,
     }
   } catch (error) {
     console.error("[Email] ❌ Unexpected error notifying specialists:", error)
