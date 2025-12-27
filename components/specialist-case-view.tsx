@@ -35,16 +35,20 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
 
   const handleAcceptCase = async () => {
+    console.log("[v0] handleAcceptCase clicked")
     setIsAccepting(true)
     const result = await acceptCase(caseData.id)
+    console.log("[v0] acceptCase result:", result)
 
     if (result.success) {
+      console.log("[v0] Case accepted successfully, showing toast and refreshing")
       toast({
         title: "Case Accepted",
         description: "You have successfully claimed this case. You can now begin working on it.",
       })
       router.refresh()
     } else {
+      console.log("[v0] Failed to accept case:", result.error)
       toast({
         title: "Failed to Accept Case",
         description: result.error || "Another specialist may have already claimed this case.",
