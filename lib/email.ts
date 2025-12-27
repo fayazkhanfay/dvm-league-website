@@ -109,7 +109,7 @@ export async function notifyMatchingSpecialists(
         }
 
         if (specialists.indexOf(specialist) < specialists.length - 1) {
-          await new Promise((resolve) => setTimeout(resolve, 100))
+          await new Promise((resolve) => setTimeout(resolve, 600))
         }
       } catch (error) {
         console.error(`[Email] ❌ Exception sending to ${specialist.email}:`, error)
