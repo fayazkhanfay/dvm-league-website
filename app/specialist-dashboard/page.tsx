@@ -82,7 +82,11 @@ export default async function SpecialistDashboard() {
           </Button>
         )
       case "awaiting_diagnostics":
-        return <span className="text-sm text-brand-navy/60">Awaiting GP Diagnostics</span>
+        return (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
+          </Button>
+        )
       case "awaiting_phase2":
         return (
           <Button variant="outline" size="sm" asChild>
