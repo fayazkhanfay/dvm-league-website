@@ -139,3 +139,126 @@ export async function notifyMatchingSpecialists(
     return { success: false, error }
   }
 }
+
+export async function notifyGPOfPhaseUpdate(caseId: string, updateType: "phase1_complete" | "phase2_complete") {
+  try {
+    const { createClient } = await import("@/lib/supabase/server")
+    const supabase = await createClient()
+
+    const { data: caseData, error: caseError } = await supabase
+      .from("cases")
+      .select(
+        `
+        id,
+        patient_name,
+        gp_id,
+        specialist_id,
+        gp:profiles!cases_gp_id_fkey(email, full_name),
+        specialist:profiles!cases_specialist_id_fkey(full_name)
+      `,
+      )
+      .eq("id", caseId)
+      .single()
+
+    if (caseError || !caseData) {
+      console.error("[Email] Error fetching case data:", caseError)
+      return { success: false, error: caseError }
+    }
+
+    const gpEmail = caseData.gp.email
+    const gpName = caseData.gp.full_name
+    const specialistName = caseData.specialist.full_name
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp/case/${caseId}`
+
+    const { default: GPCaseUpdateEmail } = await import("@/components/emails/GPCaseUpdateEmail")
+
+    const { data, error } = await resend.emails.send({
+      from: "DVM League <notifications@mail.dvmleague.com>",
+      to: gpEmail,
+      replyTo: "khan@dvmleague.com",
+      subject:
+        updateType === "phase1_complete"
+          ? `Diagnostic Plan Ready - ${caseData.patient_name}`
+          : `Final Report Complete - ${caseData.patient_name}`,
+      react: GPCaseUpdateEmail({
+        gpName,
+        patientName: caseData.patient_name,
+        caseId,
+        caseLink,
+        updateType,
+        specialistName,
+      }),
+    })
+
+    if (error) {
+      console.error("[Email] Failed to notify GP:", error)
+      return { success: false, error }
+    }
+
+    console.log("[Email] ✓ GP notified successfully:", data?.id)
+    return { success: true, data }
+  } catch (error) {
+    console.error("[Email] Unexpected error notifying GP:", error)
+    return { success: false, error }
+  }
+}
+
+export async function notifySpecialistOfDiagnostics(caseId: string) {
+  try {
+    const { createClient } = await import("@/lib/supabase/server")
+    const supabase = await createClient()
+
+    const { data: caseData, error: caseError } = await supabase
+      .from("cases")
+      .select(
+        `
+        id,
+        patient_name,
+        gp_id,
+        specialist_id,
+        specialist:profiles!cases_specialist_id_fkey(email, full_name),
+        gp:profiles!cases_gp_id_fkey(full_name)
+      `,
+      )
+      .eq("id", caseId)
+      .single()
+
+    if (caseError || !caseData) {
+      console.error("[Email] Error fetching case data:", caseError)
+      return { success: false, error: caseError }
+    }
+
+    const specialistEmail = caseData.specialist.email
+    const specialistName = caseData.specialist.full_name
+    const gpName = caseData.gp.full_name
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist/case/${caseId}`
+
+    const { default: SpecialistCaseUpdateEmail } = await import("@/components/emails/SpecialistCaseUpdateEmail")
+
+    const { data, error } = await resend.emails.send({
+      from: "DVM League <notifications@mail.dvmleague.com>",
+      to: specialistEmail,
+      replyTo: "khan@dvmleague.com",
+      subject: `Diagnostic Results Available - ${caseData.patient_name}`,
+      react: SpecialistCaseUpdateEmail({
+        specialistName,
+        patientName: caseData.patient_name,
+        caseId,
+        caseLink,
+        updateType: "diagnostics_uploaded",
+        gpName,
+      }),
+    })
+
+    if (error) {
+      console.error("[Email] Failed to notify specialist:", error)
+      return { success: false, error }
+    }
+
+    console.log("[Email] ✓ Specialist notified of diagnostics:", data?.id)
+    return { success: true, data }
+  } catch (error) {
+    console.error("[Email] Unexpected error notifying specialist:", error)
+    return { success: false, error }
+  }
+}

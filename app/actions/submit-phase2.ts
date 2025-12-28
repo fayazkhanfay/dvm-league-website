@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { notifyGPOfPhaseUpdate } from "@/lib/email"
 
 interface Phase2Data {
   assessment: string
@@ -47,6 +48,8 @@ export async function submitPhase2(caseId: string, data: Phase2Data) {
   if (updateError) {
     return { success: false, error: "Failed to submit Phase 2 report" }
   }
+
+  await notifyGPOfPhaseUpdate(caseId, "phase2_complete")
 
   revalidatePath(`/specialist/case/${caseId}`)
   revalidatePath("/specialist-dashboard")

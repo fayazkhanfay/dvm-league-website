@@ -2,6 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
+import { notifyGPOfPhaseUpdate } from "@/lib/email"
 
 export async function submitPhase1(caseId: string, phase1Plan: string) {
   const supabase = await createClient()
@@ -37,6 +38,8 @@ export async function submitPhase1(caseId: string, phase1Plan: string) {
   if (updateError) {
     return { success: false, error: "Failed to submit Phase 1 plan" }
   }
+
+  await notifyGPOfPhaseUpdate(caseId, "phase1_complete")
 
   revalidatePath(`/specialist/case/${caseId}`)
   revalidatePath("/specialist-dashboard")

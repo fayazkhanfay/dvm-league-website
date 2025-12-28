@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-
+import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -177,11 +177,10 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
     }
 
     try {
-      const { error } = await supabase.from("cases").update({ status: "awaiting_phase2" }).eq("id", caseData.id)
+      const result = await submitDiagnostics(caseData.id)
 
-      if (error) {
-        console.error("[v0] Error updating case status:", error)
-        setUploadError("Failed to submit diagnostics. Please try again.")
+      if (!result.success) {
+        setUploadError(result.error || "Failed to submit diagnostics. Please try again.")
         return
       }
 
