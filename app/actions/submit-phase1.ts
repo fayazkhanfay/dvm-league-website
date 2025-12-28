@@ -38,8 +38,10 @@ export async function submitPhase1(caseId: string, phase1Plan: string) {
     return { success: false, error: "Failed to submit Phase 1 plan" }
   }
 
-  revalidatePath(`/specialist-dashboard/cases/${caseId}`)
+  revalidatePath(`/specialist/case/${caseId}`)
   revalidatePath("/specialist-dashboard")
+  revalidatePath(`/gp/case/${caseId}`)
+  revalidatePath("/gp-dashboard")
 
   return { success: true }
 }

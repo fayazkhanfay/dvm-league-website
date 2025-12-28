@@ -1,9 +1,7 @@
 "use client"
 
 import type React from "react"
-
 import { useState, useEffect, useMemo } from "react"
-import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
@@ -17,6 +15,7 @@ import { submitPhase1 } from "@/app/actions/submit-phase1"
 import { submitPhase2 } from "@/app/actions/submit-phase2"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
+import { useRouter } from "next/navigation"
 
 interface SpecialistCaseViewProps {
   caseData: any
@@ -216,7 +215,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
           title: "Phase 1 Submitted",
           description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
         })
-        router.push("/specialist-dashboard")
         router.refresh()
       } else {
         toast({
@@ -275,7 +273,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
           description: "Your final report has been submitted successfully. The case is now complete.",
         })
         router.push("/specialist-dashboard")
-        router.refresh()
       } else {
         toast({
           title: "Submission Failed",
