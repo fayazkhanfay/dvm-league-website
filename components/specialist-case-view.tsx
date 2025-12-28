@@ -1,6 +1,8 @@
 "use client"
 
-import { useState } from "react"
+import type React from "react"
+
+import { useState, useEffect, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { AppLayout } from "@/components/app-layout"
@@ -9,11 +11,12 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, FileText, ImageIcon, CheckCircle2 } from "lucide-react"
+import { ArrowLeft, FileText, ImageIcon, CheckCircle2, Download, UploadCloud, X } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
 import { submitPhase1 } from "@/app/actions/submit-phase1"
 import { submitPhase2 } from "@/app/actions/submit-phase2"
 import { useToast } from "@/hooks/use-toast"
+import { createClient } from "@/lib/supabase/client"
 
 interface SpecialistCaseViewProps {
   caseData: any
@@ -23,6 +26,7 @@ interface SpecialistCaseViewProps {
 export default function SpecialistCaseView({ caseData, userProfile }: SpecialistCaseViewProps) {
   const router = useRouter()
   const { toast } = useToast()
+  const supabase = createClient()
   const [isAccepting, setIsAccepting] = useState(false)
   const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
   const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
@@ -32,11 +36,133 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const [phase2Prognosis, setPhase2Prognosis] = useState(caseData.phase2_prognosis || "")
   const [phase2ClientSummary, setPhase2ClientSummary] = useState(caseData.phase2_client_summary || "")
 
+  const [fileUrls, setFileUrls] = useState<Record<string, string>>({})
+  const [phase1Files, setPhase1Files] = useState<File[]>([])
+  const [phase2Files, setPhase2Files] = useState<File[]>([])
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false)
+
   const signalment = caseData.patient_signalment
-  const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
-  const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
+  const initialFiles = useMemo(
+    () => caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || [],
+    [caseData.case_files],
+  )
+  const diagnosticFiles = useMemo(
+    () => caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || [],
+    [caseData.case_files],
+  )
+  const specialistReportFiles = useMemo(
+    () => caseData.case_files?.filter((f: any) => f.upload_phase === "specialist_report") || [],
+    [caseData.case_files],
+  )
 
   const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+
+  useEffect(() => {
+    const generateSignedUrls = async () => {
+      const allFiles = [...initialFiles, ...diagnosticFiles, ...specialistReportFiles]
+      const urls: Record<string, string> = {}
+
+      for (const file of allFiles) {
+        const { data, error } = await supabase.storage
+          .from("case-bucket")
+          .createSignedUrl(file.storage_object_path, 3600)
+
+        if (!error && data) {
+          urls[file.id] = data.signedUrl
+        } else {
+          console.error("[v0] Error generating signed URL for file:", file.file_name, error)
+        }
+      }
+
+      setFileUrls(urls)
+    }
+
+    generateSignedUrls()
+  }, [caseData.case_files, supabase])
+
+  const handleFileDownload = async (storagePath: string, fileName: string) => {
+    const { data, error } = await supabase.storage.from("case-bucket").download(storagePath)
+
+    if (error) {
+      console.error("[v0] Error downloading file:", error)
+      toast({
+        title: "Download Failed",
+        description: "Failed to download the file. Please try again.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    const url = window.URL.createObjectURL(data)
+    const a = document.createElement("a")
+    a.href = url
+    a.download = fileName
+    document.body.appendChild(a)
+    a.click()
+    window.URL.revokeObjectURL(url)
+    document.body.removeChild(a)
+  }
+
+  const handlePhase1FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files)
+      setPhase1Files((prev) => [...prev, ...newFiles])
+    }
+  }
+
+  const handlePhase2FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      const newFiles = Array.from(e.target.files)
+      setPhase2Files((prev) => [...prev, ...newFiles])
+    }
+  }
+
+  const handleRemovePhase1File = (index: number) => {
+    setPhase1Files((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const handleRemovePhase2File = (index: number) => {
+    setPhase2Files((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const uploadFiles = async (files: File[], uploadPhase: "specialist_report") => {
+    const uploadedFileRecords: any[] = []
+
+    for (const file of files) {
+      const fileExt = file.name.split(".").pop()
+      const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+      const filePath = `${caseData.id}/${fileName}`
+
+      const { data: uploadData, error: uploadError } = await supabase.storage.from("case-bucket").upload(filePath, file)
+
+      if (uploadError) {
+        console.error("[v0] Error uploading file:", file.name, uploadError)
+        throw new Error(`Failed to upload ${file.name}`)
+      }
+
+      const { data: fileRecord, error: fileRecordError } = await supabase
+        .from("case_files")
+        .insert({
+          case_id: caseData.id,
+          uploader_id: userProfile.id,
+          file_name: file.name,
+          file_type: file.type,
+          storage_object_path: uploadData.path,
+          upload_phase: uploadPhase,
+        })
+        .select()
+        .single()
+
+      if (fileRecordError) {
+        console.error("[v0] Error creating file record:", fileRecordError)
+        throw new Error(`Failed to save file record for ${file.name}`)
+      }
+
+      uploadedFileRecords.push(fileRecord)
+    }
+
+    return uploadedFileRecords
+  }
 
   const handleAcceptCase = async () => {
     console.log("[v0] handleAcceptCase clicked")
@@ -59,7 +185,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
         variant: "destructive",
       })
       setIsAccepting(false)
-      // Redirect back to dashboard if case was taken
       if (result.error?.includes("already assigned")) {
         setTimeout(() => router.push("/specialist-dashboard"), 2000)
       }
@@ -77,22 +202,40 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
     }
 
     setIsSubmittingPhase1(true)
-    const result = await submitPhase1(caseData.id, phase1Plan)
 
-    if (result.success) {
+    try {
+      if (phase1Files.length > 0) {
+        setIsUploadingFiles(true)
+        await uploadFiles(phase1Files, "specialist_report")
+      }
+
+      const result = await submitPhase1(caseData.id, phase1Plan)
+
+      if (result.success) {
+        toast({
+          title: "Phase 1 Submitted",
+          description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
+        })
+        router.push("/specialist-dashboard")
+        router.refresh()
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: result.error || "Failed to submit Phase 1 plan. Please try again.",
+          variant: "destructive",
+        })
+        setIsSubmittingPhase1(false)
+      }
+    } catch (error: any) {
+      console.error("[v0] Error uploading files:", error)
       toast({
-        title: "Phase 1 Submitted",
-        description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
-      })
-      router.push("/specialist-dashboard")
-      router.refresh()
-    } else {
-      toast({
-        title: "Submission Failed",
-        description: result.error || "Failed to submit Phase 1 plan. Please try again.",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload files. Please try again.",
         variant: "destructive",
       })
       setIsSubmittingPhase1(false)
+    } finally {
+      setIsUploadingFiles(false)
     }
   }
 
@@ -112,27 +255,45 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
     }
 
     setIsSubmittingPhase2(true)
-    const result = await submitPhase2(caseData.id, {
-      assessment: phase2Assessment,
-      treatmentPlan: phase2TreatmentPlan,
-      prognosis: phase2Prognosis,
-      clientSummary: phase2ClientSummary,
-    })
 
-    if (result.success) {
-      toast({
-        title: "Phase 2 Submitted",
-        description: "Your final report has been submitted successfully. The case is now complete.",
+    try {
+      if (phase2Files.length > 0) {
+        setIsUploadingFiles(true)
+        await uploadFiles(phase2Files, "specialist_report")
+      }
+
+      const result = await submitPhase2(caseData.id, {
+        assessment: phase2Assessment,
+        treatmentPlan: phase2TreatmentPlan,
+        prognosis: phase2Prognosis,
+        clientSummary: phase2ClientSummary,
       })
-      router.push("/specialist-dashboard")
-      router.refresh()
-    } else {
+
+      if (result.success) {
+        toast({
+          title: "Phase 2 Submitted",
+          description: "Your final report has been submitted successfully. The case is now complete.",
+        })
+        router.push("/specialist-dashboard")
+        router.refresh()
+      } else {
+        toast({
+          title: "Submission Failed",
+          description: result.error || "Failed to submit Phase 2 report. Please try again.",
+          variant: "destructive",
+        })
+        setIsSubmittingPhase2(false)
+      }
+    } catch (error: any) {
+      console.error("[v0] Error uploading files:", error)
       toast({
-        title: "Submission Failed",
-        description: result.error || "Failed to submit Phase 2 report. Please try again.",
+        title: "Upload Failed",
+        description: error.message || "Failed to upload files. Please try again.",
         variant: "destructive",
       })
       setIsSubmittingPhase2(false)
+    } finally {
+      setIsUploadingFiles(false)
     }
   }
 
@@ -148,18 +309,20 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
         return <Badge variant="secondary">Awaiting Diagnostics Upload</Badge>
       case "awaiting_phase2":
         return (
-          <Badge variant="default" className="bg-blue-500 hover:bg-blue-600">
+          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
             Awaiting Phase 2 Report
           </Badge>
         )
       case "completed":
         return (
-          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
+          <Badge variant="default" className="bg-brand-navy hover:bg-brand-navy/90">
             Completed
           </Badge>
         )
+      case "pending_assignment":
+        return <Badge variant="secondary">Pending Assignment</Badge>
       default:
-        return <Badge>{status}</Badge>
+        return <Badge variant="secondary">{status}</Badge>
     }
   }
 
@@ -168,8 +331,12 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const isAwaitingPhase2 = caseData.status === "awaiting_phase2"
   const isCompleted = caseData.status === "completed"
 
+  const getFileUrl = (fileId: string) => {
+    return fileUrls[fileId] || "#"
+  }
+
   return (
-    <AppLayout activePage="myCases" userName={userProfile.full_name}>
+    <AppLayout activePage="myCases" userRole="specialist" userName={userProfile.full_name}>
       <main className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-3">
           {/* Left Column: Case Information */}
@@ -254,22 +421,35 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     </div>
                   </div>
 
-                  {/* Files */}
                   {initialFiles.length > 0 && (
                     <div>
-                      <h3 className="mb-3 text-base font-bold text-brand-navy">Initial Files</h3>
+                      <h3 className="mb-3 text-base font-bold text-brand-navy">Initially Submitted Files</h3>
                       <div className="space-y-2">
                         {initialFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm"
+                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                           >
                             {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                              <ImageIcon className="h-3 w-3 text-brand-navy/60" />
+                              <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
                             ) : (
-                              <FileText className="h-3 w-3 text-brand-navy/60" />
+                              <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
                             )}
-                            <span className="text-brand-navy/80">{file.file_name}</span>
+                            <a
+                              href={getFileUrl(file.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
+                            >
+                              {file.file_name}
+                            </a>
+                            <button
+                              onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                              className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                              title="Download file"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -283,10 +463,28 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                         {diagnosticFiles.map((file: any) => (
                           <div
                             key={file.id}
-                            className="flex items-center gap-2 rounded-md bg-white p-2 text-xs shadow-sm"
+                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
                           >
-                            <FileText className="h-3 w-3 text-brand-navy/60" />
-                            <span className="text-brand-navy/80">{file.file_name}</span>
+                            {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
+                              <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
+                            ) : (
+                              <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
+                            )}
+                            <a
+                              href={getFileUrl(file.id)}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
+                            >
+                              {file.file_name}
+                            </a>
+                            <button
+                              onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                              className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                              title="Download file"
+                            >
+                              <Download className="h-3 w-3" />
+                            </button>
                           </div>
                         ))}
                       </div>
@@ -364,12 +562,53 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     />
                   </div>
 
+                  <div>
+                    <Label className="text-sm font-medium text-brand-navy">Supporting Files (Optional)</Label>
+                    <label
+                      htmlFor="phase1-file-upload"
+                      className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-6 text-center transition-colors hover:border-brand-gold"
+                    >
+                      <UploadCloud className="mx-auto h-10 w-10 text-brand-navy/40" />
+                      <p className="mt-2 text-sm text-brand-navy/70">Click to upload supporting files</p>
+                      <p className="mt-1 text-xs text-brand-navy/50">PDF, images, etc.</p>
+                      <input
+                        id="phase1-file-upload"
+                        type="file"
+                        multiple
+                        onChange={handlePhase1FileSelect}
+                        className="hidden"
+                        disabled={isSubmittingPhase1 || isUploadingFiles}
+                      />
+                    </label>
+
+                    {phase1Files.length > 0 && (
+                      <div className="mt-3 space-y-2">
+                        {phase1Files.map((file, index) => (
+                          <div
+                            key={index}
+                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                          >
+                            <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                            <span className="flex-1 truncate text-brand-navy">{file.name}</span>
+                            <button
+                              onClick={() => handleRemovePhase1File(index)}
+                              className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
+                              title="Remove file"
+                            >
+                              <X className="h-4 w-4" />
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <Button
                     onClick={handleSubmitPhase1}
-                    disabled={isSubmittingPhase1}
+                    disabled={isSubmittingPhase1 || isUploadingFiles}
                     className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                   >
-                    {isSubmittingPhase1 ? "Submitting..." : "Submit Phase 1 Plan"}
+                    {isSubmittingPhase1 || isUploadingFiles ? "Submitting..." : "Submit Phase 1 Plan"}
                   </Button>
                 </CardContent>
               </Card>
@@ -398,10 +637,12 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                 {caseData.phase1_plan && (
                   <Card className="mb-6 border-brand-stone shadow-sm">
                     <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                      <CardTitle className="text-lg font-bold text-brand-navy">Your Phase 1 Plan</CardTitle>
+                      <CardTitle className="text-lg font-bold text-brand-navy">
+                        Your Phase 1 Plan (For Reference)
+                      </CardTitle>
                     </CardHeader>
                     <CardContent className="p-6">
-                      <p className="whitespace-pre-line text-sm text-brand-navy/90">{caseData.phase1_plan}</p>
+                      <div className="whitespace-pre-line text-sm text-brand-navy/90">{caseData.phase1_plan}</div>
                     </CardContent>
                   </Card>
                 )}
@@ -413,13 +654,13 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                   <CardContent className="space-y-6 p-6">
                     <div>
                       <Label htmlFor="phase2-assessment" className="text-sm font-medium text-brand-navy">
-                        Assessment
+                        Assessment & Diagnosis
                       </Label>
                       <Textarea
                         id="phase2-assessment"
                         value={phase2Assessment}
                         onChange={(e) => setPhase2Assessment(e.target.value)}
-                        placeholder="Provide your assessment based on diagnostic results..."
+                        placeholder="Your professional assessment based on the diagnostic results..."
                         rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
@@ -433,8 +674,8 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                         id="phase2-treatment"
                         value={phase2TreatmentPlan}
                         onChange={(e) => setPhase2TreatmentPlan(e.target.value)}
-                        placeholder="Provide detailed treatment recommendations..."
-                        rows={8}
+                        placeholder="Detailed treatment recommendations..."
+                        rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
                     </div>
@@ -447,35 +688,73 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                         id="phase2-prognosis"
                         value={phase2Prognosis}
                         onChange={(e) => setPhase2Prognosis(e.target.value)}
-                        placeholder="Provide prognosis information..."
+                        placeholder="Expected outcome and prognosis..."
                         rows={4}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="phase2-client-summary" className="text-sm font-medium text-brand-navy">
-                        Client-Friendly Summary
+                      <Label htmlFor="phase2-summary" className="text-sm font-medium text-brand-navy">
+                        Client Summary
                       </Label>
-                      <p className="mt-1 text-xs text-brand-navy/70">
-                        Write a summary that the GP can share directly with the pet owner
-                      </p>
                       <Textarea
-                        id="phase2-client-summary"
+                        id="phase2-summary"
                         value={phase2ClientSummary}
                         onChange={(e) => setPhase2ClientSummary(e.target.value)}
-                        placeholder="Provide a client-friendly summary..."
+                        placeholder="Client-friendly summary of the case and recommendations..."
                         rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
                     </div>
 
+                    <div>
+                      <Label className="text-sm font-medium text-brand-navy">Supporting Files (Optional)</Label>
+                      <label
+                        htmlFor="phase2-file-upload"
+                        className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-6 text-center transition-colors hover:border-brand-gold"
+                      >
+                        <UploadCloud className="mx-auto h-10 w-10 text-brand-navy/40" />
+                        <p className="mt-2 text-sm text-brand-navy/70">Click to upload supporting files</p>
+                        <p className="mt-1 text-xs text-brand-navy/50">PDF, images, treatment plans, etc.</p>
+                        <input
+                          id="phase2-file-upload"
+                          type="file"
+                          multiple
+                          onChange={handlePhase2FileSelect}
+                          className="hidden"
+                          disabled={isSubmittingPhase2 || isUploadingFiles}
+                        />
+                      </label>
+
+                      {phase2Files.length > 0 && (
+                        <div className="mt-3 space-y-2">
+                          {phase2Files.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                            >
+                              <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                              <span className="flex-1 truncate text-brand-navy">{file.name}</span>
+                              <button
+                                onClick={() => handleRemovePhase2File(index)}
+                                className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
+                                title="Remove file"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+
                     <Button
                       onClick={handleSubmitPhase2}
-                      disabled={isSubmittingPhase2}
+                      disabled={isSubmittingPhase2 || isUploadingFiles}
                       className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                     >
-                      {isSubmittingPhase2 ? "Submitting..." : "Submit Final Report"}
+                      {isSubmittingPhase2 || isUploadingFiles ? "Submitting..." : "Submit Phase 2 Report"}
                     </Button>
                   </CardContent>
                 </Card>
@@ -521,6 +800,41 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                       <div>
                         <h3 className="mb-2 font-semibold text-brand-navy">Client-Friendly Summary</h3>
                         <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_client_summary}</p>
+                      </div>
+                    )}
+                    {/* Added display for specialist report files for completed cases */}
+                    {specialistReportFiles.length > 0 && (
+                      <div>
+                        <h3 className="mb-3 text-base font-bold text-brand-navy">Specialist Report Files</h3>
+                        <div className="space-y-2">
+                          {specialistReportFiles.map((file: any) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
+                            >
+                              {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
+                                <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
+                              ) : (
+                                <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
+                              )}
+                              <a
+                                href={getFileUrl(file.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
+                              >
+                                {file.file_name}
+                              </a>
+                              <button
+                                onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                                className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                                title="Download file"
+                              >
+                                <Download className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                       </div>
                     )}
                   </CardContent>
