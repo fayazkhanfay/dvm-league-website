@@ -9,7 +9,6 @@ import { AppLayout } from "@/components/app-layout"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { ArrowLeft, UploadCloud, FileText, ImageIcon, Copy, CheckCircle, Download, X } from "lucide-react"
 import { createClient } from "@/lib/supabase/client"
 
@@ -426,306 +425,268 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
               </Card>
             )}
 
-            {isPhase1OrAwaiting && caseData.phase1_plan && (
-              <>
-                <Card className="mb-6 border-brand-stone shadow-sm">
-                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                    <CardTitle className="text-xl font-bold text-brand-navy">
-                      Phase 1: Diagnostic Plan Received
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <div className="whitespace-pre-line text-brand-navy/90">{caseData.phase1_plan}</div>
-                  </CardContent>
-                </Card>
+            {caseData.phase1_plan && (
+              <Card className="mb-6 border-brand-stone shadow-sm">
+                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan Received</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="whitespace-pre-line text-brand-navy/90">{caseData.phase1_plan}</div>
+                </CardContent>
+              </Card>
+            )}
 
-                <Card className="mb-6 border-2 border-brand-gold shadow-md">
-                  <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                    <CardTitle className="text-xl font-bold text-brand-navy">Next Step: Upload Diagnostics</CardTitle>
-                  </CardHeader>
-                  <CardContent className="p-6">
-                    <p className="mb-6 text-brand-navy/90">
-                      Please perform the recommended diagnostics. Once complete, upload the results below to receive the
-                      Phase 2 Treatment Plan.
-                    </p>
+            {caseData.diagnostics_performed && (
+              <Card className="mb-6 border-brand-stone bg-blue-50 shadow-sm">
+                <CardHeader className="border-b border-blue-200 bg-blue-100">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Your Diagnostic Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="whitespace-pre-line text-brand-navy">{caseData.diagnostics_performed}</p>
+                </CardContent>
+              </Card>
+            )}
 
-                    <div className="space-y-6">
-                      <div>
-                        <h3 className="mb-3 font-semibold text-brand-navy">Diagnostic Notes (Optional)</h3>
-                        <textarea
-                          value={diagnosticNotes}
-                          onChange={(e) => setDiagnosticNotes(e.target.value)}
-                          placeholder="Add any notes, observations, or context about the diagnostic results..."
-                          className="w-full rounded-lg border border-brand-stone bg-white p-4 text-brand-navy placeholder:text-brand-navy/40 focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20"
-                          rows={4}
-                        />
-                        <p className="mt-2 text-xs text-brand-navy/50">
-                          These notes will be shared with the specialist along with the diagnostic files.
-                        </p>
-                      </div>
+            {isPhase1OrAwaiting && caseData.status === "awaiting_diagnostics" && (
+              <Card className="mb-6 border-2 border-brand-gold shadow-md">
+                <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Next Step: Upload Diagnostics</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="mb-6 text-brand-navy/90">
+                    Please perform the recommended diagnostics. Once complete, upload the results below to receive the
+                    Phase 2 Treatment Plan.
+                  </p>
 
-                      <div>
-                        <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
-                        <label
-                          htmlFor="diagnostic-upload"
-                          className="block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold"
-                        >
-                          <UploadCloud className="mx-auto h-12 w-12 text-brand-navy/40" />
-                          <p className="mt-2 text-sm text-brand-navy/70">Click to upload or drag and drop</p>
-                          <p className="mt-1 text-xs text-brand-navy/50">PDF, DICOM, JPG, PNG up to 50MB</p>
-                          <input
-                            id="diagnostic-upload"
-                            type="file"
-                            multiple
-                            accept=".pdf,.dcm,.jpg,.jpeg,.png"
-                            onChange={handleFileSelect}
-                            className="hidden"
-                            disabled={isUploading}
-                          />
-                        </label>
-                      </div>
+                  <div className="space-y-6">
+                    <div>
+                      <h3 className="mb-3 font-semibold text-brand-navy">Diagnostic Notes (Optional)</h3>
+                      <textarea
+                        value={diagnosticNotes}
+                        onChange={(e) => setDiagnosticNotes(e.target.value)}
+                        placeholder="Add any notes, observations, or context about the diagnostic results..."
+                        className="w-full rounded-lg border border-brand-stone bg-white p-4 text-brand-navy placeholder:text-brand-navy/40 focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20"
+                        rows={4}
+                      />
+                      <p className="mt-2 text-xs text-brand-navy/50">
+                        These notes will be shared with the specialist along with the diagnostic files.
+                      </p>
+                    </div>
 
-                      {diagnosticFiles.length > 0 && (
-                        <div>
-                          <h4 className="mb-2 text-sm font-medium text-brand-navy">Selected Files:</h4>
-                          <div className="space-y-2">
-                            {diagnosticFiles.map((file, index) => (
-                              <div
-                                key={index}
-                                className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
-                              >
-                                <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                                <span className="flex-1 truncate text-brand-navy">{file.name}</span>
-                                <button
-                                  onClick={() => handleRemoveFile(index)}
-                                  className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
-                                  title="Remove file"
-                                >
-                                  <X className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                          <Button
-                            onClick={handleUploadDiagnostics}
-                            disabled={isUploading}
-                            className="mt-3 w-full bg-brand-navy text-white hover:bg-brand-navy/90"
-                          >
-                            {isUploading ? "Uploading..." : "Upload Files"}
-                          </Button>
-                        </div>
-                      )}
-
-                      {uploadError && (
-                        <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">{uploadError}</div>
-                      )}
-
-                      {allDiagnosticFiles.length > 0 && (
-                        <div>
-                          <h4 className="mb-2 text-sm font-medium text-brand-navy">Uploaded Files:</h4>
-                          <div className="space-y-2">
-                            {allDiagnosticFiles.map((file: any) => (
-                              <div
-                                key={file.id}
-                                className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
-                              >
-                                <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                                <a
-                                  href={getFileUrl(file.id)}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="flex-1 truncate text-brand-navy hover:text-brand-navy hover:underline"
-                                >
-                                  {file.file_name}
-                                </a>
-                                <button
-                                  onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
-                                  className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
-                                  title="Download file"
-                                >
-                                  <Download className="h-4 w-4" />
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
-                      )}
-
-                      <Button
-                        onClick={handleSubmitDiagnostics}
-                        disabled={allDiagnosticFiles.length === 0}
-                        className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+                    <div>
+                      <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
+                      <label
+                        htmlFor="diagnostic-upload"
+                        className="block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-8 text-center transition-colors hover:border-brand-gold"
                       >
-                        Confirm & Submit Diagnostic Results
-                      </Button>
+                        <UploadCloud className="mx-auto h-12 w-12 text-brand-navy/40" />
+                        <p className="mt-2 text-sm text-brand-navy/70">Click to upload or drag and drop</p>
+                        <p className="mt-1 text-xs text-brand-navy/50">PDF, DICOM, JPG, PNG up to 50MB</p>
+                        <input
+                          id="diagnostic-upload"
+                          type="file"
+                          multiple
+                          accept=".pdf,.dcm,.jpg,.jpeg,.png"
+                          onChange={handleFileSelect}
+                          className="hidden"
+                          disabled={isUploading}
+                        />
+                      </label>
                     </div>
-                  </CardContent>
-                </Card>
-              </>
-            )}
 
-            {isPhase2OrCompleted && (
-              <>
-                <Card className="mb-6 border-brand-stone shadow-sm">
-                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                    <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report Received</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6">
-                    {caseData.phase2_assessment && (
+                    {diagnosticFiles.length > 0 && (
                       <div>
-                        <h3 className="mb-2 font-semibold text-brand-navy">Assessment</h3>
-                        <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_assessment}</p>
-                      </div>
-                    )}
-                    {caseData.phase2_treatment_plan && (
-                      <div>
-                        <h3 className="mb-2 font-semibold text-brand-navy">Treatment Plan</h3>
-                        <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_treatment_plan}</p>
-                      </div>
-                    )}
-                    {caseData.phase2_prognosis && (
-                      <div>
-                        <h3 className="mb-2 font-semibold text-brand-navy">Prognosis</h3>
-                        <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_prognosis}</p>
-                      </div>
-                    )}
-                  </CardContent>
-                </Card>
-
-                {caseData.phase2_client_summary && (
-                  <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
-                    <CardHeader className="border-b border-brand-gold">
-                      <CardTitle className="flex items-center justify-between text-xl font-bold text-brand-navy">
-                        Client-Friendly Summary
+                        <h4 className="mb-2 text-sm font-medium text-brand-navy">Selected Files:</h4>
+                        <div className="space-y-2">
+                          {diagnosticFiles.map((file, index) => (
+                            <div
+                              key={index}
+                              className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm"
+                            >
+                              <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                              <span className="flex-1 truncate text-brand-navy">{file.name}</span>
+                              <button
+                                onClick={() => handleRemoveFile(index)}
+                                className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
+                                title="Remove file"
+                              >
+                                <X className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
                         <Button
-                          onClick={handleCopySummary}
-                          variant="outline"
-                          size="sm"
-                          className="gap-2 border-brand-navy bg-transparent text-brand-navy hover:bg-brand-navy hover:text-white"
+                          onClick={handleUploadDiagnostics}
+                          disabled={isUploading}
+                          className="mt-3 w-full bg-brand-navy text-white hover:bg-brand-navy/90"
                         >
-                          {copied ? (
-                            <>
-                              <CheckCircle className="h-4 w-4" />
-                              Copied!
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="h-4 w-4" />
-                              Copy Summary for Client
-                            </>
-                          )}
+                          {isUploading ? "Uploading..." : "Upload Files"}
                         </Button>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <p className="text-brand-navy/90">{caseData.phase2_client_summary}</p>
-                    </CardContent>
-                  </Card>
-                )}
-              </>
+                      </div>
+                    )}
+
+                    {uploadError && <div className="rounded-md bg-red-50 p-3 text-sm text-red-800">{uploadError}</div>}
+
+                    {allDiagnosticFiles.length > 0 && (
+                      <div>
+                        <h4 className="mb-2 text-sm font-medium text-brand-navy">Uploaded Files:</h4>
+                        <div className="space-y-2">
+                          {allDiagnosticFiles.map((file: any) => (
+                            <div
+                              key={file.id}
+                              className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
+                            >
+                              <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                              <a
+                                href={getFileUrl(file.id)}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="flex-1 truncate text-brand-navy hover:text-brand-navy hover:underline"
+                              >
+                                {file.file_name}
+                              </a>
+                              <button
+                                onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                                className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                                title="Download file"
+                              >
+                                <Download className="h-4 w-4" />
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    <Button
+                      onClick={handleSubmitDiagnostics}
+                      disabled={allDiagnosticFiles.length === 0}
+                      className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+                    >
+                      Confirm & Submit Diagnostic Results
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
             )}
 
-            <Accordion type="single" collapsible className="rounded-lg border border-brand-stone bg-white shadow-sm">
-              <AccordionItem value="case-history" className="border-none">
-                <AccordionTrigger className="px-6 py-4 font-semibold text-brand-navy hover:no-underline">
-                  View Specialist Reports & All Files
-                </AccordionTrigger>
-                <AccordionContent className="space-y-6 px-6 pb-6">
-                  {caseData.phase1_plan && (
+            {(caseData.phase2_assessment || caseData.phase2_treatment_plan || caseData.phase2_prognosis) && (
+              <Card className="mb-6 border-brand-stone shadow-sm">
+                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report Received</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                  {caseData.phase2_assessment && (
                     <div>
-                      <h3 className="mb-3 font-semibold text-brand-navy">Phase 1 Diagnostic Plan</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase1_plan}</p>
-                      </div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Assessment</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_assessment}</p>
                     </div>
                   )}
-
-                  {isPhase2OrCompleted && (
+                  {caseData.phase2_treatment_plan && (
                     <div>
-                      <h3 className="mb-3 font-semibold text-brand-navy">Phase 2 Final Report</h3>
-                      <div className="space-y-3 rounded-lg bg-brand-offwhite p-4">
-                        {caseData.phase2_assessment && (
-                          <div>
-                            <p className="text-sm font-medium text-brand-navy">Assessment:</p>
-                            <p className="text-sm text-brand-navy/80">{caseData.phase2_assessment}</p>
-                          </div>
-                        )}
-                        {caseData.phase2_treatment_plan && (
-                          <div>
-                            <p className="text-sm font-medium text-brand-navy">Treatment Plan:</p>
-                            <p className="text-sm text-brand-navy/80">{caseData.phase2_treatment_plan}</p>
-                          </div>
-                        )}
-                        {caseData.phase2_prognosis && (
-                          <div>
-                            <p className="text-sm font-medium text-brand-navy">Prognosis:</p>
-                            <p className="text-sm text-brand-navy/80">{caseData.phase2_prognosis}</p>
-                          </div>
-                        )}
-                      </div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Treatment Plan</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_treatment_plan}</p>
                     </div>
                   )}
-
-                  <div>
-                    <h3 className="mb-3 font-semibold text-brand-navy">All Attached Files</h3>
-                    <div className="space-y-2">
-                      {allCaseFiles.map((file: any) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
-                        >
-                          {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                            <ImageIcon className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                          ) : (
-                            <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                          )}
-                          <a
-                            href={getFileUrl(file.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 truncate text-brand-navy hover:underline"
-                          >
-                            {file.file_name}
-                          </a>
-                          <button
-                            onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
-                            className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
-                            title="Download file"
-                          >
-                            <Download className="h-4 w-4" />
-                          </button>
-                          <span className="ml-2 text-xs text-brand-navy/50">(Initial)</span>
-                        </div>
-                      ))}
-                      {allDiagnosticFiles.map((file: any) => (
-                        <div
-                          key={file.id}
-                          className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
-                        >
-                          <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                          <a
-                            href={getFileUrl(file.id)}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="flex-1 truncate text-brand-navy hover:underline"
-                          >
-                            {file.file_name}
-                          </a>
-                          <button
-                            onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
-                            className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
-                            title="Download file"
-                          >
-                            <Download className="h-4 w-4" />
-                          </button>
-                          <span className="ml-2 text-xs text-brand-navy/50">(Diagnostic)</span>
-                        </div>
-                      ))}
+                  {caseData.phase2_prognosis && (
+                    <div>
+                      <h3 className="mb-2 font-semibold text-brand-navy">Prognosis</h3>
+                      <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_prognosis}</p>
                     </div>
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {caseData.phase2_client_summary && (
+              <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
+                <CardHeader className="border-b border-brand-gold">
+                  <CardTitle className="flex items-center justify-between text-xl font-bold text-brand-navy">
+                    Client-Friendly Summary
+                  </CardTitle>
+                  <Button
+                    onClick={handleCopySummary}
+                    variant="outline"
+                    size="sm"
+                    className="gap-2 border-brand-navy bg-transparent text-brand-navy hover:bg-brand-navy hover:text-white"
+                  >
+                    {copied ? (
+                      <>
+                        <CheckCircle className="h-4 w-4" />
+                        Copied!
+                      </>
+                    ) : (
+                      <>
+                        <Copy className="h-4 w-4" />
+                        Copy Summary for Client
+                      </>
+                    )}
+                  </Button>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="text-brand-navy/90">{caseData.phase2_client_summary}</p>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* All Attached Files Section */}
+            <div>
+              <h3 className="mb-3 text-base font-bold text-brand-navy">All Attached Files</h3>
+              <div className="space-y-2">
+                {allCaseFiles.map((file: any) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
+                  >
+                    {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
+                      <ImageIcon className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                    ) : (
+                      <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                    )}
+                    <a
+                      href={getFileUrl(file.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 truncate text-brand-navy hover:underline"
+                    >
+                      {file.file_name}
+                    </a>
+                    <button
+                      onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                      className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                      title="Download file"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    <span className="ml-2 text-xs text-brand-navy/50">(Initial)</span>
                   </div>
-                </AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                ))}
+                {allDiagnosticFiles.map((file: any) => (
+                  <div
+                    key={file.id}
+                    className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
+                  >
+                    <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
+                    <a
+                      href={getFileUrl(file.id)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="flex-1 truncate text-brand-navy hover:underline"
+                    >
+                      {file.file_name}
+                    </a>
+                    <button
+                      onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
+                      className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
+                      title="Download file"
+                    >
+                      <Download className="h-4 w-4" />
+                    </button>
+                    <span className="ml-2 text-xs text-brand-navy/50">(Diagnostic)</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </main>

@@ -468,22 +468,13 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               <div className="mt-3">{getStatusBadge(caseData.status)}</div>
             </div>
 
-            {isPendingAssignment && isUnassigned && (
-              <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
-                <CardHeader className="border-b border-brand-gold">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Accept & Claim This Case</CardTitle>
+            {caseData.phase1_plan && !isAwaitingPhase1 && (
+              <Card className="mb-6 border-brand-stone shadow-sm">
+                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan</CardTitle>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <p className="mb-6 text-brand-navy/90">
-                    This case is currently unassigned. Click below to accept and claim this case to begin working on it.
-                  </p>
-                  <Button
-                    onClick={handleAcceptCase}
-                    disabled={isAccepting}
-                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    {isAccepting ? "Accepting Case..." : "Accept & Claim This Case"}
-                  </Button>
+                  <p className="whitespace-pre-line text-brand-navy/80">{caseData.phase1_plan}</p>
                 </CardContent>
               </Card>
             )}
@@ -563,6 +554,26 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               </Card>
             )}
 
+            {isPendingAssignment && isUnassigned && (
+              <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
+                <CardHeader className="border-b border-brand-gold">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Accept & Claim This Case</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="mb-6 text-brand-navy/90">
+                    This case is currently unassigned. Click below to accept and claim this case to begin working on it.
+                  </p>
+                  <Button
+                    onClick={handleAcceptCase}
+                    disabled={isAccepting}
+                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+                  >
+                    {isAccepting ? "Accepting Case..." : "Accept & Claim This Case"}
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+
             {isAwaitingDiagnostics && (
               <Card className="mb-6 border-brand-stone shadow-sm">
                 <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
@@ -581,6 +592,17 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                       </div>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            )}
+
+            {caseData.diagnostics_performed && !isAwaitingPhase2 && (
+              <Card className="mb-6 border-brand-stone bg-blue-50 shadow-sm">
+                <CardHeader className="border-b border-blue-200 bg-blue-100">
+                  <CardTitle className="text-xl font-bold text-brand-navy">GP Diagnostic Notes</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <p className="whitespace-pre-line text-brand-navy">{caseData.diagnostics_performed}</p>
                 </CardContent>
               </Card>
             )}
@@ -722,72 +744,56 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
             )}
 
             {isCompleted && (
-              <Card className="mb-6 border-brand-stone shadow-sm">
-                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Case Completed</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6 p-6">
-                  {caseData.phase1_plan && (
-                    <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">Phase 1 Diagnostic Plan</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase1_plan}</p>
-                      </div>
-                    </div>
-                  )}
+              <>
+                {caseData.phase1_plan && (
+                  <Card className="mb-6 border-brand-stone shadow-sm">
+                    <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                      <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <p className="whitespace-pre-line text-brand-navy/80">{caseData.phase1_plan}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                  {caseData.diagnostics_performed && (
-                    <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">GP Diagnostic Notes</h3>
-                      <div className="rounded-lg bg-blue-50 p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">
-                          {caseData.diagnostics_performed}
-                        </p>
-                      </div>
-                    </div>
-                  )}
+                {caseData.diagnostics_performed && (
+                  <Card className="mb-6 border-brand-stone bg-blue-50 shadow-sm">
+                    <CardHeader className="border-b border-blue-200 bg-blue-100">
+                      <CardTitle className="text-xl font-bold text-brand-navy">GP Diagnostic Notes</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <p className="whitespace-pre-line text-brand-navy">{caseData.diagnostics_performed}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                  {caseData.phase2_assessment && (
+                <Card className="mb-6 border-brand-stone shadow-sm">
+                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                    <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-6 p-6">
                     <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">Phase 2 Assessment</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_assessment}</p>
-                      </div>
+                      <p className="text-sm font-medium text-brand-navy">Assessment</p>
+                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_assessment}</p>
                     </div>
-                  )}
 
-                  {caseData.phase2_treatment_plan && (
                     <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">Treatment Plan</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">
-                          {caseData.phase2_treatment_plan}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-brand-navy">Treatment Plan</p>
+                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_treatment_plan}</p>
                     </div>
-                  )}
 
-                  {caseData.phase2_prognosis && (
                     <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">Prognosis</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_prognosis}</p>
-                      </div>
+                      <p className="text-sm font-medium text-brand-navy">Prognosis</p>
+                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_prognosis}</p>
                     </div>
-                  )}
 
-                  {caseData.phase2_client_summary && (
                     <div>
-                      <h3 className="mb-2 font-semibold text-brand-navy">Client-Friendly Summary</h3>
-                      <div className="rounded-lg bg-brand-gold/10 p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">
-                          {caseData.phase2_client_summary}
-                        </p>
-                      </div>
+                      <p className="text-sm font-medium text-brand-navy">Client-Friendly Summary</p>
+                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_client_summary}</p>
                     </div>
-                  )}
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </>
             )}
           </div>
         </div>
