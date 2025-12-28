@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import { notifySpecialistOfDiagnostics } from "@/lib/email"
 
-export async function submitDiagnostics(caseId: string) {
+export async function submitDiagnostics(caseId: string, diagnosticNotes?: string) {
   const supabase = await createClient()
 
   const {
@@ -21,11 +21,12 @@ export async function submitDiagnostics(caseId: string) {
     return { success: false, error: "Unauthorized or case not found" }
   }
 
-  const { error: updateError } = await supabase
-    .from("cases")
-    .update({ status: "awaiting_phase2" })
-    .eq("id", caseId)
-    .eq("gp_id", user.id)
+  const updateData: any = { status: "awaiting_phase2" }
+  if (diagnosticNotes) {
+    updateData.diagnostics_performed = diagnosticNotes
+  }
+
+  const { error: updateError } = await supabase.from("cases").update(updateData).eq("id", caseId).eq("gp_id", user.id)
 
   if (updateError) {
     return { success: false, error: "Failed to submit diagnostics" }

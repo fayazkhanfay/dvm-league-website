@@ -26,6 +26,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [uploadError, setUploadError] = useState<string | null>(null)
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
+  const [diagnosticNotes, setDiagnosticNotes] = useState("")
   const supabase = createClient()
 
   const signalment = useMemo(() => caseData.patient_signalment, [caseData.patient_signalment])
@@ -177,7 +178,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
     }
 
     try {
-      const result = await submitDiagnostics(caseData.id)
+      const result = await submitDiagnostics(caseData.id, diagnosticNotes.trim())
 
       if (!result.success) {
         setUploadError(result.error || "Failed to submit diagnostics. Please try again.")
@@ -449,6 +450,20 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                     </p>
 
                     <div className="space-y-6">
+                      <div>
+                        <h3 className="mb-3 font-semibold text-brand-navy">Diagnostic Notes (Optional)</h3>
+                        <textarea
+                          value={diagnosticNotes}
+                          onChange={(e) => setDiagnosticNotes(e.target.value)}
+                          placeholder="Add any notes, observations, or context about the diagnostic results..."
+                          className="w-full rounded-lg border border-brand-stone bg-white p-4 text-brand-navy placeholder:text-brand-navy/40 focus:border-brand-gold focus:outline-none focus:ring-2 focus:ring-brand-gold/20"
+                          rows={4}
+                        />
+                        <p className="mt-2 text-xs text-brand-navy/50">
+                          These notes will be shared with the specialist along with the diagnostic files.
+                        </p>
+                      </div>
+
                       <div>
                         <h3 className="mb-3 font-semibold text-brand-navy">Upload Diagnostic Results</h3>
                         <label
