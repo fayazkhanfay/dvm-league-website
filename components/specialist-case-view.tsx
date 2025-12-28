@@ -57,6 +57,13 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
 
   useEffect(() => {
+    console.log("[v0] Case Files Debug:")
+    console.log("[v0] Total case_files from props:", caseData.case_files?.length || 0)
+    console.log("[v0] Initial files:", initialFiles.length)
+    console.log("[v0] Diagnostic files:", diagnosticFiles.length)
+    console.log("[v0] Specialist report files:", specialistReportFiles.length)
+    console.log("[v0] All files data:", caseData.case_files)
+
     const generateSignedUrls = async () => {
       const allFiles = [...initialFiles, ...diagnosticFiles, ...specialistReportFiles]
       const urls: Record<string, string> = {}
