@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
-import { ArrowLeft, FileText, ImageIcon, CheckCircle2, Download, UploadCloud, X } from "lucide-react"
+import { ArrowLeft, FileText, ImageIcon, Download, UploadCloud, X } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
 import { submitPhase1 } from "@/app/actions/submit-phase1"
 import { submitPhase2 } from "@/app/actions/submit-phase2"
@@ -41,31 +41,16 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
   const signalment = caseData.patient_signalment
-  const initialFiles = useMemo(
-    () => caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || [],
-    [caseData.case_files],
-  )
-  const diagnosticFiles = useMemo(
-    () => caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || [],
-    [caseData.case_files],
-  )
-  const specialistReportFiles = useMemo(
-    () => caseData.case_files?.filter((f: any) => f.upload_phase === "specialist_report") || [],
-    [caseData.case_files],
-  )
-
-  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+  const allCaseFiles = useMemo(() => caseData.case_files || [], [caseData.case_files])
 
   useEffect(() => {
     console.log("[v0] Case Files Debug:")
     console.log("[v0] Total case_files from props:", caseData.case_files?.length || 0)
-    console.log("[v0] Initial files:", initialFiles.length)
-    console.log("[v0] Diagnostic files:", diagnosticFiles.length)
-    console.log("[v0] Specialist report files:", specialistReportFiles.length)
+    console.log("[v0] All case files count:", allCaseFiles.length)
     console.log("[v0] All files data:", caseData.case_files)
 
     const generateSignedUrls = async () => {
-      const allFiles = [...initialFiles, ...diagnosticFiles, ...specialistReportFiles]
+      const allFiles = allCaseFiles
       const urls: Record<string, string> = {}
 
       for (const file of allFiles) {
@@ -425,46 +410,11 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     </div>
                   </div>
 
-                  {initialFiles.length > 0 && (
+                  {allCaseFiles.length > 0 && (
                     <div>
-                      <h3 className="mb-3 text-base font-bold text-brand-navy">Initially Submitted Files</h3>
+                      <h3 className="mb-3 text-base font-bold text-brand-navy">All Submitted Files</h3>
                       <div className="space-y-2">
-                        {initialFiles.map((file: any) => (
-                          <div
-                            key={file.id}
-                            className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
-                          >
-                            {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                              <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
-                            ) : (
-                              <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
-                            )}
-                            <a
-                              href={getFileUrl(file.id)}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
-                            >
-                              {file.file_name}
-                            </a>
-                            <button
-                              onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
-                              className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
-                              title="Download file"
-                            >
-                              <Download className="h-3 w-3" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {diagnosticFiles.length > 0 && (
-                    <div>
-                      <h3 className="mb-3 text-base font-bold text-brand-navy">Diagnostic Files</h3>
-                      <div className="space-y-2">
-                        {diagnosticFiles.map((file: any) => (
+                        {allCaseFiles.map((file: any) => (
                           <div
                             key={file.id}
                             className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
@@ -515,35 +465,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               </h1>
               <div className="mt-3">{getStatusBadge(caseData.status)}</div>
             </div>
-
-            {isUnassigned && (
-              <Card className="mb-6 border-2 border-brand-gold shadow-lg">
-                <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Available Case</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4 p-6">
-                  <div className="rounded-md bg-blue-50 p-4">
-                    <p className="text-sm text-blue-900">
-                      This case is available for you to accept. Review the case details on the left, and if you'd like
-                      to work on this case, click the button below to claim it.
-                    </p>
-                  </div>
-
-                  <Button
-                    onClick={handleAcceptCase}
-                    disabled={isAccepting}
-                    className="w-full transform rounded-md bg-brand-gold px-8 py-6 text-xl font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
-                  >
-                    <CheckCircle2 className="mr-2 h-6 w-6" />
-                    {isAccepting ? "Accepting Case..." : "Accept & Claim This Case"}
-                  </Button>
-
-                  <p className="text-center text-xs text-brand-navy/60">
-                    Once you accept this case, it will no longer be visible to other specialists
-                  </p>
-                </CardContent>
-              </Card>
-            )}
 
             {/* Phase 1 Form */}
             {isAwaitingPhase1 && (
@@ -804,41 +725,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                       <div>
                         <h3 className="mb-2 font-semibold text-brand-navy">Client-Friendly Summary</h3>
                         <p className="whitespace-pre-line text-brand-navy/90">{caseData.phase2_client_summary}</p>
-                      </div>
-                    )}
-                    {/* Added display for specialist report files for completed cases */}
-                    {specialistReportFiles.length > 0 && (
-                      <div>
-                        <h3 className="mb-3 text-base font-bold text-brand-navy">Specialist Report Files</h3>
-                        <div className="space-y-2">
-                          {specialistReportFiles.map((file: any) => (
-                            <div
-                              key={file.id}
-                              className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
-                            >
-                              {file.file_type?.includes("image") || file.file_name.endsWith(".dcm") ? (
-                                <ImageIcon className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
-                              ) : (
-                                <FileText className="h-3 w-3 flex-shrink-0 text-brand-navy/60" />
-                              )}
-                              <a
-                                href={getFileUrl(file.id)}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex-1 truncate text-brand-navy/80 hover:text-brand-navy hover:underline"
-                              >
-                                {file.file_name}
-                              </a>
-                              <button
-                                onClick={() => handleFileDownload(file.storage_object_path, file.file_name)}
-                                className="flex-shrink-0 text-brand-navy/60 transition-colors hover:text-brand-navy"
-                                title="Download file"
-                              >
-                                <Download className="h-3 w-3" />
-                              </button>
-                            </div>
-                          ))}
-                        </div>
                       </div>
                     )}
                   </CardContent>

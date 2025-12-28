@@ -29,10 +29,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const supabase = createClient()
 
   const signalment = useMemo(() => caseData.patient_signalment, [caseData.patient_signalment])
-  const initialFiles = useMemo(
-    () => caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || [],
-    [caseData.case_files],
-  )
+  const allCaseFiles = useMemo(() => caseData.case_files || [], [caseData.case_files])
   const existingDiagnosticFiles = useMemo(
     () => caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || [],
     [caseData.case_files],
@@ -46,7 +43,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   useEffect(() => {
     console.log("[v0] Generating signed URLs...")
     const generateSignedUrls = async () => {
-      const allFiles = [...initialFiles, ...allDiagnosticFiles]
+      const allFiles = [...allCaseFiles, ...allDiagnosticFiles]
       const urls: Record<string, string> = {}
 
       for (const file of allFiles) {
@@ -336,12 +333,12 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                     </div>
                   </div>
 
-                  {/* Initially Submitted Files Section */}
-                  {initialFiles.length > 0 && (
+                  {/* All Submitted Files Section */}
+                  {allCaseFiles.length > 0 && (
                     <div>
-                      <h3 className="mb-3 text-base font-bold text-brand-navy">Initially Submitted Files</h3>
+                      <h3 className="mb-3 text-base font-bold text-brand-navy">All Submitted Files</h3>
                       <div className="space-y-2">
-                        {initialFiles.map((file: any) => (
+                        {allCaseFiles.map((file: any) => (
                           <div
                             key={file.id}
                             className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
@@ -658,7 +655,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                   <div>
                     <h3 className="mb-3 font-semibold text-brand-navy">All Attached Files</h3>
                     <div className="space-y-2">
-                      {initialFiles.map((file: any) => (
+                      {allCaseFiles.map((file: any) => (
                         <div
                           key={file.id}
                           className="flex items-center gap-2 rounded-md bg-white p-3 text-sm shadow-sm transition-colors hover:bg-brand-offwhite"
