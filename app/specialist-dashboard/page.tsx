@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { AppLayout } from "@/components/app-layout"
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -39,6 +39,19 @@ export default async function SpecialistDashboard() {
   const activeCases = allCases?.filter((c) => c.status !== "completed") || []
   const completedCases = allCases?.filter((c) => c.status === "completed") || []
 
+  const { data: availableCases } = await supabase
+    .from("cases")
+    .select(
+      `
+      *,
+      gp:gp_id(full_name, clinic_name)
+    `,
+    )
+    .eq("status", "pending_assignment")
+    .is("specialist_id", null)
+    .eq("specialty_requested", profile.specialty)
+    .order("created_at", { ascending: false })
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case "awaiting_phase1":
@@ -69,7 +82,11 @@ export default async function SpecialistDashboard() {
           </Button>
         )
       case "awaiting_diagnostics":
-        return <span className="text-sm text-brand-navy/60">Awaiting GP Diagnostics</span>
+        return (
+          <Button variant="outline" size="sm" asChild>
+            <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
+          </Button>
+        )
       case "awaiting_phase2":
         return (
           <Button variant="outline" size="sm" asChild>
@@ -91,9 +108,20 @@ export default async function SpecialistDashboard() {
         <h1 className="font-serif text-3xl font-bold text-brand-navy mb-8">Specialist Dashboard</h1>
 
         <Tabs defaultValue="active" className="mb-8">
-          <TabsList className="grid w-full max-w-md grid-cols-2">
-            <TabsTrigger value="active">Active Cases</TabsTrigger>
-            <TabsTrigger value="completed">Completed Cases</TabsTrigger>
+          <TabsList className="grid w-full max-w-3xl grid-cols-3">
+            <TabsTrigger value="active">
+              Active Cases {activeCases.length > 0 && <span className="ml-1.5 text-xs">({activeCases.length})</span>}
+            </TabsTrigger>
+            <TabsTrigger value="available">
+              Available Cases{" "}
+              {availableCases && availableCases.length > 0 && (
+                <span className="ml-1.5 text-xs">({availableCases.length})</span>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Completed Cases{" "}
+              {completedCases.length > 0 && <span className="ml-1.5 text-xs">({completedCases.length})</span>}
+            </TabsTrigger>
           </TabsList>
 
           <TabsContent value="active">
@@ -126,6 +154,53 @@ export default async function SpecialistDashboard() {
                         <TableRow>
                           <TableCell colSpan={6} className="text-center text-brand-navy/60">
                             No active cases
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="available">
+            <Card>
+              <CardContent className="pt-6">
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead className="font-semibold">Case ID</TableHead>
+                        <TableHead className="font-semibold">GP Clinic Name</TableHead>
+                        <TableHead className="font-semibold">Patient Signalment</TableHead>
+                        <TableHead className="font-semibold">Specialty</TableHead>
+                        <TableHead className="font-semibold">Submitted Date</TableHead>
+                        <TableHead className="font-semibold">Action</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {availableCases && availableCases.length > 0 ? (
+                        availableCases.map((caseItem) => (
+                          <TableRow key={caseItem.id}>
+                            <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
+                            <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
+                            <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
+                            <TableCell>
+                              <Badge variant="secondary">{caseItem.specialty_requested}</Badge>
+                            </TableCell>
+                            <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
+                            <TableCell>
+                              <Button variant="default" size="sm" asChild>
+                                <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        ))
+                      ) : (
+                        <TableRow>
+                          <TableCell colSpan={6} className="text-center text-brand-navy/60 py-8">
+                            No available cases at this time
                           </TableCell>
                         </TableRow>
                       )}
@@ -180,19 +255,6 @@ export default async function SpecialistDashboard() {
             </Card>
           </TabsContent>
         </Tabs>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-2xl font-serif text-brand-navy">Available Cases</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-center text-brand-navy/80 py-8 px-4 leading-relaxed">
-              No available cases at this time. DVM League operates on a concierge model; we will personally contact you
-              via email when a new case matching your expertise and availability is ready for your review. There is no
-              need to monitor a queue.
-            </p>
-          </CardContent>
-        </Card>
       </div>
     </AppLayout>
   )

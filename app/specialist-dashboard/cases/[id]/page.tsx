@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import SpecialistCaseView from "@/components/specialist-case-view"
+import SmartCaseView from "@/components/smart-case-view"
 
-export default async function SpecialistCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
-  const { caseId } = await params
+export default async function SmartCaseViewPage({ params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params
   const supabase = await createClient()
 
   const {
@@ -29,20 +29,29 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
       case_files(*)
     `,
     )
-    .eq("id", caseId)
+    .eq("id", id)
     .single()
 
   if (error || !caseData) {
     redirect("/specialist-dashboard")
   }
 
-  const isAssignedToCurrentUser = caseData.specialist_id === user.id
-  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
-
-  if (!isAssignedToCurrentUser && !isUnassigned) {
-    // Case is assigned to another specialist
+  if (caseData.specialty_requested !== profile.specialty) {
     redirect("/specialist-dashboard")
   }
 
-  return <SpecialistCaseView caseData={caseData} userProfile={profile} />
+  let caseState: "unassigned" | "accepted" | "taken"
+
+  if (!caseData.specialist_id) {
+    // State A: Unassigned (Opportunity)
+    caseState = "unassigned"
+  } else if (caseData.specialist_id === user.id) {
+    // State B: Accepted (Work Mode)
+    caseState = "accepted"
+  } else {
+    // State C: Taken (Locked)
+    caseState = "taken"
+  }
+
+  return <SmartCaseView caseData={caseData} userProfile={profile} caseState={caseState} />
 }
