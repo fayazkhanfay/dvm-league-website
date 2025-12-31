@@ -35,11 +35,11 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
 
   // Patient Signalment
   const [patientName, setPatientName] = useState(initialData?.patient_name || "")
-  const [species, setSpecies] = useState(initialData?.patient_signalment?.species || "")
-  const [breed, setBreed] = useState(initialData?.patient_signalment?.breed || "")
-  const [age, setAge] = useState(initialData?.patient_signalment?.age || "")
-  const [sexStatus, setSexStatus] = useState(initialData?.patient_signalment?.sex_status || "")
-  const [weightKg, setWeightKg] = useState(initialData?.patient_signalment?.weight_kg?.toString() || "")
+  const [species, setSpecies] = useState(initialData?.patient_species || "")
+  const [breed, setBreed] = useState(initialData?.patient_breed || "")
+  const [age, setAge] = useState(initialData?.patient_age || "")
+  const [sexStatus, setSexStatus] = useState(initialData?.patient_sex_status || "")
+  const [weightKg, setWeightKg] = useState(initialData?.patient_weight_kg?.toString() || "")
 
   // Case Details
   const [presentingComplaint, setPresentingComplaint] = useState(initialData?.presenting_complaint || "")
@@ -134,18 +134,14 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     setIsSavingDraft(true)
 
     try {
-      const patientSignalment = {
-        species,
-        breed,
-        age,
-        sex_status: sexStatus,
-        weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
-      }
-
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_signalment: patientSignalment,
+        patient_species: species,
+        patient_breed: breed,
+        patient_age: age,
+        patient_sex_status: sexStatus,
+        patient_weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
         presenting_complaint: presentingComplaint,
         brief_history: briefHistory,
         pe_findings: peFindings,
@@ -224,18 +220,14 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     setShowConfirmModal(false)
 
     try {
-      const patientSignalment = {
-        species,
-        breed,
-        age,
-        sex_status: sexStatus,
-        weight_kg: Number.parseFloat(weightKg),
-      }
-
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_signalment: patientSignalment,
+        patient_species: species,
+        patient_breed: breed,
+        patient_age: age,
+        patient_sex_status: sexStatus,
+        patient_weight_kg: Number.parseFloat(weightKg),
         presenting_complaint: presentingComplaint,
         brief_history: briefHistory,
         pe_findings: peFindings,

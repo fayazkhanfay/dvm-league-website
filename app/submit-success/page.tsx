@@ -94,7 +94,9 @@ export default async function SubmitSuccessPage({
         try {
           const { data, error } = await supabase
             .from("cases")
-            .select("id, patient_name, created_at, specialty_requested, patient_signalment, presenting_complaint")
+            .select(
+              "id, patient_name, created_at, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint",
+            )
             .eq("id", caseId)
             .single()
 
@@ -126,8 +128,7 @@ export default async function SubmitSuccessPage({
               if (data.specialty_requested && paymentConfirmed) {
                 console.log("[v0] Notifying specialists for specialty:", data.specialty_requested)
 
-                const signalment = data.patient_signalment
-                const signalmentString = `${signalment.species}, ${signalment.breed}, ${signalment.age}, ${signalment.sex_status}, ${signalment.weight_kg}kg`
+                const signalmentString = `${data.patient_species}, ${data.patient_breed}, ${data.patient_age}, ${data.patient_sex_status}, ${data.patient_weight_kg}kg`
 
                 const specialistNotifResult = await notifyMatchingSpecialists(
                   data.specialty_requested,

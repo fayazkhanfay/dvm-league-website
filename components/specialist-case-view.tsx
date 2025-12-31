@@ -40,7 +40,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const [phase2Files, setPhase2Files] = useState<File[]>([])
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
-  const signalment = caseData.patient_signalment
   const allCaseFiles = useMemo(() => caseData.case_files || [], [caseData.case_files])
 
   useEffect(() => {
@@ -362,11 +361,24 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                         <p className="text-sm text-brand-navy/80">{caseData.patient_name}</p>
                       </div>
                       <div>
-                        <p className="text-xs font-semibold text-brand-navy">Signalment</p>
-                        <p className="text-sm text-brand-navy/80">
-                          {signalment.species}, {signalment.breed}, {signalment.age}, {signalment.sex_status},{" "}
-                          {signalment.weight_kg} kg
-                        </p>
+                        <p className="text-xs font-semibold text-brand-navy">Species</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_species}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Breed</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_breed}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Age</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_age}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Sex Status</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_sex_status}</p>
+                      </div>
+                      <div>
+                        <p className="text-xs font-semibold text-brand-navy">Weight (kg)</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_weight_kg}</p>
                       </div>
                     </div>
                   </div>

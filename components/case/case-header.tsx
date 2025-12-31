@@ -23,7 +23,6 @@ const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | 
 }
 
 export function CaseHeader({ caseData }: CaseHeaderProps) {
-  const signalment = caseData.patient_signalment
   const statusLabel = STATUS_LABELS[caseData.status] || caseData.status
   const statusVariant = STATUS_VARIANTS[caseData.status] || "default"
 
@@ -34,21 +33,22 @@ export function CaseHeader({ caseData }: CaseHeaderProps) {
         <div className="flex-1">
           <h1 className="text-3xl font-bold text-balance">{caseData.patient_name}</h1>
           <p className="text-muted-foreground text-lg mt-1">
-            {signalment.species} • {signalment.breed}
+            {caseData.patient_species} • {caseData.patient_breed}
           </p>
 
           {/* Details Row */}
           <div className="flex flex-wrap gap-x-6 gap-y-2 mt-4 text-sm">
             <div>
-              <span className="text-muted-foreground">Age:</span> <span className="font-medium">{signalment.age}</span>
+              <span className="text-muted-foreground">Age:</span>{" "}
+              <span className="font-medium">{caseData.patient_age}</span>
             </div>
             <div>
               <span className="text-muted-foreground">Weight:</span>{" "}
-              <span className="font-medium">{signalment.weight}</span>
+              <span className="font-medium">{caseData.patient_weight_kg} kg</span>
             </div>
             <div>
               <span className="text-muted-foreground">Gender:</span>{" "}
-              <span className="font-medium">{signalment.gender}</span>
+              <span className="font-medium">{caseData.patient_sex_status}</span>
             </div>
           </div>
 

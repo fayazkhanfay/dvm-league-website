@@ -21,7 +21,9 @@ export async function manualNotifySpecialists(caseId: string) {
   // Fetch case details
   const { data: caseData, error: fetchError } = await supabase
     .from("cases")
-    .select("id, patient_name, specialty_requested, patient_signalment, presenting_complaint, status")
+    .select(
+      "id, patient_name, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint, status",
+    )
     .eq("id", caseId)
     .single()
 
@@ -33,8 +35,7 @@ export async function manualNotifySpecialists(caseId: string) {
     return { success: false, error: "Case is not in pending_assignment status" }
   }
 
-  const signalment = caseData.patient_signalment
-  const signalmentString = `${signalment.species}, ${signalment.breed}, ${signalment.age}, ${signalment.sex_status}, ${signalment.weight_kg}kg`
+  const signalmentString = `${caseData.patient_species}, ${caseData.patient_breed}, ${caseData.patient_age}, ${caseData.patient_sex_status}, ${caseData.patient_weight_kg}kg`
 
   const result = await notifyMatchingSpecialists(
     caseData.specialty_requested,

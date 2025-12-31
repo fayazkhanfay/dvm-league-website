@@ -5,13 +5,13 @@ import { createClient } from "@/lib/supabase/server"
 export interface CaseDetails {
   id: string
   patient_name: string
-  patient_signalment: {
-    species: string
-    breed: string
-    age: string
-    weight: string
-    gender: string
-  }
+  patient_species: string
+  patient_breed: string
+  patient_age: string
+  patient_sex_status: string
+  patient_weight_kg: number
+  patient_vax_status: string | null
+  patient_preventatives: string[] | null
   status: string
   gp_id: string
   specialist_id: string | null
@@ -37,7 +37,13 @@ export async function getCaseDetails(caseId: string) {
       `
       id,
       patient_name,
-      patient_signalment,
+      patient_species,
+      patient_breed,
+      patient_age,
+      patient_sex_status,
+      patient_weight_kg,
+      patient_vax_status,
+      patient_preventatives,
       status,
       gp_id,
       specialist_id,
