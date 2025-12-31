@@ -16,16 +16,15 @@ export type TimelineEvent =
       created_at: string
     }
   | {
-      type: "file"
+      type: "case_submission"
       id: string
-      case_id: string
-      uploader_id: string
-      uploader_name: string
-      uploader_role: "gp" | "specialist"
-      file_name: string
-      storage_object_path: string
-      file_type: string | null
-      upload_phase: string | null
+      presenting_complaint: string
+      brief_history: string
+      pe_findings: string
+      medications: string
+      diagnostics_performed: string | null
+      treatments_attempted: string | null
+      gp_questions: string
       created_at: string
     }
 
@@ -44,7 +43,9 @@ export async function getCaseTimeline(caseId: string) {
 
   const { data: caseData, error: caseError } = await supabase
     .from("cases")
-    .select("gp_id, specialist_id")
+    .select(
+      "gp_id, specialist_id, presenting_complaint, brief_history, pe_findings, medications, diagnostics_performed, treatments_attempted, gp_questions, created_at",
+    )
     .eq("id", caseId)
     .single()
 
@@ -102,32 +103,6 @@ export async function getCaseTimeline(caseId: string) {
 
   console.log("[v0] getCaseTimeline: Fetched messages", messages?.length || 0)
 
-  // Fetch files with uploader profile information
-  const { data: files, error: filesError } = await supabase
-    .from("case_files")
-    .select(
-      `
-      id,
-      case_id,
-      uploader_id,
-      file_name,
-      storage_object_path,
-      file_type,
-      upload_phase,
-      uploaded_at,
-      uploader:uploader_id(full_name, role)
-    `,
-    )
-    .eq("case_id", caseId)
-    .order("uploaded_at", { ascending: true })
-
-  if (filesError) {
-    console.log("[v0] getCaseTimeline: Files error", filesError)
-    return { error: filesError.message }
-  }
-
-  console.log("[v0] getCaseTimeline: Fetched files", files?.length || 0)
-
   // Transform messages into TimelineEvent format
   const messageEvents: TimelineEvent[] = (messages || []).map((msg: any) => ({
     type: "message" as const,
@@ -142,23 +117,20 @@ export async function getCaseTimeline(caseId: string) {
     created_at: msg.created_at,
   }))
 
-  // Transform files into TimelineEvent format
-  const fileEvents: TimelineEvent[] = (files || []).map((file: any) => ({
-    type: "file" as const,
-    id: file.id,
-    case_id: file.case_id,
-    uploader_id: file.uploader_id,
-    uploader_name: file.uploader?.full_name || "Unknown User",
-    uploader_role: file.uploader?.role || "gp",
-    file_name: file.file_name,
-    storage_object_path: file.storage_object_path,
-    file_type: file.file_type,
-    upload_phase: file.upload_phase,
-    created_at: file.uploaded_at,
-  }))
+  const caseSubmissionEvent: TimelineEvent = {
+    type: "case_submission" as const,
+    id: caseId,
+    presenting_complaint: caseData.presenting_complaint,
+    brief_history: caseData.brief_history,
+    pe_findings: caseData.pe_findings,
+    medications: caseData.medications,
+    diagnostics_performed: caseData.diagnostics_performed,
+    treatments_attempted: caseData.treatments_attempted,
+    gp_questions: caseData.gp_questions,
+    created_at: caseData.created_at,
+  }
 
-  // Merge and sort by created_at timestamp
-  const timeline = [...messageEvents, ...fileEvents].sort(
+  const timeline = [caseSubmissionEvent, ...messageEvents].sort(
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   )
 

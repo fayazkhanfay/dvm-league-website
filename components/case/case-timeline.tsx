@@ -2,10 +2,11 @@
 
 import { useEffect, useRef } from "react"
 import { format, isToday, isYesterday } from "date-fns"
-import { MessageSquare, FileText, Stethoscope, Paperclip } from "lucide-react"
+import { MessageSquare, FileText, Stethoscope, ClipboardList } from "lucide-react"
 import type { TimelineEvent } from "@/app/actions/get-case-timeline"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
+import { Card } from "@/components/ui/card"
 
 interface CaseTimelineProps {
   caseId: string
@@ -37,9 +38,64 @@ export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelinePr
   const renderEvent = (event: TimelineEvent) => {
     if (event.type === "message") {
       return renderMessage(event)
-    } else {
-      return renderFile(event)
+    } else if (event.type === "case_submission") {
+      return renderCaseSubmission(event)
     }
+  }
+
+  const renderCaseSubmission = (event: Extract<TimelineEvent, { type: "case_submission" }>) => {
+    return (
+      <div key={event.id} className="mb-6">
+        <Card className="p-6 bg-blue-50 border-blue-200">
+          <div className="flex items-center gap-2 mb-4">
+            <ClipboardList className="h-5 w-5 text-blue-600" />
+            <h3 className="font-semibold text-blue-900">Case Submitted</h3>
+            <span className="text-sm text-blue-600 ml-auto">{formatTimestamp(event.created_at)}</span>
+          </div>
+
+          <div className="space-y-4 text-sm">
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Presenting Complaint</h4>
+              <p className="text-blue-800 whitespace-pre-wrap">{event.presenting_complaint}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Brief History</h4>
+              <p className="text-blue-800 whitespace-pre-wrap">{event.brief_history}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Physical Exam Findings</h4>
+              <p className="text-blue-800 whitespace-pre-wrap">{event.pe_findings}</p>
+            </div>
+
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Current Medications</h4>
+              <p className="text-blue-800 whitespace-pre-wrap">{event.medications}</p>
+            </div>
+
+            {event.diagnostics_performed && (
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-1">Diagnostics Performed</h4>
+                <p className="text-blue-800 whitespace-pre-wrap">{event.diagnostics_performed}</p>
+              </div>
+            )}
+
+            {event.treatments_attempted && (
+              <div>
+                <h4 className="font-semibold text-blue-900 mb-1">Treatments Attempted</h4>
+                <p className="text-blue-800 whitespace-pre-wrap">{event.treatments_attempted}</p>
+              </div>
+            )}
+
+            <div>
+              <h4 className="font-semibold text-blue-900 mb-1">Questions for Specialist</h4>
+              <p className="text-blue-800 whitespace-pre-wrap">{event.gp_questions}</p>
+            </div>
+          </div>
+        </Card>
+      </div>
+    )
   }
 
   const renderMessage = (event: Extract<TimelineEvent, { type: "message" }>) => {
@@ -106,32 +162,6 @@ export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelinePr
             className={`rounded-lg px-4 py-2 ${isSpecialist ? "bg-blue-500 text-white" : "bg-muted text-foreground"}`}
           >
             <p className="text-sm">{event.content}</p>
-          </div>
-        </div>
-      </div>
-    )
-  }
-
-  const renderFile = (event: Extract<TimelineEvent, { type: "file" }>) => {
-    return (
-      <div key={event.id} className="flex justify-center mb-4">
-        <div className="max-w-md w-full border rounded-lg p-3 bg-card">
-          <div className="flex items-center gap-3">
-            <div className="flex-shrink-0">
-              <div className="h-10 w-10 rounded-full bg-muted flex items-center justify-center">
-                <Paperclip className="h-5 w-5 text-muted-foreground" />
-              </div>
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium">
-                <span className="font-semibold">{event.uploader_name}</span> uploaded a file
-              </p>
-              <p className="text-sm text-muted-foreground truncate">{event.file_name}</p>
-              <p className="text-xs text-muted-foreground">{formatTimestamp(event.created_at)}</p>
-            </div>
-            <Button variant="ghost" size="sm" className="flex-shrink-0">
-              Download
-            </Button>
           </div>
         </div>
       </div>

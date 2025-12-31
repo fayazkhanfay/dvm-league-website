@@ -3,8 +3,9 @@
 import { useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Download, FileImage, FileText, File } from "lucide-react"
+import { Download, FileImage, FileText, File, PackageOpen } from "lucide-react"
 import { getSignedFileUrl } from "@/app/actions/storage"
+import { downloadFilesAsZip } from "@/app/actions/download-files-zip"
 
 type CaseFile = {
   id: string
@@ -13,19 +14,41 @@ type CaseFile = {
   file_type: string | null
   upload_phase: "initial_submission" | "diagnostic_results" | "specialist_report" | null
   uploaded_at: string
+  uploader_id: string
+  uploader_name: string
 }
 
 type FileGalleryProps = {
+  caseId: string
   files: CaseFile[]
 }
 
-export function FileGallery({ files }: FileGalleryProps) {
+export function FileGallery({ caseId, files }: FileGalleryProps) {
   const [downloading, setDownloading] = useState<string | null>(null)
+  const [downloadingZip, setDownloadingZip] = useState<string | null>(null)
 
-  // Group files by phase
-  const initialFiles = files.filter((f) => f.upload_phase === "initial_submission" || f.upload_phase === null)
-  const diagnosticFiles = files.filter((f) => f.upload_phase === "diagnostic_results")
-  const reportFiles = files.filter((f) => f.upload_phase === "specialist_report")
+  const filesByUploader = files.reduce(
+    (acc, file) => {
+      const key = file.uploader_id
+      if (!acc[key]) {
+        acc[key] = {
+          uploaderName: file.uploader_name,
+          uploaderId: file.uploader_id,
+          files: [],
+        }
+      }
+      acc[key].files.push(file)
+      return acc
+    },
+    {} as Record<
+      string,
+      {
+        uploaderName: string
+        uploaderId: string
+        files: CaseFile[]
+      }
+    >,
+  )
 
   const handleDownload = async (file: CaseFile) => {
     setDownloading(file.id)
@@ -38,12 +61,36 @@ export function FileGallery({ files }: FileGalleryProps) {
         return
       }
 
-      // Open in new tab to trigger download
       window.open(result.signedUrl, "_blank")
     } catch (error) {
       console.error("[v0] Error downloading file:", error)
     } finally {
       setDownloading(null)
+    }
+  }
+
+  const handleDownloadAll = async (uploaderId: string, uploaderName: string) => {
+    setDownloadingZip(uploaderId)
+
+    try {
+      const result = await downloadFilesAsZip(caseId, uploaderId)
+
+      if (!result.success || !result.zipData) {
+        console.error("[v0] Failed to create zip:", result.error)
+        return
+      }
+
+      // Create download link for zip
+      const link = document.createElement("a")
+      link.href = `data:application/zip;base64,${result.zipData}`
+      link.download = result.fileName || `${uploaderName}-files.zip`
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    } catch (error) {
+      console.error("[v0] Error downloading zip:", error)
+    } finally {
+      setDownloadingZip(null)
     }
   }
 
@@ -59,7 +106,6 @@ export function FileGallery({ files }: FileGalleryProps) {
       return <FileText className="size-4 text-red-500" />
     }
 
-    // DICOM, ZIP, or other files
     return <File className="size-4 text-gray-500" />
   }
 
@@ -96,43 +142,29 @@ export function FileGallery({ files }: FileGalleryProps) {
         <CardTitle>File Gallery</CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Initial Submission Files */}
-        {initialFiles.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Initial Submission</h3>
+        {Object.values(filesByUploader).map((group) => (
+          <div key={group.uploaderId} className="space-y-2">
+            <div className="flex items-center justify-between">
+              <h3 className="text-sm font-semibold text-muted-foreground">{group.uploaderName}</h3>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={() => handleDownloadAll(group.uploaderId, group.uploaderName)}
+                disabled={downloadingZip === group.uploaderId}
+                className="h-7 text-xs"
+              >
+                <PackageOpen className="size-3 mr-1" />
+                {downloadingZip === group.uploaderId ? "Creating..." : "Download All"}
+              </Button>
+            </div>
             <div className="space-y-2">
-              {initialFiles.map((file) => (
+              {group.files.map((file) => (
                 <FileItem key={file.id} file={file} />
               ))}
             </div>
           </div>
-        )}
+        ))}
 
-        {/* Diagnostic Files */}
-        {diagnosticFiles.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Diagnostics</h3>
-            <div className="space-y-2">
-              {diagnosticFiles.map((file) => (
-                <FileItem key={file.id} file={file} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Report Files */}
-        {reportFiles.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-sm font-semibold text-muted-foreground">Reports</h3>
-            <div className="space-y-2">
-              {reportFiles.map((file) => (
-                <FileItem key={file.id} file={file} />
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Empty State */}
         {files.length === 0 && (
           <div className="text-center py-8 text-muted-foreground text-sm">No files uploaded yet</div>
         )}

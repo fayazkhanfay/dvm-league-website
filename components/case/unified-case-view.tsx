@@ -1,5 +1,6 @@
 import { getCaseDetails } from "@/app/actions/get-case-details"
 import { getCaseTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles } from "@/app/actions/get-case-files"
 import { CaseHeader } from "./case-header"
 import { CaseTimeline } from "./case-timeline"
 import { ActionPanel } from "./action-panel"
@@ -17,8 +18,11 @@ interface UnifiedCaseViewProps {
 }
 
 export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile }: UnifiedCaseViewProps) {
-  // Fetch case details and timeline in parallel
-  const [caseDetailsResult, timelineResult] = await Promise.all([getCaseDetails(caseId), getCaseTimeline(caseId)])
+  const [caseDetailsResult, timelineResult, filesResult] = await Promise.all([
+    getCaseDetails(caseId),
+    getCaseTimeline(caseId),
+    getCaseFiles(caseId),
+  ])
 
   if (caseDetailsResult.error || !caseDetailsResult.data) {
     return (
@@ -46,12 +50,10 @@ export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile 
 
   const caseData = caseDetailsResult.data
   const timelineEvents = timelineResult.data
+  const caseFiles = filesResult.data || []
 
   // Calculate if the case is assigned to the current user
   const isAssignedToMe = viewerRole === "gp" ? caseData.gp_id === userId : caseData.specialist_id === userId
-
-  // Filter file events for the file gallery
-  const fileEvents = timelineEvents.filter((event) => event.type === "file")
 
   return (
     <AppLayout
@@ -84,7 +86,7 @@ export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile 
                 specialistId={caseData.specialist_id}
                 clientSummary={caseData.phase2_client_summary}
               />
-              <FileGallery files={fileEvents} />
+              <FileGallery caseId={caseId} files={caseFiles} />
             </div>
           </div>
         </div>
