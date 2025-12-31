@@ -38,10 +38,10 @@ export async function getCaseTimeline(caseId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
+    console.log("[v0] getCaseTimeline: User not authenticated")
     return { error: "Not authenticated" }
   }
 
-  // Verify authorization - user must be either the GP or Specialist on this case
   const { data: caseData, error: caseError } = await supabase
     .from("cases")
     .select("gp_id, specialist_id")
@@ -49,12 +49,33 @@ export async function getCaseTimeline(caseId: string) {
     .single()
 
   if (caseError || !caseData) {
+    console.log("[v0] getCaseTimeline: Case not found", caseError)
     return { error: "Case not found" }
   }
 
-  if (caseData.gp_id !== user.id && caseData.specialist_id !== user.id) {
+  // Check authorization: GP owner, assigned specialist, OR specialist viewing unassigned case
+  const { data: userProfile } = await supabase.from("profiles").select("role").eq("id", user.id).single()
+
+  const isGP = caseData.gp_id === user.id
+  const isAssignedSpecialist = caseData.specialist_id === user.id
+  const isSpecialistViewingUnassigned = userProfile?.role === "specialist" && caseData.specialist_id === null
+
+  if (!isGP && !isAssignedSpecialist && !isSpecialistViewingUnassigned) {
+    console.log("[v0] getCaseTimeline: Unauthorized", {
+      userId: user.id,
+      caseData,
+      userProfile,
+    })
     return { error: "Unauthorized" }
   }
+
+  console.log("[v0] getCaseTimeline: Authorization check passed", {
+    caseId,
+    userId: user.id,
+    isGP,
+    isAssignedSpecialist,
+    isSpecialistViewingUnassigned,
+  })
 
   // Fetch messages with sender profile information
   const { data: messages, error: messagesError } = await supabase
@@ -75,8 +96,11 @@ export async function getCaseTimeline(caseId: string) {
     .order("created_at", { ascending: true })
 
   if (messagesError) {
+    console.log("[v0] getCaseTimeline: Messages error", messagesError)
     return { error: messagesError.message }
   }
+
+  console.log("[v0] getCaseTimeline: Fetched messages", messages?.length || 0)
 
   // Fetch files with uploader profile information
   const { data: files, error: filesError } = await supabase
@@ -98,8 +122,11 @@ export async function getCaseTimeline(caseId: string) {
     .order("uploaded_at", { ascending: true })
 
   if (filesError) {
+    console.log("[v0] getCaseTimeline: Files error", filesError)
     return { error: filesError.message }
   }
+
+  console.log("[v0] getCaseTimeline: Fetched files", files?.length || 0)
 
   // Transform messages into TimelineEvent format
   const messageEvents: TimelineEvent[] = (messages || []).map((msg: any) => ({
