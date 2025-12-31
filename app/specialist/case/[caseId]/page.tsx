@@ -42,5 +42,15 @@ export default async function SpecialistCaseViewPage({
     redirect("/specialist-dashboard")
   }
 
-  return <UnifiedCaseView caseId={caseId} viewerRole="specialist" userId={user.id} />
+  return (
+    <UnifiedCaseView
+      caseId={caseId}
+      viewerRole="specialist"
+      userId={user.id}
+      userProfile={{
+        full_name: profile.full_name,
+        is_demo: profile.is_demo,
+      }}
+    />
+  )
 }

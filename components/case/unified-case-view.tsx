@@ -4,14 +4,19 @@ import { CaseHeader } from "./case-header"
 import { CaseTimeline } from "./case-timeline"
 import { ActionPanel } from "./action-panel"
 import { FileGallery } from "./file-gallery"
+import { AppLayout } from "@/components/app-layout"
 
 interface UnifiedCaseViewProps {
   caseId: string
   viewerRole: "gp" | "specialist"
   userId: string
+  userProfile: {
+    full_name: string
+    is_demo?: boolean
+  }
 }
 
-export async function UnifiedCaseView({ caseId, viewerRole, userId }: UnifiedCaseViewProps) {
+export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile }: UnifiedCaseViewProps) {
   // Fetch case details and timeline in parallel
   const [caseDetailsResult, timelineResult] = await Promise.all([getCaseDetails(caseId), getCaseTimeline(caseId)])
 
@@ -49,34 +54,41 @@ export async function UnifiedCaseView({ caseId, viewerRole, userId }: UnifiedCas
   const fileEvents = timelineEvents.filter((event) => event.type === "file")
 
   return (
-    <div className="container mx-auto py-8 px-4">
-      {/* Header */}
-      <CaseHeader caseData={caseData} />
+    <AppLayout
+      activePage="myCases"
+      userRole={viewerRole}
+      userName={userProfile.full_name}
+      isDemoUser={userProfile.is_demo}
+    >
+      <div className="container mx-auto py-8 px-4">
+        {/* Header */}
+        <CaseHeader caseData={caseData} />
 
-      {/* Split Screen Layout */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-        {/* Left: Timeline (2/3 width on large screens) */}
-        <div className="lg:col-span-2">
-          <CaseTimeline events={timelineEvents} caseId={caseId} currentUserRole={viewerRole} />
-        </div>
+        {/* Split Screen Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
+          {/* Left: Timeline (2/3 width on large screens) */}
+          <div className="lg:col-span-2">
+            <CaseTimeline events={timelineEvents} caseId={caseId} currentUserRole={viewerRole} />
+          </div>
 
-        {/* Right: Sticky Sidebar (1/3 width on large screens) */}
-        <div className="lg:col-span-1">
-          <div className="sticky top-6 space-y-6">
-            <ActionPanel
-              status={caseData.status}
-              userRole={viewerRole}
-              caseId={caseId}
-              currentUserId={userId}
-              isAssignedToMe={isAssignedToMe}
-              gpId={caseData.gp_id}
-              specialistId={caseData.specialist_id}
-              clientSummary={caseData.phase2_client_summary}
-            />
-            <FileGallery files={fileEvents} />
+          {/* Right: Sticky Sidebar (1/3 width on large screens) */}
+          <div className="lg:col-span-1">
+            <div className="sticky top-6 space-y-6">
+              <ActionPanel
+                status={caseData.status}
+                userRole={viewerRole}
+                caseId={caseId}
+                currentUserId={userId}
+                isAssignedToMe={isAssignedToMe}
+                gpId={caseData.gp_id}
+                specialistId={caseData.specialist_id}
+                clientSummary={caseData.phase2_client_summary}
+              />
+              <FileGallery files={fileEvents} />
+            </div>
           </div>
         </div>
       </div>
-    </div>
+    </AppLayout>
   )
 }

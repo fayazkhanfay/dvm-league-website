@@ -31,5 +31,15 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
     redirect("/gp-dashboard")
   }
 
-  return <UnifiedCaseView caseId={caseId} viewerRole="gp" userId={user.id} />
+  return (
+    <UnifiedCaseView
+      caseId={caseId}
+      viewerRole="gp"
+      userId={user.id}
+      userProfile={{
+        full_name: profile.full_name,
+        is_demo: profile.is_demo,
+      }}
+    />
+  )
 }
