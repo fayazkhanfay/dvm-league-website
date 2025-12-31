@@ -50,7 +50,20 @@ export function CaseHeader({ caseData }: CaseHeaderProps) {
               <span className="text-muted-foreground">Gender:</span>{" "}
               <span className="font-medium">{caseData.patient_sex_status}</span>
             </div>
+            {caseData.patient_vax_status && (
+              <div>
+                <span className="text-muted-foreground">Vaccination Status:</span>{" "}
+                <span className="font-medium">{caseData.patient_vax_status}</span>
+              </div>
+            )}
           </div>
+
+          {caseData.patient_preventatives && caseData.patient_preventatives.length > 0 && (
+            <div className="mt-3 text-sm">
+              <span className="text-muted-foreground">Preventatives:</span>{" "}
+              <span className="font-medium">{caseData.patient_preventatives.join(", ")}</span>
+            </div>
+          )}
 
           {/* Referral Reason */}
           <div className="mt-4">
