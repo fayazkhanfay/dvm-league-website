@@ -34,11 +34,22 @@ export default async function SpecialistCaseViewPage({
     redirect("/specialist-dashboard")
   }
 
+  console.log("[v0] Specialist case access check:", {
+    caseId,
+    userId: user.id,
+    specialistId: caseData.specialist_id,
+    status: caseData.status,
+    isAssignedToCurrentUser: caseData.specialist_id === user.id,
+    isUnassigned: caseData.specialist_id === null,
+  })
+
   const isAssignedToCurrentUser = caseData.specialist_id === user.id
-  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+  // Allow access if specialist_id is null, regardless of status (more permissive for claiming)
+  const isUnassigned = caseData.specialist_id === null
 
   if (!isAssignedToCurrentUser && !isUnassigned) {
     // Case is assigned to another specialist
+    console.log("[v0] Access denied: case assigned to different specialist")
     redirect("/specialist-dashboard")
   }
 
