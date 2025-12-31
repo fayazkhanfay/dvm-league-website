@@ -38,7 +38,7 @@ export async function getCaseTimeline(caseId: string) {
   } = await supabase.auth.getUser()
 
   if (!user) {
-    return { success: false, error: "Not authenticated", timeline: null }
+    return { error: "Not authenticated" }
   }
 
   // Verify authorization - user must be either the GP or Specialist on this case
@@ -49,11 +49,11 @@ export async function getCaseTimeline(caseId: string) {
     .single()
 
   if (caseError || !caseData) {
-    return { success: false, error: "Case not found", timeline: null }
+    return { error: "Case not found" }
   }
 
   if (caseData.gp_id !== user.id && caseData.specialist_id !== user.id) {
-    return { success: false, error: "Unauthorized", timeline: null }
+    return { error: "Unauthorized" }
   }
 
   // Fetch messages with sender profile information
@@ -75,7 +75,7 @@ export async function getCaseTimeline(caseId: string) {
     .order("created_at", { ascending: true })
 
   if (messagesError) {
-    return { success: false, error: messagesError.message, timeline: null }
+    return { error: messagesError.message }
   }
 
   // Fetch files with uploader profile information
@@ -98,7 +98,7 @@ export async function getCaseTimeline(caseId: string) {
     .order("uploaded_at", { ascending: true })
 
   if (filesError) {
-    return { success: false, error: filesError.message, timeline: null }
+    return { error: filesError.message }
   }
 
   // Transform messages into TimelineEvent format
@@ -135,5 +135,5 @@ export async function getCaseTimeline(caseId: string) {
     (a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime(),
   )
 
-  return { success: true, timeline, error: null }
+  return { data: timeline }
 }

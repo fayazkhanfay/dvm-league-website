@@ -22,7 +22,9 @@ type ActionPanelProps = {
   status: string
   userRole: "gp" | "specialist"
   isAssignedToMe: boolean
-  userProfileId: string
+  currentUserId: string
+  gpId: string
+  specialistId: string | null
   clientSummary?: string | null
 }
 
@@ -31,7 +33,9 @@ export function ActionPanel({
   status,
   userRole,
   isAssignedToMe,
-  userProfileId,
+  currentUserId,
+  gpId,
+  specialistId,
   clientSummary,
 }: ActionPanelProps) {
   const router = useRouter()
@@ -41,19 +45,16 @@ export function ActionPanel({
   const [isLoading, setIsLoading] = useState(false)
   const [copied, setCopied] = useState(false)
 
-  // GP Diagnostics Upload State
   const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
   const [diagnosticNotes, setDiagnosticNotes] = useState("")
   const [isUploadingDiagnostics, setIsUploadingDiagnostics] = useState(false)
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
 
-  // Specialist Phase 1 State
   const [phase1Plan, setPhase1Plan] = useState("")
   const [phase1Files, setPhase1Files] = useState<File[]>([])
   const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
   const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
 
-  // Specialist Phase 2 State
   const [phase2Assessment, setPhase2Assessment] = useState("")
   const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState("")
   const [phase2Prognosis, setPhase2Prognosis] = useState("")
@@ -80,7 +81,7 @@ export function ActionPanel({
         .from("case_files")
         .insert({
           case_id: caseId,
-          uploader_id: userProfileId,
+          uploader_id: currentUserId,
           file_name: file.name,
           file_type: file.type,
           storage_object_path: uploadData.path,
@@ -620,79 +621,57 @@ export function ActionPanel({
               ? "Uploading Files..."
               : isSubmittingPhase2
                 ? "Submitting..."
-                : "Submit Final Report"}
+                : "Submit Phase 2 Report"}
           </Button>
         </CardContent>
       </Card>
     )
   }
 
-  if (status === "completed" && clientSummary && userRole === "gp") {
+  if (status === "completed" && clientSummary) {
     return (
-      <Card className="border-2 border-green-500 bg-green-50 shadow-lg">
+      <Card className="border-green-500 shadow-lg">
         <CardHeader>
-          <CardTitle className="flex items-center justify-between">
-            <span className="flex items-center gap-2">
-              <CheckCircle className="size-5 text-green-600" />
-              Client-Friendly Summary
-            </span>
-            <Button onClick={handleCopySummary} variant="outline" size="sm" className="gap-2 bg-transparent">
-              {copied ? (
-                <>
-                  <CheckCircle className="h-4 w-4" />
-                  Copied!
-                </>
-              ) : (
-                <>
-                  <Copy className="h-4 w-4" />
-                  Copy for Client
-                </>
-              )}
-            </Button>
+          <CardTitle className="flex items-center gap-2">
+            <CheckCircle className="size-5 text-green-600" />
+            Case Complete
           </CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm">{clientSummary}</p>
+        <CardContent className="space-y-3">
+          <Alert>
+            <AlertTitle>Client Summary</AlertTitle>
+            <AlertDescription className="whitespace-pre-wrap mt-2">{clientSummary}</AlertDescription>
+          </Alert>
+          <Button onClick={handleCopySummary} variant="outline" className="w-full bg-transparent">
+            {copied ? <CheckCircle className="mr-2 h-4 w-4" /> : <Copy className="mr-2 h-4 w-4" />}
+            {copied ? "Copied!" : "Copy Summary"}
+          </Button>
         </CardContent>
       </Card>
     )
   }
 
-  const getStatusMessage = () => {
-    switch (status) {
-      case "pending_assignment":
-        return "Waiting for a specialist to claim this case"
-      case "awaiting_phase1":
-        return "Specialist is reviewing the case"
-      case "awaiting_diagnostics":
-        return "Waiting for diagnostic results to be uploaded"
-      case "awaiting_phase2":
-        return "Specialist is preparing the final report"
-      case "completed":
-        return "Case has been completed"
-      default:
-        return "Case is in progress"
-    }
-  }
-
-  const getStatusColor = () => {
-    switch (status) {
-      case "completed":
-        return "text-green-600"
-      case "pending_assignment":
-        return "text-amber-600"
-      default:
-        return "text-blue-600"
-    }
-  }
-
   return (
-    <Alert>
-      <Clock className="size-4" />
-      <AlertTitle>Status Update</AlertTitle>
-      <AlertDescription>
-        <span className={getStatusColor()}>{getStatusMessage()}</span>
-      </AlertDescription>
-    </Alert>
+    <Card>
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <Clock className="size-5" />
+          Status
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <p className="text-sm text-muted-foreground">
+          {status === "awaiting_phase1" && "Waiting for specialist to provide Phase 1 diagnostic plan"}
+          {status === "awaiting_diagnostics" &&
+            userRole === "specialist" &&
+            "Waiting for GP to upload diagnostic results"}
+          {status === "awaiting_phase2" &&
+            userRole === "gp" &&
+            "Waiting for specialist to provide Phase 2 final report"}
+          {!["awaiting_phase1", "awaiting_diagnostics", "awaiting_phase2"].includes(status) &&
+            "No actions available at this time"}
+        </p>
+      </CardContent>
+    </Card>
   )
 }

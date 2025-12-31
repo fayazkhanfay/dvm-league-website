@@ -1,8 +1,12 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import SpecialistCaseView from "@/components/specialist-case-view"
+import { UnifiedCaseView } from "@/components/case/unified-case-view"
 
-export default async function SpecialistCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
+export default async function SpecialistCaseViewPage({
+  params,
+}: {
+  params: Promise<{ caseId: string }>
+}) {
   const { caseId } = await params
   const supabase = await createClient()
 
@@ -22,13 +26,7 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
 
   const { data: caseData, error } = await supabase
     .from("cases")
-    .select(
-      `
-      *,
-      gp:gp_id(full_name, clinic_name, email),
-      case_files(*)
-    `,
-    )
+    .select("id, specialist_id, status")
     .eq("id", caseId)
     .single()
 
@@ -44,5 +42,5 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
     redirect("/specialist-dashboard")
   }
 
-  return <SpecialistCaseView caseData={caseData} userProfile={profile} />
+  return <UnifiedCaseView caseId={caseId} viewerRole="specialist" userId={user.id} />
 }

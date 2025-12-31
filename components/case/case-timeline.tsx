@@ -9,12 +9,11 @@ import { Button } from "@/components/ui/button"
 
 interface CaseTimelineProps {
   caseId: string
-  initialEvents: TimelineEvent[]
-  currentUserId: string
+  events: TimelineEvent[]
   currentUserRole: "gp" | "specialist"
 }
 
-export default function CaseTimeline({ caseId, initialEvents, currentUserId, currentUserRole }: CaseTimelineProps) {
+export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
   // Scroll to bottom on initial load
@@ -44,8 +43,6 @@ export default function CaseTimeline({ caseId, initialEvents, currentUserId, cur
   }
 
   const renderMessage = (event: Extract<TimelineEvent, { type: "message" }>) => {
-    const isCurrentUser = event.sender_id === currentUserId
-
     // Handle different message types
     if (event.message_type === "report_phase1") {
       return (
@@ -97,16 +94,16 @@ export default function CaseTimeline({ caseId, initialEvents, currentUserId, cur
       )
     }
 
-    // Regular text message - chat bubble style
+    const isSpecialist = event.sender_role === "specialist"
     return (
-      <div key={event.id} className={`flex mb-4 ${isCurrentUser ? "justify-end" : "justify-start"}`}>
-        <div className={`max-w-[70%] ${isCurrentUser ? "items-end" : "items-start"} flex flex-col gap-1`}>
+      <div key={event.id} className={`flex mb-4 ${isSpecialist ? "justify-end" : "justify-start"}`}>
+        <div className={`max-w-[70%] ${isSpecialist ? "items-end" : "items-start"} flex flex-col gap-1`}>
           <div className="flex items-center gap-2 px-1">
             <span className="text-xs font-medium text-muted-foreground">{event.sender_name}</span>
             <span className="text-xs text-muted-foreground">{formatTimestamp(event.created_at)}</span>
           </div>
           <div
-            className={`rounded-lg px-4 py-2 ${isCurrentUser ? "bg-blue-500 text-white" : "bg-muted text-foreground"}`}
+            className={`rounded-lg px-4 py-2 ${isSpecialist ? "bg-blue-500 text-white" : "bg-muted text-foreground"}`}
           >
             <p className="text-sm">{event.content}</p>
           </div>
@@ -144,14 +141,14 @@ export default function CaseTimeline({ caseId, initialEvents, currentUserId, cur
   return (
     <div className="h-full flex flex-col">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        {initialEvents.length === 0 ? (
+        {events.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
             <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
             <p>No messages yet</p>
             <p className="text-sm">Start the conversation or upload files</p>
           </div>
         ) : (
-          <div className="space-y-1">{initialEvents.map((event) => renderEvent(event))}</div>
+          <div className="space-y-1">{events.map((event) => renderEvent(event))}</div>
         )}
       </ScrollArea>
     </div>
