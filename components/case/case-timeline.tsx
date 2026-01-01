@@ -197,7 +197,12 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
         compressionOptions: { level: 6 },
       })
 
-      const zipFileName = `Case_${caseId}_${batch.uploader_name.replace(/\s+/g, "_")}.zip`
+      const currentDate = format(new Date(), "yyyy-MM-dd")
+      const sanitizedPetName = (caseData.patient_name || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
+      const sanitizedSpecies = (caseData.patient_species || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
+      const shortCaseId = caseId.substring(0, 6)
+      const zipFileName = `${currentDate}_${sanitizedPetName}_${sanitizedSpecies}_Case-${shortCaseId}.zip`
+
       saveAs(zipBlob, zipFileName)
 
       toast({
