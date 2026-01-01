@@ -3,8 +3,6 @@ import { getCaseTimeline } from "@/app/actions/get-case-timeline"
 import { getCaseFiles } from "@/app/actions/get-case-files"
 import { CaseHeader } from "./case-header"
 import { CaseTimeline } from "./case-timeline"
-import { ActionPanel } from "./action-panel"
-import { FileGallery } from "./file-gallery"
 import { AppLayout } from "@/components/app-layout"
 
 interface UnifiedCaseViewProps {
@@ -52,9 +50,6 @@ export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile 
   const timelineEvents = timelineResult.data
   const caseFiles = filesResult.data || []
 
-  // Calculate if the case is assigned to the current user
-  const isAssignedToMe = viewerRole === "gp" ? caseData.gp_id === userId : caseData.specialist_id === userId
-
   return (
     <AppLayout
       activePage="myCases"
@@ -63,32 +58,24 @@ export async function UnifiedCaseView({ caseId, viewerRole, userId, userProfile 
       isDemoUser={userProfile.is_demo}
     >
       <div className="container mx-auto py-8 px-4">
-        {/* Header */}
-        <CaseHeader caseData={caseData} />
+        <div className="max-w-3xl mx-auto">
+          {/* Header - Pinned at top */}
+          <CaseHeader caseData={caseData} />
 
-        {/* Split Screen Layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-6">
-          {/* Left: Timeline (2/3 width on large screens) */}
-          <div className="lg:col-span-2">
-            <CaseTimeline events={timelineEvents} caseId={caseId} currentUserRole={viewerRole} />
+          {/* Body - Full width timeline with clinical history and file batches */}
+          <div className="mt-6">
+            <CaseTimeline
+              events={timelineEvents}
+              caseId={caseId}
+              currentUserRole={viewerRole}
+              files={caseFiles}
+              caseData={caseData}
+              userId={userId}
+            />
           </div>
 
-          {/* Right: Sticky Sidebar (1/3 width on large screens) */}
-          <div className="lg:col-span-1">
-            <div className="sticky top-6 space-y-6">
-              <ActionPanel
-                status={caseData.status}
-                userRole={viewerRole}
-                caseId={caseId}
-                currentUserId={userId}
-                isAssignedToMe={isAssignedToMe}
-                gpId={caseData.gp_id}
-                specialistId={caseData.specialist_id}
-                clientSummary={caseData.phase2_client_summary}
-              />
-              <FileGallery caseId={caseId} files={caseFiles} />
-            </div>
-          </div>
+          {/* Footer - Placeholder for future Command Center */}
+          <div className="h-24" />
         </div>
       </div>
     </AppLayout>

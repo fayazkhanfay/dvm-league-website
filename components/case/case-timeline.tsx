@@ -2,22 +2,45 @@
 
 import { useEffect, useRef } from "react"
 import { format, isToday, isYesterday } from "date-fns"
-import { MessageSquare, FileText, Stethoscope, ClipboardList } from "lucide-react"
+import { MessageSquare, FileText, Stethoscope, ClipboardList, Files, ImageIcon } from "lucide-react"
 import type { TimelineEvent } from "@/app/actions/get-case-timeline"
+import type { CaseDetails } from "@/app/actions/get-case-details"
 import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { ClinicalHistory } from "./clinical-history"
+import { ActionPanel } from "./action-panel"
+
+type CaseFile = {
+  id: string
+  file_name: string
+  storage_object_path: string
+  file_type: string | null
+  upload_phase: "initial_submission" | "diagnostic_results" | "specialist_report" | null
+  uploaded_at: string
+  uploader_id: string
+  uploader_name: string
+}
 
 interface CaseTimelineProps {
   caseId: string
   events: TimelineEvent[]
   currentUserRole: "gp" | "specialist"
+  files: CaseFile[]
+  caseData: CaseDetails
+  userId: string
 }
 
-export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelineProps) {
+type FileBatch = {
+  uploader_id: string
+  uploader_name: string
+  uploaded_at: string
+  files: CaseFile[]
+}
+
+export function CaseTimeline({ caseId, events, currentUserRole, files, caseData, userId }: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
 
-  // Scroll to bottom on initial load
   useEffect(() => {
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
@@ -35,71 +58,116 @@ export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelinePr
     }
   }
 
-  const renderEvent = (event: TimelineEvent) => {
-    if (event.type === "message") {
-      return renderMessage(event)
-    } else if (event.type === "case_submission") {
-      return renderCaseSubmission(event)
+  const createFileBatches = (): FileBatch[] => {
+    const batches: FileBatch[] = []
+    const sortedFiles = [...files].sort((a, b) => new Date(a.uploaded_at).getTime() - new Date(b.uploaded_at).getTime())
+
+    let currentBatch: FileBatch | null = null
+
+    for (const file of sortedFiles) {
+      if (!currentBatch || currentBatch.uploader_id !== file.uploader_id) {
+        if (currentBatch) {
+          batches.push(currentBatch)
+        }
+        currentBatch = {
+          uploader_id: file.uploader_id,
+          uploader_name: file.uploader_name,
+          uploaded_at: file.uploaded_at,
+          files: [file],
+        }
+      } else {
+        currentBatch.files.push(file)
+      }
     }
+
+    if (currentBatch) {
+      batches.push(currentBatch)
+    }
+
+    return batches
   }
 
-  const renderCaseSubmission = (event: Extract<TimelineEvent, { type: "case_submission" }>) => {
+  const fileBatches = createFileBatches()
+
+  const isImageFile = (fileName: string, fileType: string | null) => {
+    const ext = fileName.split(".").pop()?.toLowerCase()
+    const type = fileType?.toLowerCase()
+
+    if (ext === "dcm") return false
+
+    return type?.includes("image") || ["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")
+  }
+
+  const renderFileBatch = (batch: FileBatch) => {
+    const imageFiles = batch.files.filter((f) => isImageFile(f.file_name, f.file_type))
+    const docFiles = batch.files.filter((f) => !isImageFile(f.file_name, f.file_type))
+
     return (
-      <div key={event.id} className="mb-6">
-        <Card className="p-6 bg-blue-50 border-blue-200">
-          <div className="flex items-center gap-2 mb-4">
-            <ClipboardList className="h-5 w-5 text-blue-600" />
-            <h3 className="font-semibold text-blue-900">Case Submitted</h3>
-            <span className="text-sm text-blue-600 ml-auto">{formatTimestamp(event.created_at)}</span>
+      <div key={batch.uploader_id + batch.uploaded_at} className="mb-6">
+        <Card className="p-4 bg-muted/30">
+          <div className="flex items-center gap-2 mb-3">
+            <Files className="h-4 w-4 text-muted-foreground" />
+            <p className="text-sm font-medium">
+              {batch.uploader_name} uploaded {batch.files.length} file{batch.files.length > 1 ? "s" : ""}
+            </p>
+            <span className="text-xs text-muted-foreground ml-auto">{formatTimestamp(batch.uploaded_at)}</span>
           </div>
 
-          <div className="space-y-4 text-sm">
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Presenting Complaint</h4>
-              <p className="text-blue-800 whitespace-pre-wrap">{event.presenting_complaint}</p>
+          {imageFiles.length > 0 && (
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              {imageFiles.slice(0, 4).map((file) => (
+                <div key={file.id} className="relative aspect-square rounded-md overflow-hidden bg-muted border">
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
+                  </div>
+                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
+                    {file.file_name}
+                  </div>
+                </div>
+              ))}
             </div>
+          )}
 
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Brief History</h4>
-              <p className="text-blue-800 whitespace-pre-wrap">{event.brief_history}</p>
+          {docFiles.length > 0 && (
+            <div className="flex items-center gap-2 p-2 rounded-md bg-background border">
+              <ClipboardList className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm text-muted-foreground">
+                {docFiles.length} document{docFiles.length > 1 ? "s" : ""}
+              </span>
             </div>
-
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Physical Exam Findings</h4>
-              <p className="text-blue-800 whitespace-pre-wrap">{event.pe_findings}</p>
-            </div>
-
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Current Medications</h4>
-              <p className="text-blue-800 whitespace-pre-wrap">{event.medications}</p>
-            </div>
-
-            {event.diagnostics_performed && (
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Diagnostics Performed</h4>
-                <p className="text-blue-800 whitespace-pre-wrap">{event.diagnostics_performed}</p>
-              </div>
-            )}
-
-            {event.treatments_attempted && (
-              <div>
-                <h4 className="font-semibold text-blue-900 mb-1">Treatments Attempted</h4>
-                <p className="text-blue-800 whitespace-pre-wrap">{event.treatments_attempted}</p>
-              </div>
-            )}
-
-            <div>
-              <h4 className="font-semibold text-blue-900 mb-1">Questions for Specialist</h4>
-              <p className="text-blue-800 whitespace-pre-wrap">{event.gp_questions}</p>
-            </div>
-          </div>
+          )}
         </Card>
       </div>
     )
   }
 
+  const mergedTimeline = [
+    ...events.map((e) => ({ type: "event" as const, data: e, timestamp: new Date(e.created_at).getTime() })),
+    ...fileBatches.map((b) => ({ type: "batch" as const, data: b, timestamp: new Date(b.uploaded_at).getTime() })),
+  ].sort((a, b) => a.timestamp - b.timestamp)
+
+  const renderEvent = (event: TimelineEvent) => {
+    if (event.type === "message") {
+      return renderMessage(event)
+    } else if (event.type === "case_submission") {
+      return (
+        <div key={event.id} className="mb-6">
+          <ClinicalHistory
+            presenting_complaint={event.presenting_complaint}
+            brief_history={event.brief_history}
+            pe_findings={event.pe_findings}
+            medications={event.medications}
+            diagnostics_performed={event.diagnostics_performed}
+            treatments_attempted={event.treatments_attempted}
+            gp_questions={event.gp_questions}
+            created_at={event.created_at}
+          />
+        </div>
+      )
+    }
+  }
+
   const renderMessage = (event: Extract<TimelineEvent, { type: "message" }>) => {
-    // Handle different message types
     if (event.message_type === "report_phase1") {
       return (
         <div key={event.id} className="flex justify-center mb-4">
@@ -168,19 +236,36 @@ export function CaseTimeline({ caseId, events, currentUserRole }: CaseTimelinePr
     )
   }
 
+  const isAssignedToMe = currentUserRole === "gp" ? caseData.gp_id === userId : caseData.specialist_id === userId
+
   return (
-    <div className="h-full flex flex-col">
+    <div className="space-y-6">
       <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        {events.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground">
+        {mergedTimeline.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
             <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
-            <p>No messages yet</p>
-            <p className="text-sm">Start the conversation or upload files</p>
+            <p>No activity yet</p>
+            <p className="text-sm">The case timeline will appear here</p>
           </div>
         ) : (
-          <div className="space-y-1">{events.map((event) => renderEvent(event))}</div>
+          <div className="space-y-1">
+            {mergedTimeline.map((item) =>
+              item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data),
+            )}
+          </div>
         )}
       </ScrollArea>
+
+      <ActionPanel
+        status={caseData.status}
+        userRole={currentUserRole}
+        caseId={caseId}
+        currentUserId={userId}
+        isAssignedToMe={isAssignedToMe}
+        gpId={caseData.gp_id}
+        specialistId={caseData.specialist_id}
+        clientSummary={caseData.phase2_client_summary}
+      />
     </div>
   )
 }
