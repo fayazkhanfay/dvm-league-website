@@ -53,7 +53,7 @@ export async function getCaseFiles(caseId: string) {
       upload_phase,
       uploaded_at,
       uploader_id,
-      uploader:uploader_id(full_name)
+      profiles!uploader_id(full_name)
     `,
     )
     .eq("case_id", caseId)
@@ -71,7 +71,7 @@ export async function getCaseFiles(caseId: string) {
     upload_phase: file.upload_phase,
     uploaded_at: file.uploaded_at,
     uploader_id: file.uploader_id,
-    uploader_name: file.uploader?.full_name || "Unknown User",
+    uploader_name: file.profiles?.full_name || "Unknown User",
   }))
 
   return { data: transformedFiles }
