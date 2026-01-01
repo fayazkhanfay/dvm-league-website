@@ -5,11 +5,9 @@ import { format, isToday, isYesterday } from "date-fns"
 import { MessageSquare, FileText, Stethoscope, ClipboardList, Files, ImageIcon } from "lucide-react"
 import type { TimelineEvent } from "@/app/actions/get-case-timeline"
 import type { CaseDetails } from "@/app/actions/get-case-details"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ClinicalHistory } from "./clinical-history"
-import { ActionPanel } from "./action-panel"
 
 type CaseFile = {
   id: string
@@ -240,32 +238,17 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
 
   return (
     <div className="space-y-6">
-      <ScrollArea className="flex-1 p-4" ref={scrollRef}>
-        {mergedTimeline.length === 0 ? (
-          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-            <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
-            <p>No activity yet</p>
-            <p className="text-sm">The case timeline will appear here</p>
-          </div>
-        ) : (
-          <div className="space-y-1">
-            {mergedTimeline.map((item) =>
-              item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data),
-            )}
-          </div>
-        )}
-      </ScrollArea>
-
-      <ActionPanel
-        status={caseData.status}
-        userRole={currentUserRole}
-        caseId={caseId}
-        currentUserId={userId}
-        isAssignedToMe={isAssignedToMe}
-        gpId={caseData.gp_id}
-        specialistId={caseData.specialist_id}
-        clientSummary={caseData.phase2_client_summary}
-      />
+      {mergedTimeline.length === 0 ? (
+        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
+          <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
+          <p>No activity yet</p>
+          <p className="text-sm">The case timeline will appear here</p>
+        </div>
+      ) : (
+        <div className="space-y-1">
+          {mergedTimeline.map((item) => (item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data)))}
+        </div>
+      )}
     </div>
   )
 }

@@ -259,7 +259,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange}>
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
       <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
         {mode === "phase1" && (
           <>
