@@ -60,19 +60,31 @@ export async function getCaseFiles(caseId: string) {
     .order("uploaded_at", { ascending: true })
 
   if (filesError) {
+    console.error("[v0] getCaseFiles error:", filesError)
     return { error: filesError.message }
   }
 
-  const transformedFiles: CaseFile[] = (files || []).map((file: any) => ({
-    id: file.id,
-    file_name: file.file_name,
-    storage_object_path: file.storage_object_path,
-    file_type: file.file_type,
-    upload_phase: file.upload_phase,
-    uploaded_at: file.uploaded_at,
-    uploader_id: file.uploader_id,
-    uploader_name: file.profiles?.full_name || "Unknown User",
-  }))
+  console.log("[v0] getCaseFiles raw data sample:", files?.[0])
+
+  const transformedFiles: CaseFile[] = (files || []).map((file: any) => {
+    const uploaderName = file.profiles?.full_name || "Unknown User"
+    console.log("[v0] File mapping:", {
+      fileName: file.file_name,
+      uploaderId: file.uploader_id,
+      profilesData: file.profiles,
+      resolvedName: uploaderName,
+    })
+    return {
+      id: file.id,
+      file_name: file.file_name,
+      storage_object_path: file.storage_object_path,
+      file_type: file.file_type,
+      upload_phase: file.upload_phase,
+      uploaded_at: file.uploaded_at,
+      uploader_id: file.uploader_id,
+      uploader_name: uploaderName,
+    }
+  })
 
   return { data: transformedFiles }
 }
