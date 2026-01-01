@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { UnifiedCaseView } from "@/components/case/unified-case-view"
+import { getCaseDetails } from "@/app/actions/get-case-details"
+import { getCaseTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles } from "@/app/actions/get-case-files"
 
 export default async function SpecialistCaseViewPage({
   params,
@@ -44,14 +47,18 @@ export default async function SpecialistCaseViewPage({
   })
 
   const isAssignedToCurrentUser = caseData.specialist_id === user.id
-  // Allow access if specialist_id is null, regardless of status (more permissive for claiming)
   const isUnassigned = caseData.specialist_id === null
 
   if (!isAssignedToCurrentUser && !isUnassigned) {
-    // Case is assigned to another specialist
     console.log("[v0] Access denied: case assigned to different specialist")
     redirect("/specialist-dashboard")
   }
+
+  const [caseDetailsResult, timelineResult, filesResult] = await Promise.all([
+    getCaseDetails(caseId),
+    getCaseTimeline(caseId),
+    getCaseFiles(caseId),
+  ])
 
   return (
     <UnifiedCaseView
@@ -62,6 +69,9 @@ export default async function SpecialistCaseViewPage({
         full_name: profile.full_name,
         is_demo: profile.is_demo,
       }}
+      caseDetailsResult={caseDetailsResult}
+      timelineResult={timelineResult}
+      filesResult={filesResult}
     />
   )
 }

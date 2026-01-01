@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { UnifiedCaseView } from "@/components/case/unified-case-view"
+import { getCaseDetails } from "@/app/actions/get-case-details"
+import { getCaseTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles } from "@/app/actions/get-case-files"
 
 export default async function GPCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = await params
@@ -31,6 +34,12 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
     redirect("/gp-dashboard")
   }
 
+  const [caseDetailsResult, timelineResult, filesResult] = await Promise.all([
+    getCaseDetails(caseId),
+    getCaseTimeline(caseId),
+    getCaseFiles(caseId),
+  ])
+
   return (
     <UnifiedCaseView
       caseId={caseId}
@@ -40,6 +49,9 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
         full_name: profile.full_name,
         is_demo: profile.is_demo,
       }}
+      caseDetailsResult={caseDetailsResult}
+      timelineResult={timelineResult}
+      filesResult={filesResult}
     />
   )
 }
