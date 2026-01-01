@@ -1,13 +1,16 @@
 "use client"
 
-import { useEffect, useRef } from "react"
+import { useEffect, useRef, useState } from "react"
 import { format, isToday, isYesterday } from "date-fns"
-import { MessageSquare, FileText, Stethoscope, ClipboardList, Files, ImageIcon } from "lucide-react"
+import { MessageSquare, FileText, Stethoscope, ClipboardList, Files, ImageIcon, Download } from "lucide-react"
 import type { TimelineEvent } from "@/app/actions/get-case-timeline"
 import type { CaseDetails } from "@/app/actions/get-case-details"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { ClinicalHistory } from "./clinical-history"
+import { ImageLightbox } from "./image-lightbox"
+import { getSignedFileUrl } from "@/app/actions/storage"
+import { useToast } from "@/hooks/use-toast"
 
 type CaseFile = {
   id: string
@@ -36,14 +39,43 @@ type FileBatch = {
   files: CaseFile[]
 }
 
+type TimelineItem = {
+  type: "event" | "file_batch"
+  data: TimelineEvent | FileBatch
+}
+
 export function CaseTimeline({ caseId, events, currentUserRole, files, caseData, userId }: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
+  const { toast } = useToast()
+  const [mergedTimeline, setMergedTimeline] = useState<TimelineItem[]>([])
 
   useEffect(() => {
+    const createMergedTimeline = (): TimelineItem[] => {
+      const timelineItems: TimelineItem[] = []
+      const fileBatches = createFileBatches()
+
+      fileBatches.forEach((batch) => {
+        timelineItems.push({ type: "file_batch", data: batch })
+      })
+
+      events.forEach((event) => {
+        timelineItems.push({ type: "event", data: event })
+      })
+
+      return timelineItems.sort(
+        (a, b) =>
+          new Date(a.data.created_at || a.data.uploaded_at).getTime() -
+          new Date(b.data.created_at || b.data.uploaded_at).getTime(),
+      )
+    }
+
+    setMergedTimeline(createMergedTimeline())
+
     if (scrollRef.current) {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
-  }, [])
+  }, [events, files])
 
   const formatTimestamp = (dateString: string) => {
     const date = new Date(dateString)
@@ -96,6 +128,55 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
     return type?.includes("image") || ["jpg", "jpeg", "png", "gif", "webp"].includes(ext || "")
   }
 
+  const handleFileClick = async (file: CaseFile) => {
+    const ext = file.file_name.split(".").pop()?.toLowerCase()
+
+    const result = await getSignedFileUrl(file.storage_object_path)
+    if (!result.success || !result.signedUrl) {
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to access file",
+      })
+      return
+    }
+
+    const signedUrl = result.signedUrl
+
+    if (["jpg", "jpeg", "png", "webp", "gif"].includes(ext || "")) {
+      setSelectedImage({ src: signedUrl, alt: file.file_name })
+    } else if (ext === "pdf") {
+      window.open(signedUrl, "_blank")
+    } else {
+      const link = document.createElement("a")
+      link.href = signedUrl
+      link.download = file.file_name
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
+    }
+  }
+
+  const handleDownloadBatch = async (batch: FileBatch) => {
+    toast({
+      title: "Downloading files",
+      description: `Downloading ${batch.files.length} file(s)...`,
+    })
+
+    for (const file of batch.files) {
+      const result = await getSignedFileUrl(file.storage_object_path)
+      if (result.success && result.signedUrl) {
+        const link = document.createElement("a")
+        link.href = result.signedUrl
+        link.download = file.file_name
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        await new Promise((resolve) => setTimeout(resolve, 500))
+      }
+    }
+  }
+
   const renderFileBatch = (batch: FileBatch) => {
     const imageFiles = batch.files.filter((f) => isImageFile(f.file_name, f.file_type))
     const docFiles = batch.files.filter((f) => !isImageFile(f.file_name, f.file_type))
@@ -109,40 +190,54 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
               {batch.uploader_name} uploaded {batch.files.length} file{batch.files.length > 1 ? "s" : ""}
             </p>
             <span className="text-xs text-muted-foreground ml-auto">{formatTimestamp(batch.uploaded_at)}</span>
+            <Button
+              variant="outline"
+              size="sm"
+              className="h-7 gap-1 text-xs bg-transparent"
+              onClick={() => handleDownloadBatch(batch)}
+            >
+              <Download className="h-3 w-3" />
+              Download All
+            </Button>
           </div>
 
           {imageFiles.length > 0 && (
             <div className="grid grid-cols-2 gap-2 mb-2">
               {imageFiles.slice(0, 4).map((file) => (
-                <div key={file.id} className="relative aspect-square rounded-md overflow-hidden bg-muted border">
+                <button
+                  key={file.id}
+                  onClick={() => handleFileClick(file)}
+                  className="relative aspect-square rounded-md overflow-hidden bg-muted border hover:ring-2 hover:ring-primary transition-all cursor-pointer"
+                >
                   <div className="absolute inset-0 flex items-center justify-center">
                     <ImageIcon className="h-8 w-8 text-muted-foreground" />
                   </div>
                   <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
                     {file.file_name}
                   </div>
-                </div>
+                </button>
               ))}
             </div>
           )}
 
           {docFiles.length > 0 && (
-            <div className="flex items-center gap-2 p-2 rounded-md bg-background border">
-              <ClipboardList className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm text-muted-foreground">
-                {docFiles.length} document{docFiles.length > 1 ? "s" : ""}
-              </span>
+            <div className="space-y-1">
+              {docFiles.map((file) => (
+                <button
+                  key={file.id}
+                  onClick={() => handleFileClick(file)}
+                  className="w-full flex items-center gap-2 p-2 rounded-md bg-background border hover:bg-accent transition-colors cursor-pointer text-left"
+                >
+                  <ClipboardList className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  <span className="text-sm text-muted-foreground truncate">{file.file_name}</span>
+                </button>
+              ))}
             </div>
           )}
         </Card>
       </div>
     )
   }
-
-  const mergedTimeline = [
-    ...events.map((e) => ({ type: "event" as const, data: e, timestamp: new Date(e.created_at).getTime() })),
-    ...fileBatches.map((b) => ({ type: "batch" as const, data: b, timestamp: new Date(b.uploaded_at).getTime() })),
-  ].sort((a, b) => a.timestamp - b.timestamp)
 
   const renderEvent = (event: TimelineEvent) => {
     if (event.type === "message") {
@@ -237,18 +332,29 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
   const isAssignedToMe = currentUserRole === "gp" ? caseData.gp_id === userId : caseData.specialist_id === userId
 
   return (
-    <div className="space-y-6">
-      {mergedTimeline.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
-          <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
-          <p>No activity yet</p>
-          <p className="text-sm">The case timeline will appear here</p>
-        </div>
-      ) : (
-        <div className="space-y-1">
-          {mergedTimeline.map((item) => (item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data)))}
-        </div>
-      )}
-    </div>
+    <>
+      <ImageLightbox
+        isOpen={!!selectedImage}
+        onClose={() => setSelectedImage(null)}
+        src={selectedImage?.src || ""}
+        alt={selectedImage?.alt || ""}
+      />
+
+      <div className="space-y-6">
+        {mergedTimeline.length === 0 ? (
+          <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
+            <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
+            <p>No activity yet</p>
+            <p className="text-sm">The case timeline will appear here</p>
+          </div>
+        ) : (
+          <div className="space-y-1" ref={scrollRef}>
+            {mergedTimeline.map((item) =>
+              item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data),
+            )}
+          </div>
+        )}
+      </div>
+    </>
   )
 }
