@@ -64,16 +64,8 @@ export async function getCaseFiles(caseId: string) {
     return { error: filesError.message }
   }
 
-  console.log("[v0] getCaseFiles raw data sample:", files?.[0])
-
   const transformedFiles: CaseFile[] = (files || []).map((file: any) => {
     const uploaderName = file.profiles?.full_name || "Unknown User"
-    console.log("[v0] File mapping:", {
-      fileName: file.file_name,
-      uploaderId: file.uploader_id,
-      profilesData: file.profiles,
-      resolvedName: uploaderName,
-    })
     return {
       id: file.id,
       file_name: file.file_name,
