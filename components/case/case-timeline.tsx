@@ -11,6 +11,8 @@ import { ClinicalHistory } from "./clinical-history"
 import { ImageLightbox } from "./image-lightbox"
 import { getSignedFileUrl } from "@/app/actions/storage"
 import { useToast } from "@/hooks/use-toast"
+import JSZip from "jszip"
+import { saveAs } from "file-saver"
 
 type CaseFile = {
   id: string
@@ -49,6 +51,7 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
   const { toast } = useToast()
   const [mergedTimeline, setMergedTimeline] = useState<TimelineItem[]>([])
+  const [zippingBatchId, setZippingBatchId] = useState<string | null>(null)
 
   useEffect(() => {
     const createMergedTimeline = (): TimelineItem[] => {
@@ -158,31 +161,69 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
   }
 
   const handleDownloadBatch = async (batch: FileBatch) => {
+    const batchId = `${batch.uploader_id}-${batch.uploaded_at}`
+    setZippingBatchId(batchId)
+
     toast({
-      title: "Downloading files",
-      description: `Downloading ${batch.files.length} file(s)...`,
+      title: "Compressing files",
+      description: `Creating zip archive with ${batch.files.length} file(s)...`,
     })
 
-    for (const file of batch.files) {
-      const result = await getSignedFileUrl(file.storage_object_path)
-      if (result.success && result.signedUrl) {
-        const link = document.createElement("a")
-        link.href = result.signedUrl
-        link.download = file.file_name
-        document.body.appendChild(link)
-        link.click()
-        document.body.removeChild(link)
-        await new Promise((resolve) => setTimeout(resolve, 500))
+    try {
+      const zip = new JSZip()
+
+      for (const file of batch.files) {
+        const result = await getSignedFileUrl(file.storage_object_path)
+
+        if (result.success && result.signedUrl) {
+          try {
+            const response = await fetch(result.signedUrl)
+            const blob = await response.blob()
+            zip.file(file.file_name, blob)
+          } catch (error) {
+            console.error(`[v0] Failed to fetch file: ${file.file_name}`, error)
+            toast({
+              variant: "destructive",
+              title: "Warning",
+              description: `Failed to add ${file.file_name} to archive`,
+            })
+          }
+        }
       }
+
+      const zipBlob = await zip.generateAsync({
+        type: "blob",
+        compression: "DEFLATE",
+        compressionOptions: { level: 6 },
+      })
+
+      const zipFileName = `Case_${caseId}_${batch.uploader_name.replace(/\s+/g, "_")}.zip`
+      saveAs(zipBlob, zipFileName)
+
+      toast({
+        title: "Download complete",
+        description: `${zipFileName} has been downloaded`,
+      })
+    } catch (error) {
+      console.error("[v0] Error creating zip file:", error)
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to create zip archive",
+      })
+    } finally {
+      setZippingBatchId(null)
     }
   }
 
   const renderFileBatch = (batch: FileBatch) => {
     const imageFiles = batch.files.filter((f) => isImageFile(f.file_name, f.file_type))
     const docFiles = batch.files.filter((f) => !isImageFile(f.file_name, f.file_type))
+    const batchId = `${batch.uploader_id}-${batch.uploaded_at}`
+    const isZipping = zippingBatchId === batchId
 
     return (
-      <div key={batch.uploader_id + batch.uploaded_at} className="mb-6">
+      <div key={batchId} className="mb-6">
         <Card className="p-4 bg-muted/30">
           <div className="flex items-center gap-2 mb-3">
             <Files className="h-4 w-4 text-muted-foreground" />
@@ -195,9 +236,10 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
               size="sm"
               className="h-7 gap-1 text-xs bg-transparent"
               onClick={() => handleDownloadBatch(batch)}
+              disabled={isZipping}
             >
               <Download className="h-3 w-3" />
-              Download All
+              {isZipping ? "Compressing..." : "Download All"}
             </Button>
           </div>
 
