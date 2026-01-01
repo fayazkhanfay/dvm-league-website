@@ -52,6 +52,7 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
   const { toast } = useToast()
   const [mergedTimeline, setMergedTimeline] = useState<TimelineItem[]>([])
   const [zippingBatchId, setZippingBatchId] = useState<string | null>(null)
+  const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
     const createMergedTimeline = (): TimelineItem[] => {
@@ -79,6 +80,26 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight
     }
   }, [events, files])
+
+  useEffect(() => {
+    const loadImageUrls = async () => {
+      const imageFiles = files.filter((f) => isImageFile(f.file_name, f.file_type))
+      const urls: Record<string, string> = {}
+
+      await Promise.all(
+        imageFiles.map(async (file) => {
+          const result = await getSignedFileUrl(file.storage_object_path)
+          if (result.success && result.signedUrl) {
+            urls[file.id] = result.signedUrl
+          }
+        }),
+      )
+
+      setImageUrls(urls)
+    }
+
+    loadImageUrls()
+  }, [files])
 
   const formatTimestamp = (dateString: string) => {
     const date = new Date(dateString)
@@ -249,21 +270,45 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
           </div>
 
           {imageFiles.length > 0 && (
-            <div className="grid grid-cols-2 gap-2 mb-2">
-              {imageFiles.slice(0, 4).map((file) => (
-                <button
-                  key={file.id}
-                  onClick={() => handleFileClick(file)}
-                  className="relative aspect-square rounded-md overflow-hidden bg-muted border hover:ring-2 hover:ring-primary transition-all cursor-pointer"
-                >
-                  <div className="absolute inset-0 flex items-center justify-center">
-                    <ImageIcon className="h-8 w-8 text-muted-foreground" />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
-                    {file.file_name}
-                  </div>
-                </button>
-              ))}
+            <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-2">
+              {imageFiles.map((file) => {
+                const signedUrl = imageUrls[file.id]
+
+                return (
+                  <button
+                    key={file.id}
+                    onClick={() => handleFileClick(file)}
+                    className="relative aspect-square rounded-md overflow-hidden bg-muted border hover:ring-2 hover:ring-primary transition-all cursor-pointer"
+                  >
+                    {signedUrl ? (
+                      <img
+                        src={signedUrl || "/placeholder.svg"}
+                        alt={file.file_name}
+                        referrerPolicy="no-referrer"
+                        className="w-full h-full object-cover aspect-square rounded-md"
+                        onError={(e) => {
+                          e.currentTarget.style.display = "none"
+                          const parent = e.currentTarget.parentElement
+                          if (parent) {
+                            const fallback = document.createElement("div")
+                            fallback.className = "absolute inset-0 flex items-center justify-center bg-muted"
+                            fallback.innerHTML =
+                              '<svg class="h-8 w-8 text-muted-foreground" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" /></svg>'
+                            parent.appendChild(fallback)
+                          }
+                        }}
+                      />
+                    ) : (
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <ImageIcon className="h-8 w-8 text-muted-foreground animate-pulse" />
+                      </div>
+                    )}
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs p-1 truncate">
+                      {file.file_name}
+                    </div>
+                  </button>
+                )
+              })}
             </div>
           )}
 
