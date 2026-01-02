@@ -38,7 +38,11 @@ export function UnifiedCaseView({
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState<"phase1" | "phase2" | "diagnostics">("phase1")
 
-  const { data: timelineData, mutate: mutateTimeline } = useSWR(
+  const {
+    data: timelineData,
+    mutate: mutateTimeline,
+    isLoading: isLoadingTimeline,
+  } = useSWR(
     `timeline-${caseId}`,
     async () => {
       const result = await fetchTimeline(caseId)
@@ -52,7 +56,11 @@ export function UnifiedCaseView({
     },
   )
 
-  const { data: filesData, mutate: mutateFiles } = useSWR(
+  const {
+    data: filesData,
+    mutate: mutateFiles,
+    isLoading: isLoadingFiles,
+  } = useSWR(
     `files-${caseId}`,
     async () => {
       const result = await fetchFiles(caseId)
@@ -117,6 +125,7 @@ export function UnifiedCaseView({
               files={caseFiles}
               caseData={caseData}
               userId={userId}
+              isLoading={isLoadingTimeline || isLoadingFiles}
             />
           </div>
         </div>

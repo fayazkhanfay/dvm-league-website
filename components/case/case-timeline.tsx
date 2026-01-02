@@ -7,6 +7,7 @@ import type { TimelineEvent } from "@/app/actions/get-case-timeline"
 import type { CaseDetails } from "@/app/actions/get-case-details"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { ClinicalHistory } from "./clinical-history"
 import { ImageLightbox } from "./image-lightbox"
 import { getSignedFileUrl } from "@/app/actions/storage"
@@ -33,6 +34,7 @@ interface CaseTimelineProps {
   files: CaseFile[]
   caseData: CaseDetails
   userId: string
+  isLoading?: boolean
 }
 
 type FileBatch = {
@@ -47,7 +49,15 @@ type TimelineItem = {
   data: TimelineEvent | FileBatch
 }
 
-export function CaseTimeline({ caseId, events, currentUserRole, files, caseData, userId }: CaseTimelineProps) {
+export function CaseTimeline({
+  caseId,
+  events,
+  currentUserRole,
+  files,
+  caseData,
+  userId,
+  isLoading,
+}: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
   const { toast } = useToast()
@@ -426,6 +436,54 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
 
   const isAssignedToMe = currentUserRole === "gp" ? caseData.gp_id === userId : caseData.specialist_id === userId
 
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Skeleton for file batch */}
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <Skeleton className="h-4 w-4" />
+            <Skeleton className="h-4 w-48" />
+            <Skeleton className="h-4 w-24 ml-auto" />
+            <Skeleton className="h-7 w-24" />
+          </div>
+          <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2">
+            {[...Array(6)].map((_, i) => (
+              <Skeleton key={i} className="aspect-square rounded-md" />
+            ))}
+          </div>
+        </Card>
+
+        {/* Skeleton for messages */}
+        <div className="space-y-4">
+          {/* Incoming message */}
+          <div className="flex justify-start">
+            <div className="max-w-[70%] flex flex-col gap-1">
+              <Skeleton className="h-3 w-32 mb-1" />
+              <Skeleton className="h-16 w-64 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Outgoing message */}
+          <div className="flex justify-end">
+            <div className="max-w-[70%] flex flex-col gap-1">
+              <Skeleton className="h-3 w-32 mb-1 ml-auto" />
+              <Skeleton className="h-12 w-48 rounded-lg" />
+            </div>
+          </div>
+
+          {/* Another incoming message */}
+          <div className="flex justify-start">
+            <div className="max-w-[70%] flex flex-col gap-1">
+              <Skeleton className="h-3 w-28 mb-1" />
+              <Skeleton className="h-20 w-72 rounded-lg" />
+            </div>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <>
       <ImageLightbox
@@ -436,7 +494,7 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
       />
 
       <div className="space-y-6">
-        {mergedTimeline.length === 0 ? (
+        {!isLoading && mergedTimeline.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
             <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
             <p>No activity yet</p>
