@@ -119,7 +119,12 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
     let currentBatch: FileBatch | null = null
 
     for (const file of sortedFiles) {
-      if (!currentBatch || currentBatch.uploader_id !== file.uploader_id) {
+      const shouldCreateNewBatch =
+        !currentBatch ||
+        currentBatch.uploader_id !== file.uploader_id ||
+        Math.abs(new Date(file.uploaded_at).getTime() - new Date(currentBatch.uploaded_at).getTime()) > 60000
+
+      if (shouldCreateNewBatch) {
         if (currentBatch) {
           batches.push(currentBatch)
         }
