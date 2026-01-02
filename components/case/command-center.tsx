@@ -88,23 +88,31 @@ export function CommandCenter({
 
     try {
       for (const file of Array.from(files)) {
+        console.log("[v0] Starting upload for file:", file.name)
+
         // Upload to storage
         const fileExt = file.name.split(".").pop()
         const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
         const filePath = `${caseId}/${fileName}`
 
+        console.log("[v0] Uploading to storage:", filePath)
         const { error: uploadError } = await supabase.storage.from("case-bucket").upload(filePath, file)
 
         if (uploadError) {
+          console.error("[v0] Storage upload error:", uploadError)
           throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
         }
 
+        console.log("[v0] Storage upload successful, saving file record")
         // Save file record to database
         const result = await uploadCaseFile(caseId, file.name, file.type, filePath, "additional")
 
         if (!result.success) {
+          console.error("[v0] File record save failed:", result.error)
           throw new Error(`Failed to save file record: ${result.error}`)
         }
+
+        console.log("[v0] File upload complete:", file.name)
       }
 
       toast({
@@ -113,6 +121,7 @@ export function CommandCenter({
       })
       router.refresh()
     } catch (error: any) {
+      console.error("[v0] File upload error:", error)
       toast({
         title: "Upload failed",
         description: error.message || "Failed to upload files",
