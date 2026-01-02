@@ -10,6 +10,7 @@ import { Card } from "@/components/ui/card"
 import { ClinicalHistory } from "./clinical-history"
 import { ImageLightbox } from "./image-lightbox"
 import { getSignedFileUrl } from "@/app/actions/storage"
+import { getSignedUrlsBatch } from "@/app/actions/get-signed-urls-batch"
 import { useToast } from "@/hooks/use-toast"
 import JSZip from "jszip"
 import { saveAs } from "file-saver"
@@ -84,18 +85,15 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
   useEffect(() => {
     const loadImageUrls = async () => {
       const imageFiles = files.filter((f) => isImageFile(f.file_name, f.file_type))
-      const urls: Record<string, string> = {}
 
-      await Promise.all(
-        imageFiles.map(async (file) => {
-          const result = await getSignedFileUrl(file.storage_object_path)
-          if (result.success && result.signedUrl) {
-            urls[file.id] = result.signedUrl
-          }
-        }),
-      )
+      const pathsToFetch = imageFiles.map((f) => f.storage_object_path).filter((path) => !imageUrls[path])
 
-      setImageUrls(urls)
+      if (pathsToFetch.length === 0) return
+
+      const result = await getSignedUrlsBatch(pathsToFetch)
+      if (result.success) {
+        setImageUrls((prev) => ({ ...prev, ...result.urls }))
+      }
     }
 
     loadImageUrls()
@@ -277,7 +275,7 @@ export function CaseTimeline({ caseId, events, currentUserRole, files, caseData,
           {imageFiles.length > 0 && (
             <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-2 mb-2">
               {imageFiles.map((file) => {
-                const signedUrl = imageUrls[file.id]
+                const signedUrl = imageUrls[file.storage_object_path]
 
                 return (
                   <button
