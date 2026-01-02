@@ -5,7 +5,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Paperclip, Send } from "lucide-react"
+import { Paperclip, Send, X, FileIcon, ImageIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { acceptCase } from "@/app/actions/accept-case"
@@ -37,7 +37,7 @@ export function CommandCenter({
   const [message, setMessage] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isSendingMessage, setIsSendingMessage] = useState(false)
-  const [isUploadingFile, setIsUploadingFile] = useState(false)
+  const [stagedFiles, setStagedFiles] = useState<File[]>([])
   const fileInputRef = useRef<HTMLInputElement>(null)
   const supabase = createClient()
 
@@ -62,71 +62,156 @@ export function CommandCenter({
   }
 
   const handleSendMessage = async () => {
-    if (!message.trim()) return
+    if (!message.trim() && stagedFiles.length === 0) return
 
     setIsSendingMessage(true)
-    const result = await sendCaseMessage(caseId, message.trim())
-
-    if (result.success) {
-      setMessage("")
-      router.refresh()
-    } else {
-      toast({
-        title: "Failed to send message",
-        description: result.error || "Could not send message",
-        variant: "destructive",
-      })
-    }
-    setIsSendingMessage(false)
-  }
-
-  const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files
-    if (!files || files.length === 0) return
-
-    setIsUploadingFile(true)
 
     try {
-      for (const file of Array.from(files)) {
-        // Upload to storage
-        const fileExt = file.name.split(".").pop()
-        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
-        const filePath = `${caseId}/${fileName}`
-
-        const { error: uploadError } = await supabase.storage.from("case-bucket").upload(filePath, file)
-
-        if (uploadError) {
-          throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
-        }
-
-        // Save file record to database
-        const result = await uploadCaseFile(caseId, file.name, file.type, filePath, "additional")
-
+      if (message.trim()) {
+        const result = await sendCaseMessage(caseId, message.trim())
         if (!result.success) {
-          throw new Error(`Failed to save file record: ${result.error}`)
+          throw new Error(result.error || "Could not send message")
         }
       }
 
+      if (stagedFiles.length > 0) {
+        for (const file of stagedFiles) {
+          const fileExt = file.name.split(".").pop()
+          const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`
+          const filePath = `${caseId}/${fileName}`
+
+          const { error: uploadError } = await supabase.storage.from("case-bucket").upload(filePath, file)
+
+          if (uploadError) {
+            throw new Error(`Failed to upload ${file.name}: ${uploadError.message}`)
+          }
+
+          const result = await uploadCaseFile(caseId, file.name, file.type, filePath, "additional")
+
+          if (!result.success) {
+            throw new Error(`Failed to save file record: ${result.error}`)
+          }
+        }
+      }
+
+      setMessage("")
+      setStagedFiles([])
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
+
       toast({
-        title: "Files uploaded",
-        description: `Successfully uploaded ${files.length} file(s)`,
+        title: "Sent successfully",
+        description: stagedFiles.length > 0 ? `Message and ${stagedFiles.length} file(s) sent` : "Message sent",
       })
       router.refresh()
     } catch (error: any) {
       toast({
-        title: "Upload failed",
-        description: error.message || "Failed to upload files",
+        title: "Failed to send",
+        description: error.message || "Could not send message and files",
         variant: "destructive",
       })
     } finally {
-      setIsUploadingFile(false)
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""
-      }
+      setIsSendingMessage(false)
     }
   }
 
-  // Scenario A: Unassigned Specialist
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = e.target.files
+    if (!files || files.length === 0) return
+
+    setStagedFiles((prev) => [...prev, ...Array.from(files)])
+  }
+
+  const removeFile = (index: number) => {
+    setStagedFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  const isImageFile = (file: File) => {
+    return file.type.startsWith("image/")
+  }
+
+  const ChatBar = ({
+    showActionButton,
+    actionLabel,
+    onAction,
+  }: {
+    showActionButton?: boolean
+    actionLabel?: string
+    onAction?: () => void
+  }) => (
+    <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-lg">
+      <div className="container mx-auto max-w-3xl">
+        {showActionButton && (
+          <div className="block p-2 md:hidden">
+            <Button className="w-full bg-transparent" variant="outline" onClick={onAction}>
+              {actionLabel}
+            </Button>
+          </div>
+        )}
+
+        {stagedFiles.length > 0 && (
+          <div className="flex gap-2 overflow-x-auto border-b bg-gray-50 p-2">
+            {stagedFiles.map((file, index) => (
+              <div key={index} className="relative flex items-center gap-1 rounded bg-white border px-2 py-1 text-sm">
+                {isImageFile(file) ? (
+                  <ImageIcon className="h-4 w-4 text-blue-500" />
+                ) : (
+                  <FileIcon className="h-4 w-4 text-gray-500" />
+                )}
+                <span className="max-w-[100px] truncate">{file.name}</span>
+                <button
+                  onClick={() => removeFile(index)}
+                  className="ml-1 rounded hover:bg-gray-100 p-0.5"
+                  type="button"
+                >
+                  <X className="h-3 w-3" />
+                </button>
+              </div>
+            ))}
+          </div>
+        )}
+
+        <div className="flex gap-2 p-4">
+          <input
+            ref={fileInputRef}
+            type="file"
+            multiple
+            onChange={handleFileSelect}
+            className="hidden"
+            accept=".pdf,.dcm,.jpg,.jpeg,.png"
+          />
+          <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
+            <Paperclip className="h-4 w-4" />
+          </Button>
+          <Input
+            placeholder="Type a message..."
+            value={message}
+            onChange={(e) => setMessage(e.target.value)}
+            onKeyPress={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault()
+                handleSendMessage()
+              }
+            }}
+            disabled={isSendingMessage}
+          />
+          <Button
+            onClick={handleSendMessage}
+            disabled={(!message.trim() && stagedFiles.length === 0) || isSendingMessage}
+          >
+            <Send className="h-4 w-4" />
+          </Button>
+          {showActionButton && (
+            <Button className="hidden md:flex" onClick={onAction}>
+              {actionLabel}
+            </Button>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+
   if (userRole === "specialist" && status === "pending_assignment") {
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-4 shadow-lg">
@@ -140,109 +225,11 @@ export function CommandCenter({
   }
 
   if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase1") {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-lg">
-        <div className="container mx-auto max-w-3xl">
-          {/* Mobile: Stack action button above chat */}
-          <div className="block p-2 md:hidden">
-            <Button className="w-full bg-transparent" variant="outline" onClick={onOpenPhase1}>
-              Write Phase 1 Diagnostic Plan
-            </Button>
-          </div>
-          {/* Chat bar with desktop action button */}
-          <div className="flex gap-2 p-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.dcm,.jpg,.jpeg,.png"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingFile}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-              disabled={isSendingMessage}
-            />
-            <Button onClick={handleSendMessage} disabled={!message.trim() || isSendingMessage}>
-              <Send className="h-4 w-4" />
-            </Button>
-            {/* Desktop: Show action button inline */}
-            <Button className="hidden md:flex" onClick={onOpenPhase1}>
-              Write Phase 1 Plan
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+    return <ChatBar showActionButton actionLabel="Write Phase 1 Diagnostic Plan" onAction={onOpenPhase1} />
   }
 
   if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase2") {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white shadow-lg">
-        <div className="container mx-auto max-w-3xl">
-          {/* Mobile: Stack action button above chat */}
-          <div className="block p-2 md:hidden">
-            <Button className="w-full bg-transparent" variant="outline" onClick={onOpenPhase2}>
-              Write Final Report
-            </Button>
-          </div>
-          {/* Chat bar with desktop action button */}
-          <div className="flex gap-2 p-4">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.dcm,.jpg,.jpeg,.png"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingFile}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-              disabled={isSendingMessage}
-            />
-            <Button onClick={handleSendMessage} disabled={!message.trim() || isSendingMessage}>
-              <Send className="h-4 w-4" />
-            </Button>
-            {/* Desktop: Show action button inline */}
-            <Button className="hidden md:flex" onClick={onOpenPhase2}>
-              Write Final Report
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+    return <ChatBar showActionButton actionLabel="Write Final Report" onAction={onOpenPhase2} />
   }
 
   if (
@@ -250,47 +237,8 @@ export function CommandCenter({
       (status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
     (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics")
   ) {
-    return (
-      <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-4 shadow-lg">
-        <div className="container mx-auto max-w-3xl">
-          <div className="flex gap-2">
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              onChange={handleFileUpload}
-              className="hidden"
-              accept=".pdf,.dcm,.jpg,.jpeg,.png"
-            />
-            <Button
-              variant="outline"
-              size="icon"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploadingFile}
-            >
-              <Paperclip className="h-4 w-4" />
-            </Button>
-            <Input
-              placeholder="Type a message..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-              onKeyPress={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSendMessage()
-                }
-              }}
-              disabled={isSendingMessage}
-            />
-            <Button onClick={handleSendMessage} disabled={!message.trim() || isSendingMessage}>
-              <Send className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    )
+    return <ChatBar />
   }
 
-  // No action available
   return null
 }
