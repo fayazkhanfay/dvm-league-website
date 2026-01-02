@@ -35,11 +35,13 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
 
   // Patient Signalment
   const [patientName, setPatientName] = useState(initialData?.patient_name || "")
-  const [species, setSpecies] = useState(initialData?.patient_signalment?.species || "")
-  const [breed, setBreed] = useState(initialData?.patient_signalment?.breed || "")
-  const [age, setAge] = useState(initialData?.patient_signalment?.age || "")
-  const [sexStatus, setSexStatus] = useState(initialData?.patient_signalment?.sex_status || "")
-  const [weightKg, setWeightKg] = useState(initialData?.patient_signalment?.weight_kg?.toString() || "")
+  const [species, setSpecies] = useState(initialData?.patient_species || "")
+  const [breed, setBreed] = useState(initialData?.patient_breed || "")
+  const [age, setAge] = useState(initialData?.patient_age || "")
+  const [sexStatus, setSexStatus] = useState(initialData?.patient_sex_status || "")
+  const [weightKg, setWeightKg] = useState(initialData?.patient_weight_kg?.toString() || "")
+  const [vaxStatus, setVaxStatus] = useState(initialData?.patient_vax_status || "")
+  const [preventatives, setPreventatives] = useState(initialData?.patient_preventatives?.join(", ") || "")
 
   // Case Details
   const [presentingComplaint, setPresentingComplaint] = useState(initialData?.presenting_complaint || "")
@@ -134,18 +136,21 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     setIsSavingDraft(true)
 
     try {
-      const patientSignalment = {
-        species,
-        breed,
-        age,
-        sex_status: sexStatus,
-        weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
-      }
-
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_signalment: patientSignalment,
+        patient_species: species,
+        patient_breed: breed,
+        patient_age: age,
+        patient_sex_status: sexStatus,
+        patient_weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
+        patient_vax_status: vaxStatus || null,
+        patient_preventatives: preventatives
+          ? preventatives
+              .split(",")
+              .map((p) => p.trim())
+              .filter(Boolean)
+          : null,
         presenting_complaint: presentingComplaint,
         brief_history: briefHistory,
         pe_findings: peFindings,
@@ -224,18 +229,21 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     setShowConfirmModal(false)
 
     try {
-      const patientSignalment = {
-        species,
-        breed,
-        age,
-        sex_status: sexStatus,
-        weight_kg: Number.parseFloat(weightKg),
-      }
-
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_signalment: patientSignalment,
+        patient_species: species,
+        patient_breed: breed,
+        patient_age: age,
+        patient_sex_status: sexStatus,
+        patient_weight_kg: Number.parseFloat(weightKg),
+        patient_vax_status: vaxStatus || null,
+        patient_preventatives: preventatives
+          ? preventatives
+              .split(",")
+              .map((p) => p.trim())
+              .filter(Boolean)
+          : null,
         presenting_complaint: presentingComplaint,
         brief_history: briefHistory,
         pe_findings: peFindings,
@@ -457,6 +465,42 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+                <div>
+                  <Label htmlFor="vax-status" className="text-sm font-medium text-brand-navy">
+                    Vaccination Status (Optional)
+                  </Label>
+                  <Select value={vaxStatus} onValueChange={setVaxStatus}>
+                    <SelectTrigger
+                      id="vax-status"
+                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    >
+                      <SelectValue placeholder="Select status" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Up to date">Up to date</SelectItem>
+                      <SelectItem value="Overdue">Overdue</SelectItem>
+                      <SelectItem value="Unknown">Unknown</SelectItem>
+                      <SelectItem value="Declined">Declined</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div>
+                  <Label htmlFor="preventatives" className="text-sm font-medium text-brand-navy">
+                    Preventatives (Optional)
+                  </Label>
+                  <Input
+                    id="preventatives"
+                    value={preventatives}
+                    onChange={(e) => setPreventatives(e.target.value)}
+                    placeholder="e.g., Heartgard, Simparica, Revolution"
+                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  />
+                  <p className="mt-1 text-xs text-brand-navy/60">Separate multiple preventatives with commas</p>
                 </div>
               </div>
             </CardContent>

@@ -1,8 +1,15 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import SpecialistCaseView from "@/components/specialist-case-view"
+import { UnifiedCaseView } from "@/components/case/unified-case-view"
+import { getCaseDetails } from "@/app/actions/get-case-details"
+import { getCaseTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles } from "@/app/actions/get-case-files"
 
-export default async function SpecialistCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
+export default async function SpecialistCaseViewPage({
+  params,
+}: {
+  params: Promise<{ caseId: string }>
+}) {
   const { caseId } = await params
   const supabase = await createClient()
 
@@ -22,13 +29,7 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
 
   const { data: caseData, error } = await supabase
     .from("cases")
-    .select(
-      `
-      *,
-      gp:gp_id(full_name, clinic_name, email),
-      case_files(*)
-    `,
-    )
+    .select("id, specialist_id, status")
     .eq("id", caseId)
     .single()
 
@@ -36,13 +37,41 @@ export default async function SpecialistCaseViewPage({ params }: { params: Promi
     redirect("/specialist-dashboard")
   }
 
+  console.log("[v0] Specialist case access check:", {
+    caseId,
+    userId: user.id,
+    specialistId: caseData.specialist_id,
+    status: caseData.status,
+    isAssignedToCurrentUser: caseData.specialist_id === user.id,
+    isUnassigned: caseData.specialist_id === null,
+  })
+
   const isAssignedToCurrentUser = caseData.specialist_id === user.id
-  const isUnassigned = caseData.specialist_id === null && caseData.status === "pending_assignment"
+  const isUnassigned = caseData.specialist_id === null
 
   if (!isAssignedToCurrentUser && !isUnassigned) {
-    // Case is assigned to another specialist
+    console.log("[v0] Access denied: case assigned to different specialist")
     redirect("/specialist-dashboard")
   }
 
-  return <SpecialistCaseView caseData={caseData} userProfile={profile} />
+  const [caseDetailsResult, timelineResult, filesResult] = await Promise.all([
+    getCaseDetails(caseId),
+    getCaseTimeline(caseId),
+    getCaseFiles(caseId),
+  ])
+
+  return (
+    <UnifiedCaseView
+      caseId={caseId}
+      viewerRole="specialist"
+      userId={user.id}
+      userProfile={{
+        full_name: profile.full_name,
+        is_demo: profile.is_demo,
+      }}
+      caseDetailsResult={caseDetailsResult}
+      timelineResult={timelineResult}
+      filesResult={filesResult}
+    />
+  )
 }

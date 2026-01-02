@@ -30,7 +30,6 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState("")
 
-  const signalment = caseData.patient_signalment
   const initialFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "initial_submission") || []
   const diagnosticFiles = caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || []
 
@@ -205,11 +204,24 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
                           <p className="text-sm text-brand-navy/80">{caseData.patient_name}</p>
                         </div>
                         <div>
-                          <p className="text-xs font-semibold text-brand-navy">Signalment</p>
-                          <p className="text-sm text-brand-navy/80">
-                            {signalment.species}, {signalment.breed}, {signalment.age}, {signalment.sex_status},{" "}
-                            {signalment.weight_kg} kg
-                          </p>
+                          <p className="text-xs font-semibold text-brand-navy">Species</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.species}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-brand-navy">Breed</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.breed}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-brand-navy">Age</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.age}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-brand-navy">Sex Status</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.sex_status}</p>
+                        </div>
+                        <div>
+                          <p className="text-xs font-semibold text-brand-navy">Weight (kg)</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.weight_kg}</p>
                         </div>
                       </div>
                     </div>

@@ -28,7 +28,6 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
   const [diagnosticNotes, setDiagnosticNotes] = useState("")
   const supabase = createClient()
 
-  const signalment = useMemo(() => caseData.patient_signalment, [caseData.patient_signalment])
   const allCaseFiles = useMemo(() => caseData.case_files || [], [caseData.case_files])
   const existingDiagnosticFiles = useMemo(
     () => caseData.case_files?.filter((f: any) => f.upload_phase === "diagnostic_results") || [],
@@ -254,34 +253,34 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-brand-navy">Species</p>
-                        <p className="text-sm text-brand-navy/80">{signalment.species}</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_species}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-brand-navy">Breed</p>
-                        <p className="text-sm text-brand-navy/80">{signalment.breed}</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_breed}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-brand-navy">Age</p>
-                        <p className="text-sm text-brand-navy/80">{signalment.age}</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_age}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-brand-navy">Sex</p>
-                        <p className="text-sm text-brand-navy/80">{signalment.sex_status}</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_sex_status}</p>
                       </div>
                       <div>
                         <p className="text-xs font-semibold text-brand-navy">Weight</p>
-                        <p className="text-sm text-brand-navy/80">{signalment.weight_kg} kg</p>
+                        <p className="text-sm text-brand-navy/80">{caseData.patient_weight_kg} kg</p>
                       </div>
-                      {signalment.vax_status && (
+                      {caseData.patient_vax_status && (
                         <div>
                           <p className="text-xs font-semibold text-brand-navy">Vaccination Status</p>
-                          <p className="text-sm text-brand-navy/80">{signalment.vax_status}</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.patient_vax_status}</p>
                         </div>
                       )}
-                      {signalment.preventatives && signalment.preventatives.length > 0 && (
+                      {caseData.patient_preventatives && caseData.patient_preventatives.length > 0 && (
                         <div>
                           <p className="text-xs font-semibold text-brand-navy">Preventative Status</p>
-                          <p className="text-sm text-brand-navy/80">{signalment.preventatives.join(", ")}</p>
+                          <p className="text-sm text-brand-navy/80">{caseData.patient_preventatives.join(", ")}</p>
                         </div>
                       )}
                     </div>

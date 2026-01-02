@@ -98,8 +98,8 @@ export default async function SpecialistDashboard() {
     }
   }
 
-  const formatSignalment = (signalment: any) => {
-    return `${signalment.species}, ${signalment.breed}, ${signalment.age} ${signalment.sex_status}`
+  const formatSignalment = (caseItem: any) => {
+    return `${caseItem.patient_species}, ${caseItem.patient_breed}, ${caseItem.patient_age} ${caseItem.patient_sex_status}`
   }
 
   return (
@@ -144,7 +144,7 @@ export default async function SpecialistDashboard() {
                         <TableRow key={caseItem.id}>
                           <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                           <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
-                          <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
+                          <TableCell>{formatSignalment(caseItem)}</TableCell>
                           <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
                           <TableCell>{caseItem.report_due_description || "1-2 Business Days"}</TableCell>
                           <TableCell>{getActionButton(caseItem)}</TableCell>
@@ -185,7 +185,7 @@ export default async function SpecialistDashboard() {
                           <TableRow key={caseItem.id}>
                             <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                             <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
-                            <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
+                            <TableCell>{formatSignalment(caseItem)}</TableCell>
                             <TableCell>
                               <Badge variant="secondary">{caseItem.specialty_requested}</Badge>
                             </TableCell>
@@ -231,7 +231,7 @@ export default async function SpecialistDashboard() {
                         <TableRow key={caseItem.id}>
                           <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                           <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
-                          <TableCell>{formatSignalment(caseItem.patient_signalment)}</TableCell>
+                          <TableCell>{formatSignalment(caseItem)}</TableCell>
                           <TableCell>{caseItem.specialty_requested}</TableCell>
                           <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
                           <TableCell>

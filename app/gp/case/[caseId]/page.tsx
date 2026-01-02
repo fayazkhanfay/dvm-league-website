@@ -1,6 +1,9 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
-import GPCaseView from "@/components/gp-case-view"
+import { UnifiedCaseView } from "@/components/case/unified-case-view"
+import { getCaseDetails } from "@/app/actions/get-case-details"
+import { getCaseTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles } from "@/app/actions/get-case-files"
 
 export default async function GPCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = await params
@@ -22,13 +25,7 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
 
   const { data: caseData, error } = await supabase
     .from("cases")
-    .select(
-      `
-      *,
-      specialist:specialist_id(full_name, specialty, clinic_name),
-      case_files(*)
-    `,
-    )
+    .select("id, gp_id")
     .eq("id", caseId)
     .eq("gp_id", user.id)
     .single()
@@ -37,5 +34,24 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
     redirect("/gp-dashboard")
   }
 
-  return <GPCaseView caseData={caseData} userProfile={profile} />
+  const [caseDetailsResult, timelineResult, filesResult] = await Promise.all([
+    getCaseDetails(caseId),
+    getCaseTimeline(caseId),
+    getCaseFiles(caseId),
+  ])
+
+  return (
+    <UnifiedCaseView
+      caseId={caseId}
+      viewerRole="gp"
+      userId={user.id}
+      userProfile={{
+        full_name: profile.full_name,
+        is_demo: profile.is_demo,
+      }}
+      caseDetailsResult={caseDetailsResult}
+      timelineResult={timelineResult}
+      filesResult={filesResult}
+    />
+  )
 }
