@@ -18,16 +18,8 @@ export async function uploadCaseFile(
   } = await supabase.auth.getUser()
 
   if (!user) {
-    console.log("[v0] uploadCaseFile: User not authenticated")
     return { success: false, error: "Not authenticated" }
   }
-
-  console.log("[v0] uploadCaseFile: Attempting to insert file", {
-    caseId,
-    fileName,
-    userId: user.id,
-    uploadPhase,
-  })
 
   // Insert file record into case_files
   const { data, error } = await supabase
@@ -43,16 +35,8 @@ export async function uploadCaseFile(
     .select()
 
   if (error) {
-    console.error("[v0] uploadCaseFile: Error saving file record", {
-      error,
-      errorCode: error.code,
-      errorMessage: error.message,
-      errorDetails: error.details,
-    })
     return { success: false, error: error.message }
   }
-
-  console.log("[v0] uploadCaseFile: File record saved successfully", data)
 
   // Revalidate the case page to show the new file in the timeline
   revalidatePath(`/gp/case/${caseId}`)
