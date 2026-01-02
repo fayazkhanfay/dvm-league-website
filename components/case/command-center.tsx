@@ -20,6 +20,7 @@ interface CommandCenterProps {
   onOpenPhase1: () => void
   onOpenPhase2: () => void
   onOpenFileUpload: () => void
+  onMessageSent?: () => void // Added callback for SWR optimistic updates
 }
 
 interface ChatBarProps {
@@ -135,6 +136,7 @@ export function CommandCenter({
   onOpenPhase1,
   onOpenPhase2,
   onOpenFileUpload,
+  onMessageSent, // Accept the new callback prop
 }: CommandCenterProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -204,11 +206,12 @@ export function CommandCenter({
         fileInputRef.current.value = ""
       }
 
+      onMessageSent?.()
+
       toast({
         title: "Sent successfully",
         description: stagedFiles.length > 0 ? `Message and ${stagedFiles.length} file(s) sent` : "Message sent",
       })
-      router.refresh()
     } catch (error: any) {
       toast({
         title: "Failed to send",

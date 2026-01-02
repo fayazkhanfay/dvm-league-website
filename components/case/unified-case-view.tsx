@@ -1,9 +1,12 @@
 "use client"
 
 import { useState } from "react"
+import useSWR from "swr"
 import type { getCaseDetails } from "@/app/actions/get-case-details"
 import type { getCaseTimeline } from "@/app/actions/get-case-timeline"
 import type { getCaseFiles } from "@/app/actions/get-case-files"
+import { getCaseTimeline as fetchTimeline } from "@/app/actions/get-case-timeline"
+import { getCaseFiles as fetchFiles } from "@/app/actions/get-case-files"
 import { CaseHeader } from "./case-header"
 import { CaseTimeline } from "./case-timeline"
 import { CommandCenter } from "./command-center"
@@ -35,6 +38,34 @@ export function UnifiedCaseView({
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState<"phase1" | "phase2" | "diagnostics">("phase1")
 
+  const { data: timelineData, mutate: mutateTimeline } = useSWR(
+    `timeline-${caseId}`,
+    async () => {
+      const result = await fetchTimeline(caseId)
+      return result.data || []
+    },
+    {
+      fallbackData: timelineResult.data || [],
+      refreshInterval: 10000, // Refresh every 10 seconds
+      revalidateOnFocus: true, // Refresh when tab becomes active
+      revalidateOnReconnect: true, // Refresh when internet reconnects
+    },
+  )
+
+  const { data: filesData, mutate: mutateFiles } = useSWR(
+    `files-${caseId}`,
+    async () => {
+      const result = await fetchFiles(caseId)
+      return result.data || []
+    },
+    {
+      fallbackData: filesResult.data || [],
+      refreshInterval: 10000, // Refresh every 10 seconds
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
+    },
+  )
+
   if (caseDetailsResult.error || !caseDetailsResult.data) {
     return (
       <div className="container mx-auto py-8">
@@ -60,8 +91,8 @@ export function UnifiedCaseView({
   }
 
   const caseData = caseDetailsResult.data
-  const timelineEvents = timelineResult.data
-  const caseFiles = filesResult.data || []
+  const timelineEvents = timelineData || []
+  const caseFiles = filesData || []
 
   const isAssignedToMe = viewerRole === "specialist" && caseData.specialist_id === userId
 
@@ -107,6 +138,10 @@ export function UnifiedCaseView({
         onOpenFileUpload={() => {
           setSheetMode("diagnostics")
           setSheetOpen(true)
+        }}
+        onMessageSent={() => {
+          mutateTimeline()
+          mutateFiles()
         }}
       />
 
