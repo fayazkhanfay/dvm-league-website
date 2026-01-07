@@ -387,7 +387,6 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   id="patient-name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
-                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
