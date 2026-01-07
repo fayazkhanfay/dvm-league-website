@@ -135,14 +135,6 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     e.preventDefault()
     setIsSavingDraft(true)
 
-    if (!patientName.trim()) {
-      toast.error("Patient Name is required to save draft", {
-        description: "Please provide a Patient Name to save your draft.",
-      })
-      setIsSavingDraft(false)
-      return
-    }
-
     try {
       const caseData = {
         gp_id: userProfile.id,
@@ -387,6 +379,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   id="patient-name"
                   value={patientName}
                   onChange={(e) => setPatientName(e.target.value)}
+                  required
                   className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
@@ -396,13 +389,18 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
                     Species *
                   </Label>
-                  <Input
-                    id="species"
-                    value={species}
-                    onChange={(e) => setSpecies(e.target.value)}
-                    placeholder="e.g., Canine, Feline"
-                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
-                  />
+                  <Select value={species} onValueChange={setSpecies} required>
+                    <SelectTrigger
+                      id="species"
+                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    >
+                      <SelectValue placeholder="Select species" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Canine">Canine</SelectItem>
+                      <SelectItem value="Feline">Feline</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -413,8 +411,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     id="breed"
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
-                    placeholder="e.g., Labrador Retriever, Domestic Shorthair"
-                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                    required
+                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
               </div>
@@ -428,8 +426,9 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     id="age"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    placeholder="e.g., 5 years, 3 months"
-                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                    placeholder="e.g., 5 years"
+                    required
+                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
 
@@ -437,13 +436,20 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
                     Sex/Status *
                   </Label>
-                  <Input
-                    id="sex-status"
-                    value={sexStatus}
-                    onChange={(e) => setSexStatus(e.target.value)}
-                    placeholder="e.g., Male Neutered, Female Spayed"
-                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
-                  />
+                  <Select value={sexStatus} onValueChange={setSexStatus} required>
+                    <SelectTrigger
+                      id="sex-status"
+                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    >
+                      <SelectValue placeholder="Select" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="Male Neutered">Male Neutered</SelectItem>
+                      <SelectItem value="Male Intact">Male Intact</SelectItem>
+                      <SelectItem value="Female Spayed">Female Spayed</SelectItem>
+                      <SelectItem value="Female Intact">Female Intact</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div>
@@ -456,8 +462,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    placeholder="e.g., 25.5"
-                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                    required
+                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
               </div>
@@ -514,9 +520,10 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   id="presenting-complaint"
                   value={presentingComplaint}
                   onChange={(e) => setPresentingComplaint(e.target.value)}
-                  placeholder="Brief description of the main problem..."
+                  placeholder="Brief description of the main issue..."
                   rows={3}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -530,7 +537,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setBriefHistory(e.target.value)}
                   placeholder="Relevant medical history..."
                   rows={4}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -544,7 +552,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setPeFindings(e.target.value)}
                   placeholder="Key physical examination findings..."
                   rows={4}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -558,7 +567,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setMedications(e.target.value)}
                   placeholder="List current medications and dosages..."
                   rows={3}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -571,7 +581,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   value={financialConstraints}
                   onChange={(e) => setFinancialConstraints(e.target.value)}
                   placeholder="e.g., Hard cap of $1,500, or 'No constraints'"
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -585,7 +595,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setDiagnosticsPerformed(e.target.value)}
                   placeholder="List any diagnostics already performed..."
                   rows={3}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -599,7 +610,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setTreatmentsAttempted(e.target.value)}
                   placeholder="List any treatments already attempted..."
                   rows={3}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
 
@@ -613,7 +625,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setGpQuestions(e.target.value)}
                   placeholder="What specific questions do you have for the specialist?"
                   rows={4}
-                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  required
+                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                 />
               </div>
             </CardContent>
@@ -629,7 +642,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                 <Label htmlFor="specialty" className="text-sm font-medium text-brand-navy">
                   Specialty Requested *
                 </Label>
-                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested}>
+                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
                   <SelectTrigger
                     id="specialty"
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -735,42 +748,39 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
             </CardContent>
           </Card>
 
-          {/* Form Actions */}
-          <Card className="border-brand-stone shadow-md">
-            <CardContent className="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
-              <Button
-                type="button"
-                onClick={handleSaveDraft}
-                disabled={isSavingDraft || isSubmitting}
-                variant="outline"
-                className="w-full border-2 border-brand-gold bg-white px-8 py-3 font-semibold text-brand-navy shadow-sm transition-all hover:bg-brand-gold/10 hover:shadow-md sm:w-auto"
-              >
-                {isSavingDraft ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    Saving Draft...
-                  </>
-                ) : (
-                  "Save Draft"
-                )}
-              </Button>
+          <div className="flex items-center gap-4">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={isSubmitting || isSavingDraft}
+              className="flex-1 border-2 border-brand-stone px-6 py-3 font-semibold text-brand-navy transition-all hover:bg-brand-stone bg-transparent"
+            >
+              {isSavingDraft ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Saving Draft...
+                </>
+              ) : (
+                "Save Draft"
+              )}
+            </Button>
 
-              <Button
-                type="submit"
-                disabled={isSubmitting || isSavingDraft}
-                className="w-full bg-brand-gold px-8 py-3 font-semibold text-brand-navy shadow-sm transition-all hover:bg-brand-gold/90 hover:shadow-md sm:w-auto"
-              >
-                {isSubmitting ? (
-                  <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
-                    Submitting Case...
-                  </>
-                ) : (
-                  "Submit Case"
-                )}
-              </Button>
-            </CardContent>
-          </Card>
+            <Button
+              type="submit"
+              disabled={isSubmitting || isSavingDraft}
+              className="flex-1 transform rounded-md bg-brand-gold px-6 py-3 font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+            >
+              {isSubmitting ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Submitting Case...
+                </>
+              ) : (
+                "Submit Case"
+              )}
+            </Button>
+          </div>
         </form>
 
         {/* Confirmation Modal */}
@@ -826,11 +836,11 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                 type="button"
                 onClick={executeSubmission}
                 disabled={isSubmitting}
-                className="bg-brand-gold font-bold text-brand-navy shadow-sm transition-all hover:bg-brand-navy hover:text-white"
+                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Submitting...
                   </>
                 ) : (
