@@ -396,18 +396,13 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
                     Species *
                   </Label>
-                  <Select value={species} onValueChange={setSpecies}>
-                    <SelectTrigger
-                      id="species"
-                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                    >
-                      <SelectValue placeholder="Select species" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Canine">Canine</SelectItem>
-                      <SelectItem value="Feline">Feline</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="species"
+                    value={species}
+                    onChange={(e) => setSpecies(e.target.value)}
+                    placeholder="e.g., Canine, Feline"
+                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  />
                 </div>
 
                 <div>
@@ -418,7 +413,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     id="breed"
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
-                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    placeholder="e.g., Labrador Retriever, Domestic Shorthair"
+                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                   />
                 </div>
               </div>
@@ -432,8 +428,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     id="age"
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
-                    placeholder="e.g., 5 years"
-                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    placeholder="e.g., 5 years, 3 months"
+                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                   />
                 </div>
 
@@ -441,20 +437,13 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
                     Sex/Status *
                   </Label>
-                  <Select value={sexStatus} onValueChange={setSexStatus}>
-                    <SelectTrigger
-                      id="sex-status"
-                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                    >
-                      <SelectValue placeholder="Select" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="Male Neutered">Male Neutered</SelectItem>
-                      <SelectItem value="Male Intact">Male Intact</SelectItem>
-                      <SelectItem value="Female Spayed">Female Spayed</SelectItem>
-                      <SelectItem value="Female Intact">Female Intact</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Input
+                    id="sex-status"
+                    value={sexStatus}
+                    onChange={(e) => setSexStatus(e.target.value)}
+                    placeholder="e.g., Male Neutered, Female Spayed"
+                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
+                  />
                 </div>
 
                 <div>
@@ -467,7 +456,8 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                    placeholder="e.g., 25.5"
+                    className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                   />
                 </div>
               </div>
@@ -524,10 +514,9 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   id="presenting-complaint"
                   value={presentingComplaint}
                   onChange={(e) => setPresentingComplaint(e.target.value)}
-                  placeholder="Brief description of the main issue..."
+                  placeholder="Brief description of the main problem..."
                   rows={3}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -541,8 +530,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setBriefHistory(e.target.value)}
                   placeholder="Relevant medical history..."
                   rows={4}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -556,8 +544,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setPeFindings(e.target.value)}
                   placeholder="Key physical examination findings..."
                   rows={4}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -571,8 +558,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setMedications(e.target.value)}
                   placeholder="List current medications and dosages..."
                   rows={3}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -585,7 +571,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   value={financialConstraints}
                   onChange={(e) => setFinancialConstraints(e.target.value)}
                   placeholder="e.g., Hard cap of $1,500, or 'No constraints'"
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -599,8 +585,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setDiagnosticsPerformed(e.target.value)}
                   placeholder="List any diagnostics already performed..."
                   rows={3}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -614,8 +599,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setTreatmentsAttempted(e.target.value)}
                   placeholder="List any treatments already attempted..."
                   rows={3}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
 
@@ -629,8 +613,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   onChange={(e) => setGpQuestions(e.target.value)}
                   placeholder="What specific questions do you have for the specialist?"
                   rows={4}
-                  required
-                  className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                  className="border-brand-stone focus:border-brand-gold focus:ring-brand-gold"
                 />
               </div>
             </CardContent>
@@ -646,7 +629,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                 <Label htmlFor="specialty" className="text-sm font-medium text-brand-navy">
                   Specialty Requested *
                 </Label>
-                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested} required>
+                <Select value={specialtyRequested} onValueChange={setSpecialtyRequested}>
                   <SelectTrigger
                     id="specialty"
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
