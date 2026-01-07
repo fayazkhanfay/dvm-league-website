@@ -397,7 +397,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="species" className="text-sm font-medium text-brand-navy">
                     Species *
                   </Label>
-                  <Select value={species} onValueChange={setSpecies} required>
+                  <Select value={species} onValueChange={setSpecies}>
                     <SelectTrigger
                       id="species"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -419,7 +419,6 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     id="breed"
                     value={breed}
                     onChange={(e) => setBreed(e.target.value)}
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
@@ -435,7 +434,6 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     value={age}
                     onChange={(e) => setAge(e.target.value)}
                     placeholder="e.g., 5 years"
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
@@ -444,7 +442,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                   <Label htmlFor="sex-status" className="text-sm font-medium text-brand-navy">
                     Sex/Status *
                   </Label>
-                  <Select value={sexStatus} onValueChange={setSexStatus} required>
+                  <Select value={sexStatus} onValueChange={setSexStatus}>
                     <SelectTrigger
                       id="sex-status"
                       className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -470,7 +468,6 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                     step="0.1"
                     value={weightKg}
                     onChange={(e) => setWeightKg(e.target.value)}
-                    required
                     className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                   />
                 </div>
