@@ -135,6 +135,14 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     e.preventDefault()
     setIsSavingDraft(true)
 
+    if (!patientName.trim()) {
+      toast.error("Patient Name is required to save draft", {
+        description: "Please provide a Patient Name to save your draft.",
+      })
+      setIsSavingDraft(false)
+      return
+    }
+
     try {
       const caseData = {
         gp_id: userProfile.id,
