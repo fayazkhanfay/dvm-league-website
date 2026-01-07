@@ -753,39 +753,42 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
             </CardContent>
           </Card>
 
-          <div className="flex items-center gap-4">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleSaveDraft}
-              disabled={isSubmitting || isSavingDraft}
-              className="flex-1 border-2 border-brand-stone px-6 py-3 font-semibold text-brand-navy transition-all hover:bg-brand-stone bg-transparent"
-            >
-              {isSavingDraft ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Saving Draft...
-                </>
-              ) : (
-                "Save Draft"
-              )}
-            </Button>
+          {/* Form Actions */}
+          <Card className="border-brand-stone shadow-md">
+            <CardContent className="flex flex-col items-center justify-between gap-4 p-6 sm:flex-row">
+              <Button
+                type="button"
+                onClick={handleSaveDraft}
+                disabled={isSavingDraft || isSubmitting}
+                variant="outline"
+                className="w-full border-2 border-brand-gold bg-white px-8 py-3 font-semibold text-brand-navy shadow-sm transition-all hover:bg-brand-gold/10 hover:shadow-md sm:w-auto"
+              >
+                {isSavingDraft ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Saving Draft...
+                  </>
+                ) : (
+                  "Save Draft"
+                )}
+              </Button>
 
-            <Button
-              type="submit"
-              disabled={isSubmitting || isSavingDraft}
-              className="flex-1 transform rounded-md bg-brand-gold px-6 py-3 font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
-            >
-              {isSubmitting ? (
-                <>
-                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                  Submitting Case...
-                </>
-              ) : (
-                "Submit Case"
-              )}
-            </Button>
-          </div>
+              <Button
+                type="submit"
+                disabled={isSubmitting || isSavingDraft}
+                className="w-full bg-brand-gold px-8 py-3 font-semibold text-brand-navy shadow-sm transition-all hover:bg-brand-gold/90 hover:shadow-md sm:w-auto"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="mr-2 size-4 animate-spin" />
+                    Submitting Case...
+                  </>
+                ) : (
+                  "Submit Case"
+                )}
+              </Button>
+            </CardContent>
+          </Card>
         </form>
 
         {/* Confirmation Modal */}
@@ -841,11 +844,11 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                 type="button"
                 onClick={executeSubmission}
                 disabled={isSubmitting}
-                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+                className="bg-brand-gold font-bold text-brand-navy shadow-sm transition-all hover:bg-brand-navy hover:text-white"
               >
                 {isSubmitting ? (
                   <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    <Loader2 className="mr-2 size-4 animate-spin" />
                     Submitting...
                   </>
                 ) : (
