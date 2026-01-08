@@ -6,7 +6,8 @@ const resend = new Resend(process.env.RESEND_API_KEY)
 
 export async function sendCaseConfirmation(email: string, gpName: string, patientName: string, caseId: string) {
   try {
-    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp-dashboard?case=${caseId}`
+    // UPDATED: Pointing to the specific Case View, not the Dashboard
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp/case/${caseId}`
 
     const { data, error } = await resend.emails.send({
       from: "DVM League <notifications@mail.dvmleague.com>",
@@ -75,7 +76,8 @@ export async function notifyMatchingSpecialists(
     console.log(`[Email] ✓ Found ${specialists.length} specialist(s) for ${specialty}:`)
     specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email}) - Specialties: ${s.specialty}`))
 
-    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
+    // UPDATED: Pointing to the specific Case View, not the Dashboard
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist/case/${caseId}`
     console.log("[Email] Case link being sent:", caseLink)
 
     const emailResults = []
