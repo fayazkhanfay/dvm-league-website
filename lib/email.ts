@@ -4,9 +4,16 @@ import SpecialistCaseNotificationEmail from "@/components/emails/SpecialistCaseN
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function sendCaseConfirmation(email: string, gpName: string, patientName: string, caseId: string) {
+export async function sendCaseConfirmation(
+  email: string,
+  gpName: string,
+  patientName: string,
+  caseId: string,
+  patientSignalment: string,
+  presentingComplaint: string,
+  gpQuestions: string,
+) {
   try {
-    // UPDATED: Pointing to the specific Case View, not the Dashboard
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp/case/${caseId}`
 
     const { data, error } = await resend.emails.send({
@@ -19,6 +26,9 @@ export async function sendCaseConfirmation(email: string, gpName: string, patien
         patientName,
         caseId,
         caseLink,
+        patientSignalment,
+        presentingComplaint,
+        gpQuestions,
       }),
     })
 

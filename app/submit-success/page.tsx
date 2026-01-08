@@ -105,12 +105,17 @@ export default async function SubmitSuccessPage({
             caseData = data
 
             if (profile?.email && profile?.full_name && data.patient_name) {
+              const signalmentString = `${data.patient_species}, ${data.patient_breed}, ${data.patient_age}, ${data.patient_sex_status}, ${data.patient_weight_kg}kg`
+
               console.log("[v0] Sending confirmation email to GP:", profile.email)
               const emailResult = await sendCaseConfirmation(
                 profile.email,
                 profile.full_name,
                 data.patient_name,
                 data.id,
+                signalmentString,
+                data.presenting_complaint,
+                data.gp_questions || "",
               )
 
               if (emailResult.success) {
@@ -127,8 +132,6 @@ export default async function SubmitSuccessPage({
 
               if (data.specialty_requested && paymentConfirmed) {
                 console.log("[v0] Notifying specialists for specialty:", data.specialty_requested)
-
-                const signalmentString = `${data.patient_species}, ${data.patient_breed}, ${data.patient_age}, ${data.patient_sex_status}, ${data.patient_weight_kg}kg`
 
                 const specialistNotifResult = await notifyMatchingSpecialists(
                   data.specialty_requested,
