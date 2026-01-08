@@ -284,7 +284,7 @@ export function CommandCenter({
 
   if (
     (userRole === "gp" &&
-      (status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
+      (status === "pending_assignment" || status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
     (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics")
   ) {
     return (
