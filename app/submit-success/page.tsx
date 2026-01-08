@@ -137,6 +137,7 @@ export default async function SubmitSuccessPage({
                   signalmentString,
                   data.presenting_complaint,
                   data.gp_questions || "",
+                  data.patient_species || "Unknown",
                 )
 
                 if (specialistNotifResult.success) {

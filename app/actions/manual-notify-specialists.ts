@@ -44,6 +44,7 @@ export async function manualNotifySpecialists(caseId: string) {
     signalmentString,
     caseData.presenting_complaint,
     caseData.gp_questions || "",
+    caseData.patient_species || "Unknown",
   )
 
   return result

@@ -42,10 +42,16 @@ export async function notifyMatchingSpecialists(
   patientSignalment: string,
   presentingComplaint: string,
   gpQuestions: string,
+  patientSpecies: string,
 ) {
   try {
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = await createClient()
+
+    // Format Species (Capitalize first letter)
+    const formattedSpecies = patientSpecies
+      ? patientSpecies.charAt(0).toUpperCase() + patientSpecies.slice(1).toLowerCase()
+      : "Veterinary"
 
     console.log("[Email] ========== SPECIALIST NOTIFICATION DEBUG ==========")
     console.log("[Email] Input specialty:", specialty)
@@ -91,7 +97,7 @@ export async function notifyMatchingSpecialists(
           from: "DVM League <notifications@mail.dvmleague.com>",
           to: specialist.email,
           replyTo: "khan@dvmleague.com",
-          subject: `New ${specialty} Case Available - ${patientName}`,
+          subject: `New ${formattedSpecies} Case Available - ${patientName}`,
           react: SpecialistCaseNotificationEmail({
             specialistName: specialist.full_name,
             patientName,
