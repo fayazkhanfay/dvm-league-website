@@ -12,15 +12,22 @@ export async function sendCaseConfirmation(
   patientSignalment: string,
   presentingComplaint: string,
   gpQuestions: string,
+  specialty: string,
+  patientSpecies: string,
 ) {
   try {
     const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp/case/${caseId}`
+
+    // Format the species (e.g. "canine" -> "Canine")
+    const formattedSpecies = patientSpecies
+      ? patientSpecies.charAt(0).toUpperCase() + patientSpecies.slice(1).toLowerCase()
+      : "Veterinary"
 
     const { data, error } = await resend.emails.send({
       from: "DVM League <notifications@mail.dvmleague.com>",
       to: email,
       replyTo: "khan@dvmleague.com",
-      subject: `Case Confirmation: ${patientName}`,
+      subject: `Case Confirmation: ${formattedSpecies} ${specialty} - ${patientName}`,
       react: CaseSubmissionEmail({
         gpName,
         patientName,

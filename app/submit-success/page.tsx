@@ -116,6 +116,8 @@ export default async function SubmitSuccessPage({
                 signalmentString,
                 data.presenting_complaint,
                 data.gp_questions || "",
+                data.specialty_requested || "",
+                data.patient_species || "",
               )
 
               if (emailResult.success) {
@@ -140,7 +142,7 @@ export default async function SubmitSuccessPage({
                   signalmentString,
                   data.presenting_complaint,
                   data.gp_questions || "",
-                  data.patient_species || "Unknown",
+                  data.patient_species || "",
                 )
 
                 if (specialistNotifResult.success) {
