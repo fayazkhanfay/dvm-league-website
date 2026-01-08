@@ -133,12 +133,17 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
 
   const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!patientName.trim()) {
+      toast.error("Patient Name is required to save a draft")
+      return
+    }
     setIsSavingDraft(true)
 
     try {
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
+        // Use || null to ensure empty strings are saved as NULL in the DB
         patient_species: species || null,
         patient_breed: breed || null,
         patient_age: age || null,
@@ -147,9 +152,9 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
         patient_vax_status: vaxStatus || null,
         patient_preventatives: preventatives
           ? preventatives
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean)
           : null,
         presenting_complaint: presentingComplaint || null,
         brief_history: briefHistory || null,
@@ -158,7 +163,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
         diagnostics_performed: diagnosticsPerformed || null,
         treatments_attempted: treatmentsAttempted || null,
         gp_questions: gpQuestions || null,
-        specialty_requested: specialtyRequested,
+        specialty_requested: specialtyRequested || null,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,
         status: "draft",
@@ -240,9 +245,9 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
         patient_vax_status: vaxStatus || null,
         patient_preventatives: preventatives
           ? preventatives
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean)
           : null,
         presenting_complaint: presentingComplaint || null,
         brief_history: briefHistory || null,
