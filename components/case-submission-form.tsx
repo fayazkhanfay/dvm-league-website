@@ -236,7 +236,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
         patient_breed: breed || null,
         patient_age: age || null,
         patient_sex_status: sexStatus || null,
-        patient_weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
+        patient_weight_kg: Number.parseFloat(weightKg),
         patient_vax_status: vaxStatus || null,
         patient_preventatives: preventatives
           ? preventatives
@@ -254,7 +254,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
         specialty_requested: specialtyRequested,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,
-        status: "pending_assignment",
+        status: "draft",
       }
 
       let activeCaseId = caseId
@@ -318,6 +318,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
 
       if (previousCaseCount === 0) {
         // First case - Founder's Circle freebie
+        await supabase.from("cases").update({ status: "pending_assignment" }).eq("id", activeCaseId)
         router.push(`/submit-success?case_id=${activeCaseId}`)
       } else {
         // Subsequent cases - requires payment
