@@ -355,6 +355,7 @@ export function CaseTimeline({
             brief_history={event.brief_history}
             pe_findings={event.pe_findings}
             medications={event.medications}
+            financial_constraints={event.financial_constraints}
             diagnostics_performed={event.diagnostics_performed}
             treatments_attempted={event.treatments_attempted}
             gp_questions={event.gp_questions}

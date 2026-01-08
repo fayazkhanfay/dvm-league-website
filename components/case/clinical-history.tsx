@@ -8,6 +8,7 @@ interface ClinicalHistoryProps {
   brief_history: string
   pe_findings: string
   medications: string
+  financial_constraints: string | null
   diagnostics_performed: string | null
   treatments_attempted: string | null
   gp_questions: string
@@ -19,6 +20,7 @@ export function ClinicalHistory({
   brief_history,
   pe_findings,
   medications,
+  financial_constraints,
   diagnostics_performed,
   treatments_attempted,
   gp_questions,
@@ -64,6 +66,13 @@ export function ClinicalHistory({
                   <h4 className="font-semibold text-foreground mb-1">Current Medications</h4>
                   <p className="text-muted-foreground whitespace-pre-wrap">{medications}</p>
                 </div>
+
+                {financial_constraints && (
+                  <div>
+                    <h4 className="font-semibold text-foreground mb-1">Client Financial Constraints</h4>
+                    <p className="text-muted-foreground whitespace-pre-wrap">{financial_constraints}</p>
+                  </div>
+                )}
 
                 {diagnostics_performed && (
                   <div>

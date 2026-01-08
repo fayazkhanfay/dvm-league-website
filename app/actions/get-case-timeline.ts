@@ -4,29 +4,30 @@ import { createClient } from "@/lib/supabase/server"
 
 export type TimelineEvent =
   | {
-      type: "message"
-      id: string
-      case_id: string
-      sender_id: string
-      sender_name: string
-      sender_role: "gp" | "specialist"
-      content: string | null
-      message_type: "text" | "system" | "report_phase1" | "report_phase2"
-      is_internal: boolean
-      created_at: string
-    }
+    type: "message"
+    id: string
+    case_id: string
+    sender_id: string
+    sender_name: string
+    sender_role: "gp" | "specialist"
+    content: string | null
+    message_type: "text" | "system" | "report_phase1" | "report_phase2"
+    is_internal: boolean
+    created_at: string
+  }
   | {
-      type: "case_submission"
-      id: string
-      presenting_complaint: string
-      brief_history: string
-      pe_findings: string
-      medications: string
-      diagnostics_performed: string | null
-      treatments_attempted: string | null
-      gp_questions: string
-      created_at: string
-    }
+    type: "case_submission"
+    id: string
+    presenting_complaint: string
+    brief_history: string
+    pe_findings: string
+    medications: string
+    financial_constraints: string | null
+    diagnostics_performed: string | null
+    treatments_attempted: string | null
+    gp_questions: string
+    created_at: string
+  }
 
 export async function getCaseTimeline(caseId: string) {
   const supabase = await createClient()
@@ -44,7 +45,7 @@ export async function getCaseTimeline(caseId: string) {
   const { data: caseData, error: caseError } = await supabase
     .from("cases")
     .select(
-      "gp_id, specialist_id, presenting_complaint, brief_history, pe_findings, medications, diagnostics_performed, treatments_attempted, gp_questions, created_at",
+      "gp_id, specialist_id, presenting_complaint, brief_history, pe_findings, medications, diagnostics_performed, treatments_attempted, gp_questions, created_at, financial_constraints",
     )
     .eq("id", caseId)
     .single()
@@ -124,6 +125,7 @@ export async function getCaseTimeline(caseId: string) {
     brief_history: caseData.brief_history,
     pe_findings: caseData.pe_findings,
     medications: caseData.medications,
+    financial_constraints: caseData.financial_constraints,
     diagnostics_performed: caseData.diagnostics_performed,
     treatments_attempted: caseData.treatments_attempted,
     gp_questions: caseData.gp_questions,
