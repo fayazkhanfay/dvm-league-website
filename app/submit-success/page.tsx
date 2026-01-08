@@ -95,7 +95,7 @@ export default async function SubmitSuccessPage({
           const { data, error } = await supabase
             .from("cases")
             .select(
-              "id, patient_name, created_at, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint",
+              "id, patient_name, created_at, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint, gp_questions",
             )
             .eq("id", caseId)
             .single()
@@ -136,6 +136,7 @@ export default async function SubmitSuccessPage({
                   data.patient_name,
                   signalmentString,
                   data.presenting_complaint,
+                  data.gp_questions || "",
                 )
 
                 if (specialistNotifResult.success) {

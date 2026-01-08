@@ -8,6 +8,7 @@ interface SpecialistCaseNotificationEmailProps {
   caseLink: string
   patientSignalment: string
   presentingComplaint: string
+  gpQuestions: string
 }
 
 export default function SpecialistCaseNotificationEmail({
@@ -18,6 +19,7 @@ export default function SpecialistCaseNotificationEmail({
   caseLink,
   patientSignalment,
   presentingComplaint,
+  gpQuestions,
 }: SpecialistCaseNotificationEmailProps) {
   return (
     <Html>
@@ -42,6 +44,9 @@ export default function SpecialistCaseNotificationEmail({
 
               <Text style={infoLabel}>Presenting Complaint:</Text>
               <Text style={infoValue}>{presentingComplaint}</Text>
+
+              <Text style={infoLabel}>Primary Question:</Text>
+              <Text style={infoValue}>{gpQuestions || "No specific questions listed."}</Text>
 
               <Text style={infoLabel}>Case ID:</Text>
               <Text style={infoValue}>{caseId.slice(0, 8).toUpperCase()}</Text>

@@ -41,6 +41,7 @@ export async function notifyMatchingSpecialists(
   patientName: string,
   patientSignalment: string,
   presentingComplaint: string,
+  gpQuestions: string,
 ) {
   try {
     const { createClient } = await import("@/lib/supabase/server")
@@ -99,6 +100,7 @@ export async function notifyMatchingSpecialists(
             caseLink,
             patientSignalment,
             presentingComplaint,
+            gpQuestions,
           }),
         })
 
