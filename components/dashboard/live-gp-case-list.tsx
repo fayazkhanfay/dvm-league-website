@@ -164,7 +164,7 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                 <TableHead className="font-semibold text-brand-navy">Patient Name</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Case ID</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
-                <TableHead className="font-semibold text-brand-navy">Last Updated</TableHead>
+                <TableHead className="font-semibold text-brand-navy">Date Started</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Status</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Actions</TableHead>
               </TableRow>
@@ -175,7 +175,7 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                   <TableCell className="font-medium">{caseItem.patient_name || "Untitled"}</TableCell>
                   <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{caseItem.specialty_requested || "Not specified"}</TableCell>
-                  <TableCell>{new Date(caseItem.updated_at || caseItem.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
                   <TableCell>
                     <div className="flex items-center gap-2">
