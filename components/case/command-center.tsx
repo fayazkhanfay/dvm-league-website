@@ -7,6 +7,16 @@ import { Input } from "@/components/ui/input"
 import { Paperclip, Send, X, FileIcon, ImageIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { acceptCase } from "@/app/actions/accept-case"
 import { sendCaseMessage } from "@/app/actions/send-case-message"
 import { createClient } from "@/lib/supabase/client"
@@ -238,9 +248,42 @@ export function CommandCenter({
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-4 shadow-lg">
         <div className="container mx-auto max-w-3xl">
-          <Button className="w-full" size="lg" onClick={handleClaimCase} disabled={isLoading}>
-            {isLoading ? "Claiming..." : "Claim Case"}
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="w-full" size="lg">
+                Claim Case
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Case Assignment</DialogTitle>
+                <DialogDescription>Please review the terms below before accepting this case.</DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <ul className="list-disc pl-5 space-y-2 text-sm">
+                  <li>
+                    <span className="font-semibold">Compensation:</span> Estimated Payout: <span className="font-bold">$275.00+</span>
+                  </li>
+                  <li>
+                    <span className="font-semibold">Timeline:</span> Report Due: <span className="font-bold">Within 24 Hours</span>
+                  </li>
+                  <li>
+                    <span className="font-semibold">Commitment:</span> I agree to manage this case from Diagnosis through Treatment (Continuity of Care).
+                  </li>
+                </ul>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">
+                    Review Case Files
+                  </Button>
+                </DialogClose>
+                <Button onClick={handleClaimCase} disabled={isLoading}>
+                  {isLoading ? "Accepting..." : "Accept & Claim"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     )
