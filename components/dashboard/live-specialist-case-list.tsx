@@ -8,8 +8,8 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TabCountBadge } from "@/components/ui/tab-count-badge"
-import Link from "next/link"
 import { UniversalCaseList } from "./universal-case-list"
+import { useRouter } from "next/navigation"
 
 interface LiveSpecialistCaseListProps {
   userId: string
@@ -24,6 +24,7 @@ export function LiveSpecialistCaseList({
   initialAssignedCases,
   initialAvailableCases,
 }: LiveSpecialistCaseListProps) {
+  const router = useRouter()
   const { data } = useSWR(`specialist-cases-${userId}`, () => fetchSpecialistCases(userId, specialty), {
     fallbackData: {
       assignedCases: initialAssignedCases,
@@ -39,9 +40,6 @@ export function LiveSpecialistCaseList({
 
   const activeCases = allCases.filter((c) => c.status !== "completed")
   const completedCases = allCases.filter((c) => c.status === "completed")
-
-
-
 
 
   const formatSignalment = (caseItem: any) => {
@@ -80,13 +78,16 @@ export function LiveSpecialistCaseList({
                     <TableHead className="font-semibold">Patient Signalment</TableHead>
                     <TableHead className="font-semibold">Specialty</TableHead>
                     <TableHead className="font-semibold">Submitted Date</TableHead>
-                    <TableHead className="font-semibold">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {availableCases && availableCases.length > 0 ? (
                     availableCases.map((caseItem) => (
-                      <TableRow key={caseItem.id}>
+                      <TableRow
+                        key={caseItem.id}
+                        onClick={() => router.push(`/specialist/case/${caseItem.id}`)}
+                        className="cursor-pointer hover:bg-muted/50"
+                      >
                         <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                         <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
                         <TableCell>{formatSignalment(caseItem)}</TableCell>
@@ -94,16 +95,11 @@ export function LiveSpecialistCaseList({
                           <Badge variant="secondary">{caseItem.specialty_requested}</Badge>
                         </TableCell>
                         <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
-                        <TableCell>
-                          <Button variant="default" size="sm" asChild>
-                            <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
-                          </Button>
-                        </TableCell>
                       </TableRow>
                     ))
                   ) : (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-brand-navy/60 py-8">
+                      <TableCell colSpan={5} className="text-center text-brand-navy/60 py-8">
                         No available cases at this time
                       </TableCell>
                     </TableRow>
@@ -127,27 +123,25 @@ export function LiveSpecialistCaseList({
                     <TableHead className="font-semibold">Patient Signalment</TableHead>
                     <TableHead className="font-semibold">Specialty</TableHead>
                     <TableHead className="font-semibold">Completed Date</TableHead>
-                    <TableHead className="font-semibold">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {completedCases.map((caseItem) => (
-                    <TableRow key={caseItem.id}>
+                    <TableRow
+                      key={caseItem.id}
+                      onClick={() => router.push(`/specialist/case/${caseItem.id}`)}
+                      className="cursor-pointer hover:bg-muted/50"
+                    >
                       <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
                       <TableCell>{formatSignalment(caseItem)}</TableCell>
                       <TableCell>{caseItem.specialty_requested}</TableCell>
                       <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
-                      <TableCell>
-                        <Button variant="outline" size="sm" asChild>
-                          <Link href={`/specialist/case/${caseItem.id}`}>View Final Report</Link>
-                        </Button>
-                      </TableCell>
                     </TableRow>
                   ))}
                   {completedCases.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={6} className="text-center text-brand-navy/60">
+                      <TableCell colSpan={5} className="text-center text-brand-navy/60">
                         No completed cases
                       </TableCell>
                     </TableRow>

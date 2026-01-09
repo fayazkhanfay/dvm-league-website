@@ -7,7 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { TabCountBadge } from "@/components/ui/tab-count-badge"
-import Link from "next/link"
 import { UniversalCaseList } from "./universal-case-list"
 import { Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -86,28 +85,8 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
     }
   }
 
-  const getActionButton = (caseItem: any) => {
-    if (caseItem.status === "draft") {
-      return (
-        <Button
-          variant="default"
-          size="sm"
-          className="bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white"
-          asChild
-        >
-          <Link href={`/submit-case?id=${caseItem.id}`}>Resume Case</Link>
-        </Button>
-      )
-    }
-
-    return (
-      <Button variant="outline" size="sm" asChild>
-        <Link href={`/gp/case/${caseItem.id}`}>View Case</Link>
-      </Button>
-    )
-  }
-
-  const handleDelete = async (caseId: string) => {
+  const handleDelete = async (e: React.MouseEvent, caseId: string) => {
+    e.stopPropagation()
     setDeletingId(caseId)
     try {
       await onDeleteDraft(caseId)
@@ -145,34 +124,30 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                 <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Date Started</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Status</TableHead>
-                <TableHead className="font-semibold text-brand-navy">Actions</TableHead>
+                <TableHead className="font-semibold text-brand-navy w-[50px]"></TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {draftCases.map((caseItem) => (
-                <TableRow key={caseItem.id}>
+                <TableRow
+                  key={caseItem.id}
+                  onClick={() => router.push(`/submit-case?id=${caseItem.id}`)}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
                   <TableCell className="font-medium">{caseItem.patient_name || "Untitled"}</TableCell>
                   <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{caseItem.specialty_requested || "Not specified"}</TableCell>
                   <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
                   <TableCell>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="default"
-                        size="sm"
-                        className="bg-brand-gold text-brand-navy hover:bg-brand-navy hover:text-white"
-                        asChild
-                      >
-                        <Link href={`/submit-case?id=${caseItem.id}`}>Resume Case</Link>
-                      </Button>
+                    <div className="flex justify-end">
                       <Button
                         type="button"
                         variant="ghost"
                         size="sm"
                         className="text-red-600 hover:bg-red-50 hover:text-red-700"
                         title="Delete draft"
-                        onClick={() => handleDelete(caseItem.id)}
+                        onClick={(e) => handleDelete(e, caseItem.id)}
                         disabled={deletingId === caseItem.id}
                       >
                         <Trash2 className="h-4 w-4" />
@@ -209,23 +184,26 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                 <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Submitted Date</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Status</TableHead>
-                <TableHead className="font-semibold text-brand-navy">Action</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {completedCases.map((caseItem) => (
-                <TableRow key={caseItem.id}>
+                <TableRow
+                  key={caseItem.id}
+                  onClick={() => router.push(`/gp/case/${caseItem.id}`)}
+                  className="cursor-pointer hover:bg-muted/50"
+                >
                   <TableCell className="font-medium">{caseItem.patient_name}</TableCell>
                   <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{caseItem.specialty_requested}</TableCell>
                   <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
                   <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
-                  <TableCell>{getActionButton(caseItem)}</TableCell>
+                  {/* Action column removed */}
                 </TableRow>
               ))}
               {completedCases.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-brand-navy/60">
+                  <TableCell colSpan={5} className="text-center text-brand-navy/60">
                     No completed cases
                   </TableCell>
                 </TableRow>
