@@ -74,7 +74,7 @@ export async function acceptCase(caseId: string) {
   }
 
   console.log("[v0] Case accepted successfully!")
-  revalidatePath(`/specialist-dashboard/cases/${caseId}`)
+  revalidatePath(`/specialist/case/${caseId}`)
   revalidatePath("/specialist-dashboard")
 
   return { success: true }
