@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge"
 import { Card, CardContent } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TabCountBadge } from "@/components/ui/tab-count-badge"
 import Link from "next/link"
 
 interface LiveSpecialistCaseListProps {
@@ -91,18 +92,14 @@ export function LiveSpecialistCaseList({
   return (
     <Tabs defaultValue="active" className="mb-8">
       <TabsList className="grid w-full max-w-3xl grid-cols-3">
-        <TabsTrigger value="active">
-          Active Cases {activeCases.length > 0 && <span className="ml-1.5 text-xs">({activeCases.length})</span>}
+        <TabsTrigger value="active" className="flex items-center">
+          Active Cases <TabCountBadge count={activeCases.length} variant="blue" />
         </TabsTrigger>
-        <TabsTrigger value="available">
-          Available Cases{" "}
-          {availableCases && availableCases.length > 0 && (
-            <span className="ml-1.5 text-xs">({availableCases.length})</span>
-          )}
+        <TabsTrigger value="available" className="flex items-center">
+          Available Cases <TabCountBadge count={availableCases.length} variant="gold" />
         </TabsTrigger>
-        <TabsTrigger value="completed">
-          Completed Cases{" "}
-          {completedCases.length > 0 && <span className="ml-1.5 text-xs">({completedCases.length})</span>}
+        <TabsTrigger value="completed" className="flex items-center">
+          Completed Cases <TabCountBadge count={completedCases.length} variant="neutral" />
         </TabsTrigger>
       </TabsList>
 

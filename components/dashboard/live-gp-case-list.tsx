@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { TabCountBadge } from "@/components/ui/tab-count-badge"
 import Link from "next/link"
 import { Trash2 } from "lucide-react"
 import { useRouter } from "next/navigation"
@@ -146,14 +147,15 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
   return (
     <Tabs defaultValue="active" className="w-full">
       <TabsList className="mb-6 grid w-full max-w-2xl grid-cols-3">
-        <TabsTrigger value="drafts" className="relative">
-          Drafts
-          {draftCases.length > 0 && (
-            <Badge className="ml-2 bg-brand-gold text-brand-navy hover:bg-brand-gold">{draftCases.length}</Badge>
-          )}
+        <TabsTrigger value="drafts" className="flex items-center">
+          Drafts <TabCountBadge count={draftCases.length} variant="gold" />
         </TabsTrigger>
-        <TabsTrigger value="active">Active Cases</TabsTrigger>
-        <TabsTrigger value="completed">Completed Cases</TabsTrigger>
+        <TabsTrigger value="active" className="flex items-center">
+          Active Cases <TabCountBadge count={activeCases.length} variant="blue" />
+        </TabsTrigger>
+        <TabsTrigger value="completed" className="flex items-center">
+          Completed Cases <TabCountBadge count={completedCases.length} variant="neutral" />
+        </TabsTrigger>
       </TabsList>
 
       <TabsContent value="drafts">
