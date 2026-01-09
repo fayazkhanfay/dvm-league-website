@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Download, FileImage, FileText, File, PackageOpen } from "lucide-react"
 import { getSignedFileUrl } from "@/app/actions/storage"
-import { downloadFilesAsZip } from "@/app/actions/download-files-zip"
+import { DownloadAllButton } from "./download-all-button"
 
 type CaseFile = {
   id: string
@@ -25,7 +25,6 @@ type FileGalleryProps = {
 
 export function FileGallery({ caseId, files }: FileGalleryProps) {
   const [downloading, setDownloading] = useState<string | null>(null)
-  const [downloadingZip, setDownloadingZip] = useState<string | null>(null)
 
   const filesByUploader = files.reduce(
     (acc, file) => {
@@ -69,30 +68,6 @@ export function FileGallery({ caseId, files }: FileGalleryProps) {
     }
   }
 
-  const handleDownloadAll = async (uploaderId: string, uploaderName: string) => {
-    setDownloadingZip(uploaderId)
-
-    try {
-      const result = await downloadFilesAsZip(caseId, uploaderId)
-
-      if (!result.success || !result.zipData) {
-        console.error("[v0] Failed to create zip:", result.error)
-        return
-      }
-
-      // Create download link for zip
-      const link = document.createElement("a")
-      link.href = `data:application/zip;base64,${result.zipData}`
-      link.download = result.fileName || `${uploaderName}-files.zip`
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-    } catch (error) {
-      console.error("[v0] Error downloading zip:", error)
-    } finally {
-      setDownloadingZip(null)
-    }
-  }
 
   const getFileIcon = (fileName: string, fileType: string | null) => {
     const ext = fileName.split(".").pop()?.toLowerCase()
@@ -146,16 +121,11 @@ export function FileGallery({ caseId, files }: FileGalleryProps) {
           <div key={group.uploaderId} className="space-y-2">
             <div className="flex items-center justify-between">
               <h3 className="text-sm font-semibold text-muted-foreground">{group.uploaderName}</h3>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => handleDownloadAll(group.uploaderId, group.uploaderName)}
-                disabled={downloadingZip === group.uploaderId}
-                className="h-7 text-xs"
-              >
-                <PackageOpen className="size-3 mr-1" />
-                {downloadingZip === group.uploaderId ? "Creating..." : "Download All"}
-              </Button>
+              <DownloadAllButton
+                caseId={caseId}
+                uploaderId={group.uploaderId}
+                uploaderName={group.uploaderName}
+              />
             </div>
             <div className="space-y-2">
               {group.files.map((file) => (

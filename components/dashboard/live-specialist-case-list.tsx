@@ -27,7 +27,7 @@ export function LiveSpecialistCaseList({
       assignedCases: initialAssignedCases,
       availableCases: initialAvailableCases,
     },
-    refreshInterval: 30000, // Poll every 30 seconds
+    refreshInterval: 60000, // Poll every 60 seconds
     revalidateOnFocus: true,
     revalidateOnReconnect: true,
   })
