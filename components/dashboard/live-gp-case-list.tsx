@@ -59,7 +59,7 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
       case "awaiting_phase1":
         return (
           <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            Phase 1 Plan Ready
+            Preparing Phase 1
           </Badge>
         )
       case "awaiting_diagnostics":
@@ -99,35 +99,11 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
       )
     }
 
-    switch (caseItem.status) {
-      case "pending_assignment":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/gp/case/${caseItem.id}`}>View Case</Link>
-          </Button>
-        )
-      case "awaiting_phase1":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/gp/case/${caseItem.id}`}>View Phase 1 Plan</Link>
-          </Button>
-        )
-      case "awaiting_diagnostics":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/gp/case/${caseItem.id}`}>Upload Diagnostics</Link>
-          </Button>
-        )
-      case "awaiting_phase2":
-      case "completed":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/gp/case/${caseItem.id}`}>View Final Report</Link>
-          </Button>
-        )
-      default:
-        return null
-    }
+    return (
+      <Button variant="outline" size="sm" asChild>
+        <Link href={`/gp/case/${caseItem.id}`}>View Case</Link>
+      </Button>
+    )
   }
 
   const handleDelete = async (caseId: string) => {
@@ -232,7 +208,18 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
             <TableBody>
               {activeCases.map((caseItem) => (
                 <TableRow key={caseItem.id}>
-                  <TableCell className="font-medium">{caseItem.patient_name}</TableCell>
+                  <TableCell className="font-medium">
+                    <div className="flex items-center gap-2">
+                      {caseItem.patient_name}
+                      {caseItem.last_message?.[0]?.sender_id &&
+                        caseItem.last_message[0].sender_id === caseItem.specialist_id && (
+                          <span
+                            className="h-2 w-2 rounded-full bg-blue-500 ring-2 ring-blue-100"
+                            title="New specialist message"
+                          />
+                        )}
+                    </div>
+                  </TableCell>
                   <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{caseItem.specialty_requested}</TableCell>
                   <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>

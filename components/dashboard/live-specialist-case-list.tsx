@@ -61,28 +61,11 @@ export function LiveSpecialistCaseList({
   }
 
   const getActionButton = (caseItem: any) => {
-    switch (caseItem.status) {
-      case "awaiting_phase1":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/specialist/case/${caseItem.id}`}>Submit Phase 1 Plan</Link>
-          </Button>
-        )
-      case "awaiting_diagnostics":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
-          </Button>
-        )
-      case "awaiting_phase2":
-        return (
-          <Button variant="outline" size="sm" asChild>
-            <Link href={`/specialist/case/${caseItem.id}`}>Submit Final Report</Link>
-          </Button>
-        )
-      default:
-        return null
-    }
+    return (
+      <Button variant="outline" size="sm" asChild>
+        <Link href={`/specialist/case/${caseItem.id}`}>View Case</Link>
+      </Button>
+    )
   }
 
   const formatSignalment = (caseItem: any) => {
@@ -123,7 +106,18 @@ export function LiveSpecialistCaseList({
                     <TableRow key={caseItem.id}>
                       <TableCell className="font-medium">{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                       <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
-                      <TableCell>{formatSignalment(caseItem)}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          {formatSignalment(caseItem)}
+                          {caseItem.last_message?.[0]?.sender_id &&
+                            caseItem.last_message[0].sender_id !== userId && (
+                              <span
+                                className="h-2 w-2 rounded-full bg-blue-500 ring-2 ring-blue-100"
+                                title="New message from GP"
+                              />
+                            )}
+                        </div>
+                      </TableCell>
                       <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
                       <TableCell>{caseItem.report_due_description || "1-2 Business Days"}</TableCell>
                       <TableCell>{getActionButton(caseItem)}</TableCell>

@@ -201,7 +201,7 @@ export default function GPCaseView({ caseData, userProfile }: GPCaseViewProps) {
       case "awaiting_phase1":
         return (
           <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            Phase 1 Plan Ready
+            Preparing Phase 1
           </Badge>
         )
       case "awaiting_diagnostics":

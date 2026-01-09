@@ -10,10 +10,13 @@ export async function fetchGPCases(userId: string) {
     .select(
       `
       *,
-      specialist:specialist_id(full_name, specialty)
+      specialist:specialist_id(full_name, specialty),
+      last_message:case_messages(sender_id, created_at)
     `,
     )
     .eq("gp_id", userId)
+    .order("created_at", { foreignTable: "case_messages", ascending: false })
+    .limit(1, { foreignTable: "case_messages" })
     .order("created_at", { ascending: false })
 
   if (error) throw error
@@ -29,10 +32,13 @@ export async function fetchSpecialistCases(userId: string, specialty: string) {
     .select(
       `
       *,
-      gp:gp_id(full_name, clinic_name)
+      gp:gp_id(full_name, clinic_name),
+      last_message:case_messages(sender_id, created_at)
     `,
     )
     .eq("specialist_id", userId)
+    .order("created_at", { foreignTable: "case_messages", ascending: false })
+    .limit(1, { foreignTable: "case_messages" })
     .order("created_at", { ascending: false })
 
   // Fetch available cases
