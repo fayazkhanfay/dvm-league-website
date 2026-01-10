@@ -4,7 +4,7 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Paperclip, Send, X, FileIcon, ImageIcon } from "lucide-react"
+import { Paperclip, X, FileIcon, ImageIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import {
@@ -97,7 +97,13 @@ function ChatBar({
           </div>
         )}
 
-        <div className="flex gap-2 p-4">
+        <form
+          className="flex gap-2 p-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleSendMessage()
+          }}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -106,33 +112,29 @@ function ChatBar({
             className="hidden"
             accept=".pdf,.dcm,.jpg,.jpeg,.png"
           />
-          <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
+          <Button variant="outline" size="icon" type="button" onClick={() => fileInputRef.current?.click()}>
             <Paperclip className="h-4 w-4" />
           </Button>
           <Input
-            placeholder="Type a message..."
+            placeholder="Add clinical update, clarification, or upload files..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSendMessage()
-              }
-            }}
             disabled={isSendingMessage}
+            className="flex-1 border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 transition-colors"
           />
           <Button
-            onClick={handleSendMessage}
+            type="submit"
             disabled={(!message.trim() && stagedFiles.length === 0) || isSendingMessage}
+            className="min-w-[100px] bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium"
           >
-            <Send className="h-4 w-4" />
+            {isSendingMessage ? "Posting..." : "Post Update"}
           </Button>
           {showActionButton && (
-            <Button className="hidden md:flex" onClick={onAction}>
+            <Button className="hidden md:flex" type="button" onClick={onAction}>
               {actionLabel}
             </Button>
           )}
-        </div>
+        </form>
       </div>
     </div>
   )
