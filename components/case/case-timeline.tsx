@@ -10,11 +10,10 @@ import { Card } from "@/components/ui/card"
 import { Skeleton } from "@/components/ui/skeleton"
 import { ClinicalHistory } from "./clinical-history"
 import { ImageLightbox } from "./image-lightbox"
+import { DownloadAllButton } from "./download-all-button"
 import { getSignedFileUrl } from "@/app/actions/storage"
 import { getSignedUrlsBatch } from "@/app/actions/get-signed-urls-batch"
 import { useToast } from "@/hooks/use-toast"
-import JSZip from "jszip"
-import { saveAs } from "file-saver"
 
 type CaseFile = {
   id: string
@@ -62,7 +61,6 @@ export function CaseTimeline({
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
   const { toast } = useToast()
   const [mergedTimeline, setMergedTimeline] = useState<TimelineItem[]>([])
-  const [zippingBatchId, setZippingBatchId] = useState<string | null>(null)
   const [imageUrls, setImageUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -78,11 +76,11 @@ export function CaseTimeline({
         timelineItems.push({ type: "event", data: event })
       })
 
-      return timelineItems.sort(
-        (a, b) =>
-          new Date(a.data.created_at || a.data.uploaded_at).getTime() -
-          new Date(b.data.created_at || b.data.uploaded_at).getTime(),
-      )
+      return timelineItems.sort((a, b) => {
+        const aDate = "created_at" in a.data ? a.data.created_at : a.data.uploaded_at
+        const bDate = "created_at" in b.data ? b.data.created_at : b.data.uploaded_at
+        return new Date(aDate).getTime() - new Date(bDate).getTime()
+      })
     }
 
     setMergedTimeline(createMergedTimeline())
@@ -130,7 +128,7 @@ export function CaseTimeline({
       const shouldCreateNewBatch =
         !currentBatch ||
         currentBatch.uploader_id !== file.uploader_id ||
-        Math.abs(new Date(file.uploaded_at).getTime() - new Date(currentBatch.uploaded_at).getTime()) > 60000
+        Math.abs(new Date(file.uploaded_at).getTime() - new Date(currentBatch!.uploaded_at).getTime()) > 60000
 
       if (shouldCreateNewBatch) {
         if (currentBatch) {
@@ -142,7 +140,7 @@ export function CaseTimeline({
           uploaded_at: file.uploaded_at,
           files: [file],
         }
-      } else {
+      } else if (currentBatch) {
         currentBatch.files.push(file)
       }
     }
@@ -194,72 +192,11 @@ export function CaseTimeline({
     }
   }
 
-  const handleDownloadBatch = async (batch: FileBatch) => {
-    const batchId = `${batch.uploader_id}-${batch.uploaded_at}`
-    setZippingBatchId(batchId)
-
-    toast({
-      title: "Compressing files",
-      description: `Creating zip archive with ${batch.files.length} file(s)...`,
-    })
-
-    try {
-      const zip = new JSZip()
-
-      for (const file of batch.files) {
-        const result = await getSignedFileUrl(file.storage_object_path)
-
-        if (result.success && result.signedUrl) {
-          try {
-            const response = await fetch(result.signedUrl)
-            const blob = await response.blob()
-            zip.file(file.file_name, blob)
-          } catch (error) {
-            console.error(`[v0] Failed to fetch file: ${file.file_name}`, error)
-            toast({
-              variant: "destructive",
-              title: "Warning",
-              description: `Failed to add ${file.file_name} to archive`,
-            })
-          }
-        }
-      }
-
-      const zipBlob = await zip.generateAsync({
-        type: "blob",
-        compression: "DEFLATE",
-        compressionOptions: { level: 6 },
-      })
-
-      const currentDateTime = format(new Date(), "yyyy-MM-dd_HHmmss")
-      const sanitizedPetName = (caseData.patient_name || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
-      const sanitizedSpecies = (caseData.patient_species || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
-      const shortCaseId = caseId.substring(0, 6)
-      const zipFileName = `${currentDateTime}_${sanitizedPetName}_${sanitizedSpecies}_Case-${shortCaseId}.zip`
-
-      saveAs(zipBlob, zipFileName)
-
-      toast({
-        title: "Download complete",
-        description: `${zipFileName} has been downloaded`,
-      })
-    } catch (error) {
-      console.error("[v0] Error creating zip file:", error)
-      toast({
-        variant: "destructive",
-        title: "Error",
-        description: "Failed to create zip archive",
-      })
-    } finally {
-      setZippingBatchId(null)
-    }
-  }
 
   const renderFileBatch = (batch: FileBatch) => {
     const imageFiles = batch.files.filter((f) => isImageFile(f.file_name, f.file_type))
     const docFiles = batch.files.filter((f) => !isImageFile(f.file_name, f.file_type))
     const batchId = `${batch.uploader_id}-${batch.uploaded_at}`
-    const isZipping = zippingBatchId === batchId
 
     return (
       <div key={batchId} className="mb-6">
@@ -270,16 +207,12 @@ export function CaseTimeline({
               {batch.uploader_name} uploaded {batch.files.length} file{batch.files.length > 1 ? "s" : ""}
             </p>
             <span className="text-xs text-muted-foreground ml-auto">{formatTimestamp(batch.uploaded_at)}</span>
-            <Button
-              variant="outline"
-              size="sm"
-              className="h-7 gap-1 text-xs bg-transparent"
-              onClick={() => handleDownloadBatch(batch)}
-              disabled={isZipping}
-            >
-              <Download className="h-3 w-3" />
-              {isZipping ? "Compressing..." : "Download All"}
-            </Button>
+            <DownloadAllButton
+              caseId={caseId}
+              uploaderId={batch.uploader_id}
+              uploaderName={batch.uploader_name}
+              filePaths={batch.files.map((f) => f.storage_object_path)}
+            />
           </div>
 
           {imageFiles.length > 0 && (
@@ -355,6 +288,7 @@ export function CaseTimeline({
             brief_history={event.brief_history}
             pe_findings={event.pe_findings}
             medications={event.medications}
+            financial_constraints={event.financial_constraints}
             diagnostics_performed={event.diagnostics_performed}
             treatments_attempted={event.treatments_attempted}
             gp_questions={event.gp_questions}
@@ -502,8 +436,10 @@ export function CaseTimeline({
           </div>
         ) : (
           <div className="space-y-1" ref={scrollRef}>
-            {mergedTimeline.map((item) =>
-              item.type === "event" ? renderEvent(item.data) : renderFileBatch(item.data),
+            {mergedTimeline.map((item, index) =>
+              item.type === "event"
+                ? renderEvent(item.data as TimelineEvent)
+                : renderFileBatch(item.data as FileBatch),
             )}
           </div>
         )}

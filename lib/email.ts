@@ -4,20 +4,38 @@ import SpecialistCaseNotificationEmail from "@/components/emails/SpecialistCaseN
 
 const resend = new Resend(process.env.RESEND_API_KEY)
 
-export async function sendCaseConfirmation(email: string, gpName: string, patientName: string, caseId: string) {
+export async function sendCaseConfirmation(
+  email: string,
+  gpName: string,
+  patientName: string,
+  caseId: string,
+  patientSignalment: string,
+  presentingComplaint: string,
+  gpQuestions: string,
+  specialty: string,
+  patientSpecies: string,
+) {
   try {
-    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp-dashboard?case=${caseId}`
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/gp/case/${caseId}`
+
+    // Format the species (e.g. "canine" -> "Canine")
+    const formattedSpecies = patientSpecies
+      ? patientSpecies.charAt(0).toUpperCase() + patientSpecies.slice(1).toLowerCase()
+      : "Veterinary"
 
     const { data, error } = await resend.emails.send({
       from: "DVM League <notifications@mail.dvmleague.com>",
       to: email,
       replyTo: "khan@dvmleague.com",
-      subject: `Case Confirmation: ${patientName}`,
+      subject: `Case Confirmation: ${formattedSpecies} ${specialty} - ${patientName}`,
       react: CaseSubmissionEmail({
         gpName,
         patientName,
         caseId,
         caseLink,
+        patientSignalment,
+        presentingComplaint,
+        gpQuestions,
       }),
     })
 
@@ -40,10 +58,17 @@ export async function notifyMatchingSpecialists(
   patientName: string,
   patientSignalment: string,
   presentingComplaint: string,
+  gpQuestions: string,
+  patientSpecies: string,
 ) {
   try {
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = await createClient()
+
+    // Format Species (Capitalize first letter)
+    const formattedSpecies = patientSpecies
+      ? patientSpecies.charAt(0).toUpperCase() + patientSpecies.slice(1).toLowerCase()
+      : "Veterinary"
 
     console.log("[Email] ========== SPECIALIST NOTIFICATION DEBUG ==========")
     console.log("[Email] Input specialty:", specialty)
@@ -75,7 +100,8 @@ export async function notifyMatchingSpecialists(
     console.log(`[Email] ✓ Found ${specialists.length} specialist(s) for ${specialty}:`)
     specialists.forEach((s) => console.log(`  - ${s.full_name} (${s.email}) - Specialties: ${s.specialty}`))
 
-    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist-dashboard/cases/${caseId}`
+    // UPDATED: Pointing to the specific Case View, not the Dashboard
+    const caseLink = `${process.env.NEXT_PUBLIC_SITE_URL || "https://dvmleague.com"}/specialist/case/${caseId}`
     console.log("[Email] Case link being sent:", caseLink)
 
     const emailResults = []
@@ -88,7 +114,7 @@ export async function notifyMatchingSpecialists(
           from: "DVM League <notifications@mail.dvmleague.com>",
           to: specialist.email,
           replyTo: "khan@dvmleague.com",
-          subject: `New ${specialty} Case Available - ${patientName}`,
+          subject: `New ${formattedSpecies} Case Available - ${patientName}`,
           react: SpecialistCaseNotificationEmail({
             specialistName: specialist.full_name,
             patientName,
@@ -97,6 +123,7 @@ export async function notifyMatchingSpecialists(
             caseLink,
             patientSignalment,
             presentingComplaint,
+            gpQuestions,
           }),
         })
 

@@ -4,9 +4,19 @@ import type React from "react"
 import { useState, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Paperclip, Send, X, FileIcon, ImageIcon } from "lucide-react"
+import { Paperclip, X, FileIcon, ImageIcon } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogClose,
+} from "@/components/ui/dialog"
 import { acceptCase } from "@/app/actions/accept-case"
 import { sendCaseMessage } from "@/app/actions/send-case-message"
 import { createClient } from "@/lib/supabase/client"
@@ -87,7 +97,13 @@ function ChatBar({
           </div>
         )}
 
-        <div className="flex gap-2 p-4">
+        <form
+          className="flex gap-2 p-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            handleSendMessage()
+          }}
+        >
           <input
             ref={fileInputRef}
             type="file"
@@ -96,33 +112,29 @@ function ChatBar({
             className="hidden"
             accept=".pdf,.dcm,.jpg,.jpeg,.png"
           />
-          <Button variant="outline" size="icon" onClick={() => fileInputRef.current?.click()}>
+          <Button variant="outline" size="icon" type="button" onClick={() => fileInputRef.current?.click()}>
             <Paperclip className="h-4 w-4" />
           </Button>
           <Input
-            placeholder="Type a message..."
+            placeholder="Add clinical update, clarification, or upload files..."
             value={message}
             onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={(e) => {
-              if (e.key === "Enter" && !e.shiftKey) {
-                e.preventDefault()
-                handleSendMessage()
-              }
-            }}
             disabled={isSendingMessage}
+            className="flex-1 border-gray-300 bg-gray-50 focus:bg-white focus:border-blue-500 transition-colors"
           />
           <Button
-            onClick={handleSendMessage}
+            type="submit"
             disabled={(!message.trim() && stagedFiles.length === 0) || isSendingMessage}
+            className="min-w-[100px] bg-[#0F172A] hover:bg-[#1E293B] text-white font-medium"
           >
-            <Send className="h-4 w-4" />
+            {isSendingMessage ? "Posting..." : "Post Update"}
           </Button>
           {showActionButton && (
-            <Button className="hidden md:flex" onClick={onAction}>
+            <Button className="hidden md:flex" type="button" onClick={onAction}>
               {actionLabel}
             </Button>
           )}
-        </div>
+        </form>
       </div>
     </div>
   )
@@ -238,9 +250,42 @@ export function CommandCenter({
     return (
       <div className="fixed bottom-0 left-0 right-0 z-50 border-t bg-white p-4 shadow-lg">
         <div className="container mx-auto max-w-3xl">
-          <Button className="w-full" size="lg" onClick={handleClaimCase} disabled={isLoading}>
-            {isLoading ? "Claiming..." : "Claim Case"}
-          </Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="w-full" size="lg">
+                Claim Case
+              </Button>
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Confirm Case Assignment</DialogTitle>
+                <DialogDescription>Please review the terms below before accepting this case.</DialogDescription>
+              </DialogHeader>
+              <div className="py-4">
+                <ul className="list-disc pl-5 space-y-2 text-sm">
+                  <li>
+                    <span className="font-semibold">Compensation:</span> Estimated Payout: <span className="font-bold">$275.00+</span>
+                  </li>
+                  <li>
+                    <span className="font-semibold">Timeline:</span> Report Due: <span className="font-bold">Within 24 Hours</span>
+                  </li>
+                  <li>
+                    <span className="font-semibold">Commitment:</span> I agree to manage this case from Diagnosis through Treatment (Continuity of Care).
+                  </li>
+                </ul>
+              </div>
+              <DialogFooter className="gap-2 sm:gap-0">
+                <DialogClose asChild>
+                  <Button variant="outline" type="button">
+                    Review Case Files
+                  </Button>
+                </DialogClose>
+                <Button onClick={handleClaimCase} disabled={isLoading}>
+                  {isLoading ? "Accepting..." : "Accept & Claim"}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     )
@@ -284,7 +329,7 @@ export function CommandCenter({
 
   if (
     (userRole === "gp" &&
-      (status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
+      (status === "pending_assignment" || status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
     (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics")
   ) {
     return (

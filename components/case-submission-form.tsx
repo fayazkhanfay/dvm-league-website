@@ -133,32 +133,37 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
 
   const handleSaveDraft = async (e: React.FormEvent) => {
     e.preventDefault()
+    if (!patientName.trim()) {
+      toast.error("Patient Name is required to save a draft")
+      return
+    }
     setIsSavingDraft(true)
 
     try {
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_species: species,
-        patient_breed: breed,
-        patient_age: age,
-        patient_sex_status: sexStatus,
+        // Use || null to ensure empty strings are saved as NULL in the DB
+        patient_species: species || null,
+        patient_breed: breed || null,
+        patient_age: age || null,
+        patient_sex_status: sexStatus || null,
         patient_weight_kg: weightKg ? Number.parseFloat(weightKg) : null,
         patient_vax_status: vaxStatus || null,
         patient_preventatives: preventatives
           ? preventatives
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean)
           : null,
-        presenting_complaint: presentingComplaint,
-        brief_history: briefHistory,
-        pe_findings: peFindings,
-        medications,
+        presenting_complaint: presentingComplaint || null,
+        brief_history: briefHistory || null,
+        pe_findings: peFindings || null,
+        medications: medications || null,
         diagnostics_performed: diagnosticsPerformed || null,
         treatments_attempted: treatmentsAttempted || null,
-        gp_questions: gpQuestions,
-        specialty_requested: specialtyRequested,
+        gp_questions: gpQuestions || null,
+        specialty_requested: specialtyRequested || null,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,
         status: "draft",
@@ -232,25 +237,25 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
       const caseData = {
         gp_id: userProfile.id,
         patient_name: patientName,
-        patient_species: species,
-        patient_breed: breed,
-        patient_age: age,
-        patient_sex_status: sexStatus,
+        patient_species: species || null,
+        patient_breed: breed || null,
+        patient_age: age || null,
+        patient_sex_status: sexStatus || null,
         patient_weight_kg: Number.parseFloat(weightKg),
         patient_vax_status: vaxStatus || null,
         patient_preventatives: preventatives
           ? preventatives
-              .split(",")
-              .map((p) => p.trim())
-              .filter(Boolean)
+            .split(",")
+            .map((p) => p.trim())
+            .filter(Boolean)
           : null,
-        presenting_complaint: presentingComplaint,
-        brief_history: briefHistory,
-        pe_findings: peFindings,
-        medications,
+        presenting_complaint: presentingComplaint || null,
+        brief_history: briefHistory || null,
+        pe_findings: peFindings || null,
+        medications: medications || null,
         diagnostics_performed: diagnosticsPerformed || null,
         treatments_attempted: treatmentsAttempted || null,
-        gp_questions: gpQuestions,
+        gp_questions: gpQuestions || null,
         specialty_requested: specialtyRequested,
         preferred_specialist: preferredSpecialist || null,
         financial_constraints: financialConstraints || null,

@@ -65,11 +65,6 @@ export function CaseHeader({ caseData }: CaseHeaderProps) {
             </div>
           )}
 
-          {/* Referral Reason */}
-          <div className="mt-4">
-            <p className="text-sm text-muted-foreground">Referral Reason</p>
-            <p className="text-sm line-clamp-2">{caseData.gp_questions}</p>
-          </div>
         </div>
 
         {/* Right: Status Badge */}

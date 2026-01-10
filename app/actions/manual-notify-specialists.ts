@@ -22,7 +22,7 @@ export async function manualNotifySpecialists(caseId: string) {
   const { data: caseData, error: fetchError } = await supabase
     .from("cases")
     .select(
-      "id, patient_name, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint, status",
+      "id, patient_name, specialty_requested, patient_species, patient_breed, patient_age, patient_sex_status, patient_weight_kg, presenting_complaint, gp_questions, status",
     )
     .eq("id", caseId)
     .single()
@@ -43,6 +43,8 @@ export async function manualNotifySpecialists(caseId: string) {
     caseData.patient_name,
     signalmentString,
     caseData.presenting_complaint,
+    caseData.gp_questions || "",
+    caseData.patient_species || "Unknown",
   )
 
   return result

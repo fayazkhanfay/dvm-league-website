@@ -50,7 +50,7 @@ export function UnifiedCaseView({
     },
     {
       fallbackData: timelineResult.data || [],
-      refreshInterval: 10000, // Refresh every 10 seconds
+      refreshInterval: 60000, // Refresh every 60 seconds
       revalidateOnFocus: true, // Refresh when tab becomes active
       revalidateOnReconnect: true, // Refresh when internet reconnects
     },
@@ -68,7 +68,7 @@ export function UnifiedCaseView({
     },
     {
       fallbackData: filesResult.data || [],
-      refreshInterval: 10000, // Refresh every 10 seconds
+      refreshInterval: 60000, // Refresh every 60 seconds
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
     },

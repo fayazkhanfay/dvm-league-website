@@ -18,6 +18,7 @@ export interface CaseDetails {
   gp_questions: string
   phase2_client_summary: string | null
   specialty_requested: string | null
+  financial_constraints: string | null
 }
 
 export async function getCaseDetails(caseId: string) {
@@ -49,7 +50,8 @@ export async function getCaseDetails(caseId: string) {
       specialist_id,
       gp_questions,
       phase2_client_summary,
-      specialty_requested
+      specialty_requested,
+      financial_constraints
     `,
     )
     .eq("id", caseId)

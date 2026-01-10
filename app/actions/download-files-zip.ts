@@ -3,7 +3,7 @@
 import { createClient } from "@/lib/supabase/server"
 import JSZip from "jszip"
 
-export async function downloadFilesAsZip(caseId: string, uploaderId: string) {
+export async function downloadFilesAsZip(caseId: string, uploaderId: string, storagePaths?: string[]) {
   const supabase = await createClient()
 
   const {
@@ -15,7 +15,11 @@ export async function downloadFilesAsZip(caseId: string, uploaderId: string) {
   }
 
   // Check case access
-  const { data: caseData } = await supabase.from("cases").select("gp_id, specialist_id").eq("id", caseId).single()
+  const { data: caseData } = await supabase
+    .from("cases")
+    .select("gp_id, specialist_id, patient_name, patient_species")
+    .eq("id", caseId)
+    .single()
 
   if (!caseData) {
     return { error: "Case not found" }
@@ -32,11 +36,17 @@ export async function downloadFilesAsZip(caseId: string, uploaderId: string) {
   }
 
   // Get all files from this uploader for this case
-  const { data: files, error: filesError } = await supabase
+  let query = supabase
     .from("case_files")
     .select("file_name, storage_object_path")
     .eq("case_id", caseId)
     .eq("uploader_id", uploaderId)
+
+  if (storagePaths && storagePaths.length > 0) {
+    query = query.in("storage_object_path", storagePaths)
+  }
+
+  const { data: files, error: filesError } = await query
 
   if (filesError || !files || files.length === 0) {
     return { error: "No files found" }
@@ -45,41 +55,70 @@ export async function downloadFilesAsZip(caseId: string, uploaderId: string) {
   // Create zip file
   const zip = new JSZip()
 
-  for (const file of files) {
+  // OPTIMIZATION: Process all files in parallel
+  const downloadPromises = files.map(async (file) => {
     try {
-      // Get signed URL for file
+      // 1. Get signed URL (Short expiry is fine for immediate server-side fetch)
       const { data: signedUrlData } = await supabase.storage
         .from("case-bucket")
         .createSignedUrl(file.storage_object_path, 60)
 
       if (!signedUrlData?.signedUrl) {
         console.error(`Failed to get signed URL for ${file.file_name}`)
-        continue
+        return null
       }
 
-      // Download file content
+      // 2. Download file content
       const response = await fetch(signedUrlData.signedUrl)
       if (!response.ok) {
         console.error(`Failed to download ${file.file_name}`)
-        continue
+        return null
       }
 
       const blob = await response.blob()
       const arrayBuffer = await blob.arrayBuffer()
 
-      // Add to zip
-      zip.file(file.file_name, arrayBuffer)
+      return {
+        name: file.file_name,
+        data: arrayBuffer,
+      }
     } catch (error) {
       console.error(`Error processing ${file.file_name}:`, error)
+      return null
     }
+  })
+
+  // Wait for all concurrent downloads to complete
+  const results = await Promise.all(downloadPromises)
+
+  // Add successful downloads to zip
+  let fileCount = 0
+  results.forEach((result) => {
+    if (result) {
+      zip.file(result.name, result.data)
+      fileCount++
+    }
+  })
+
+  if (fileCount === 0) {
+    return { error: "Failed to download any files" }
   }
 
   // Generate zip file
   const zipBlob = await zip.generateAsync({ type: "base64" })
 
+  // Generate custom filename: YYYY-MM-DD_HHmmss_PatientName_Species_Case-ShortID.zip
+  const now = new Date()
+  const timestamp = now.toISOString().replace(/T/, "_").replace(/\..+/, "").replace(/:/g, "")
+  const sanitizedPatient = (caseData?.patient_name || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
+  const sanitizedSpecies = (caseData?.patient_species || "Unknown").replace(/[^a-zA-Z0-9]/g, "_")
+  const shortCaseId = caseId.substring(0, 6)
+
+  const fileName = `${timestamp}_${sanitizedPatient}_${sanitizedSpecies}_Case-${shortCaseId}.zip`
+
   return {
     success: true,
     zipData: zipBlob,
-    fileName: `case-${caseId}-files.zip`,
+    fileName: fileName,
   }
 }
