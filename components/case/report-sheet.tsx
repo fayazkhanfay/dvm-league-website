@@ -344,7 +344,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       return (
         <>
           {splitMode && (
-            <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b p-6 flex items-center justify-between z-10 shadow-sm">
+            <div className="p-6 pb-4 border-b flex items-center justify-between">
               <div className="flex-1">
                 <h2 className="text-xl font-semibold">Final Case Report</h2>
                 <p className="text-sm text-muted-foreground mt-1">
@@ -366,7 +366,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </SheetHeader>
           )}
 
-          <div className={splitMode ? "p-6 pt-8 space-y-6" : "mt-6 space-y-6"}>
+          <div className={splitMode ? "p-6 space-y-6" : "mt-6 space-y-6"}>
             <div>
               <Label htmlFor="case-disposition">Case Disposition *</Label>
               <Select value={caseDisposition} onValueChange={setCaseDisposition}>
