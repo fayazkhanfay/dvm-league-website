@@ -119,8 +119,8 @@ export function UnifiedCaseView({
             showFinalReportSplit ? "w-1/2 border-r overflow-y-auto" : "w-full"
           }`}
         >
-          <div className="container mx-auto py-8 px-4 pb-32">
-            <div className="max-w-3xl mx-auto">
+          <div className={`py-8 pb-32 ${showFinalReportSplit ? "px-6" : "container mx-auto px-4"}`}>
+            <div className={showFinalReportSplit ? "max-w-full mx-auto" : "max-w-3xl mx-auto"}>
               {/* Header - Pinned at top */}
               <CaseHeader caseData={caseData} />
 
@@ -141,7 +141,7 @@ export function UnifiedCaseView({
         </div>
 
         {showFinalReportSplit && (
-          <div className="w-1/2 overflow-y-auto bg-white">
+          <div className="w-1/2 overflow-y-auto bg-white px-6">
             <ReportSheet
               open={showFinalReportSplit}
               onOpenChange={(open) => setShowFinalReportSplit(open)}
