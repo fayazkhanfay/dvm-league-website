@@ -113,11 +113,11 @@ export function UnifiedCaseView({
       isDemoUser={userProfile.is_demo}
     >
       <div className="flex h-[calc(100vh-64px)] overflow-hidden">
-        {/* Left side - Main case view with independent scroll */}
+        {/* Left side - Main case view with independent scroll only when split */}
         <div
           className={`transition-all duration-300 ${
-            showFinalReportSplit ? "w-1/2 border-r" : "w-full"
-          } overflow-y-auto`}
+            showFinalReportSplit ? "w-1/2 border-r overflow-y-auto" : "w-full"
+          }`}
         >
           <div className="container mx-auto py-8 px-4 pb-32">
             <div className="max-w-3xl mx-auto">
