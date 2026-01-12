@@ -30,7 +30,8 @@ interface CommandCenterProps {
   onOpenPhase1: () => void
   onOpenPhase2: () => void
   onOpenFileUpload: () => void
-  onMessageSent?: () => void // Added callback for SWR optimistic updates
+  onOpenFinalReport?: () => void
+  onMessageSent?: () => void
 }
 
 interface ChatBarProps {
@@ -148,7 +149,8 @@ export function CommandCenter({
   onOpenPhase1,
   onOpenPhase2,
   onOpenFileUpload,
-  onMessageSent, // Accept the new callback prop
+  onOpenFinalReport,
+  onMessageSent,
 }: CommandCenterProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -264,13 +266,16 @@ export function CommandCenter({
               <div className="py-4">
                 <ul className="list-disc pl-5 space-y-2 text-sm">
                   <li>
-                    <span className="font-semibold">Compensation:</span> Estimated Payout: <span className="font-bold">$275.00+</span>
+                    <span className="font-semibold">Compensation:</span> Estimated Payout:{" "}
+                    <span className="font-bold">$275.00+</span>
                   </li>
                   <li>
-                    <span className="font-semibold">Timeline:</span> Report Due: <span className="font-bold">Within 24 Hours</span>
+                    <span className="font-semibold">Timeline:</span> Report Due:{" "}
+                    <span className="font-bold">Within 24 Hours</span>
                   </li>
                   <li>
-                    <span className="font-semibold">Commitment:</span> I agree to manage this case from Diagnosis through Treatment (Continuity of Care).
+                    <span className="font-semibold">Commitment:</span> I agree to manage this case from Diagnosis
+                    through Treatment (Continuity of Care).
                   </li>
                 </ul>
               </div>
@@ -322,7 +327,7 @@ export function CommandCenter({
         fileInputRef={fileInputRef}
         showActionButton
         actionLabel="Write Final Report"
-        onAction={() => console.log("Write Final Report button clicked")}
+        onAction={onOpenFinalReport}
       />
     )
   }
@@ -340,14 +345,17 @@ export function CommandCenter({
         fileInputRef={fileInputRef}
         showActionButton
         actionLabel="Write Final Report"
-        onAction={() => console.log("Write Final Report button clicked")}
+        onAction={onOpenFinalReport}
       />
     )
   }
 
   if (
     userRole === "gp" &&
-    (status === "pending_assignment" || status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")
+    (status === "pending_assignment" ||
+      status === "awaiting_phase1" ||
+      status === "awaiting_diagnostics" ||
+      status === "awaiting_phase2")
   ) {
     return (
       <ChatBar
