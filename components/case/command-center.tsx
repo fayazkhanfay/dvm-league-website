@@ -322,15 +322,32 @@ export function CommandCenter({
         fileInputRef={fileInputRef}
         showActionButton
         actionLabel="Write Final Report"
-        onAction={onOpenPhase2}
+        onAction={() => console.log("Write Final Report button clicked")}
+      />
+    )
+  }
+
+  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics") {
+    return (
+      <ChatBar
+        message={message}
+        setMessage={setMessage}
+        stagedFiles={stagedFiles}
+        handleSendMessage={handleSendMessage}
+        handleFileSelect={handleFileSelect}
+        removeFile={removeFile}
+        isSendingMessage={isSendingMessage}
+        fileInputRef={fileInputRef}
+        showActionButton
+        actionLabel="Write Final Report"
+        onAction={() => console.log("Write Final Report button clicked")}
       />
     )
   }
 
   if (
-    (userRole === "gp" &&
-      (status === "pending_assignment" || status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")) ||
-    (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics")
+    userRole === "gp" &&
+    (status === "pending_assignment" || status === "awaiting_phase1" || status === "awaiting_diagnostics" || status === "awaiting_phase2")
   ) {
     return (
       <ChatBar
