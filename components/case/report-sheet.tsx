@@ -6,6 +6,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { submitPhase1 } from "@/app/actions/submit-phase1"
 import { submitPhase2 } from "@/app/actions/submit-phase2"
@@ -34,10 +36,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
 
   // Phase 2 state
-  const [phase2Assessment, setPhase2Assessment] = useState("")
-  const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState("")
-  const [phase2Prognosis, setPhase2Prognosis] = useState("")
-  const [phase2ClientSummary, setPhase2ClientSummary] = useState("")
+  const [caseDisposition, setCaseDisposition] = useState("")
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState("")
+  const [treatmentProtocol, setTreatmentProtocol] = useState("")
+  const [monitoringPlan, setMonitoringPlan] = useState("")
+  const [clientExplanation, setClientExplanation] = useState("")
   const [phase2Files, setPhase2Files] = useState<File[]>([])
   const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
   const [isUploadingPhase2Files, setIsUploadingPhase2Files] = useState(false)
@@ -134,10 +138,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
 
   const handleSubmitPhase2 = async () => {
     if (
-      !phase2Assessment.trim() ||
-      !phase2TreatmentPlan.trim() ||
-      !phase2Prognosis.trim() ||
-      !phase2ClientSummary.trim()
+      !caseDisposition.trim() ||
+      !primaryDiagnosis.trim() ||
+      !clinicalInterpretation.trim() ||
+      !treatmentProtocol.trim() ||
+      !monitoringPlan.trim() ||
+      !clientExplanation.trim()
     ) {
       toast({
         title: "Missing information",
@@ -156,15 +162,15 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       }
 
       const result = await submitPhase2(caseId, {
-        assessment: phase2Assessment,
-        treatmentPlan: phase2TreatmentPlan,
-        prognosis: phase2Prognosis,
-        clientSummary: phase2ClientSummary,
+        assessment: `Disposition: ${caseDisposition}\n\nPrimary Diagnosis: ${primaryDiagnosis}\n\nClinical Interpretation: ${clinicalInterpretation}`,
+        treatmentPlan: treatmentProtocol,
+        prognosis: monitoringPlan,
+        clientSummary: clientExplanation,
       })
 
       if (result.success) {
         toast({
-          title: "Phase 2 submitted",
+          title: "Final report submitted",
           description: "Your final report has been submitted successfully.",
         })
         onOpenChange(false)
@@ -172,14 +178,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       } else {
         toast({
           title: "Submission failed",
-          description: result.error || "Failed to submit Phase 2 report.",
+          description: result.error || "Failed to submit final report.",
           variant: "destructive",
         })
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit Phase 2.",
+        description: error.message || "Failed to submit final report.",
         variant: "destructive",
       })
     } finally {
@@ -340,7 +346,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
           {splitMode && (
             <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
               <div>
-                <h2 className="text-xl font-semibold">Phase 2 Final Report</h2>
+                <h2 className="text-xl font-semibold">Final Case Report</h2>
                 <p className="text-sm text-muted-foreground">
                   Complete the final report based on diagnostic results. Scroll the timeline to review findings.
                 </p>
@@ -353,57 +359,85 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
 
           {!splitMode && (
             <SheetHeader>
-              <SheetTitle>Phase 2 Final Report</SheetTitle>
+              <SheetTitle>Final Case Report</SheetTitle>
               <SheetDescription>
                 Complete the final report based on diagnostic results. Scroll the timeline to review findings.
               </SheetDescription>
             </SheetHeader>
           )}
 
-          <div className={splitMode ? "p-6 space-y-4" : "mt-6 space-y-4"}>
+          <div className={splitMode ? "p-6 space-y-6" : "mt-6 space-y-6"}>
             <div>
-              <Label htmlFor="phase2-assessment">Assessment *</Label>
+              <Label htmlFor="case-disposition">Case Disposition *</Label>
+              <Select value={caseDisposition} onValueChange={setCaseDisposition}>
+                <SelectTrigger id="case-disposition" className="mt-2">
+                  <SelectValue placeholder="Select case disposition..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="managed">✅ Managed In-House (Protocol provided)</SelectItem>
+                  <SelectItem value="referral">🏥 Referral Recommended (Patient needs physical surgery/MRI)</SelectItem>
+                  <SelectItem value="er_transfer">⚠️ Immediate ER Transfer (Patient unstable)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="primary-diagnosis">Primary Diagnosis & Confidence Level *</Label>
+              <Input
+                id="primary-diagnosis"
+                value={primaryDiagnosis}
+                onChange={(e) => setPrimaryDiagnosis(e.target.value)}
+                placeholder="e.g., ACVIM Stage C Mitral Valve Disease with acute pulmonary edema. (High Confidence)"
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="clinical-interpretation">Clinical Interpretation & Findings *</Label>
               <Textarea
-                id="phase2-assessment"
-                value={phase2Assessment}
-                onChange={(e) => setPhase2Assessment(e.target.value)}
-                placeholder="Provide your assessment..."
+                id="clinical-interpretation"
+                value={clinicalInterpretation}
+                onChange={(e) => setClinicalInterpretation(e.target.value)}
+                placeholder="Explain your reasoning. Reference specific findings in the uploaded labs or radiographs (e.g., 'The VHS is 11.8 and the alveolar pattern in the caudodorsal lung field confirms edema...')."
+                rows={8}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="treatment-protocol">Treatment Protocol (Drugs & Dosages) *</Label>
+              <p className="text-xs text-muted-foreground mt-1">Please include specific mg/kg dosages.</p>
+              <Textarea
+                id="treatment-protocol"
+                value={treatmentProtocol}
+                onChange={(e) => setTreatmentProtocol(e.target.value)}
+                placeholder={
+                  "List specific drugs, dosages, and frequencies. \n• Furosemide: 2mg/kg IV NOW, then...\n• Pimobendan: 0.25mg/kg PO BID...\n• Diet: Switch to Cardiac diet..."
+                }
+                rows={8}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="monitoring-plan">Monitoring & Recheck Plan *</Label>
+              <Textarea
+                id="monitoring-plan"
+                value={monitoringPlan}
+                onChange={(e) => setMonitoringPlan(e.target.value)}
+                placeholder="When should the GP recheck labs or imaging? What are the 'Red Flags' for the owner to watch for? (e.g., 'Recheck BUN/Creatinine in 3 days. If RR > 40 at rest, go to ER.')"
                 rows={6}
                 className="mt-2"
               />
             </div>
 
             <div>
-              <Label htmlFor="phase2-treatment">Treatment Plan *</Label>
+              <Label htmlFor="client-explanation">Client-Friendly Explanation *</Label>
               <Textarea
-                id="phase2-treatment"
-                value={phase2TreatmentPlan}
-                onChange={(e) => setPhase2TreatmentPlan(e.target.value)}
-                placeholder="Detail your recommended treatment..."
-                rows={6}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phase2-prognosis">Prognosis *</Label>
-              <Textarea
-                id="phase2-prognosis"
-                value={phase2Prognosis}
-                onChange={(e) => setPhase2Prognosis(e.target.value)}
-                placeholder="Provide your prognosis..."
-                rows={4}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="phase2-client-summary">Client-Friendly Summary *</Label>
-              <Textarea
-                id="phase2-client-summary"
-                value={phase2ClientSummary}
-                onChange={(e) => setPhase2ClientSummary(e.target.value)}
-                placeholder="Summary for the pet owner..."
+                id="client-explanation"
+                value={clientExplanation}
+                onChange={(e) => setClientExplanation(e.target.value)}
+                placeholder="Write a simple paragraph the GP can copy/paste to the pet owner. Avoid jargon. (e.g., 'Charlie has a leaky heart valve which caused fluid in his lungs. The medications will help clear the fluid...')"
                 rows={6}
                 className="mt-2"
               />
@@ -447,21 +481,32 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
               )}
             </div>
 
-            <Button
-              onClick={handleSubmitPhase2}
-              disabled={
-                isSubmittingPhase2 ||
-                isUploadingPhase2Files ||
-                !phase2Assessment.trim() ||
-                !phase2TreatmentPlan.trim() ||
-                !phase2Prognosis.trim() ||
-                !phase2ClientSummary.trim()
-              }
-              className="w-full"
-              size="lg"
-            >
-              {isUploadingPhase2Files ? "Uploading Files..." : isSubmittingPhase2 ? "Submitting..." : "Submit Phase 2"}
-            </Button>
+            <div className="flex gap-3 pt-4">
+              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingPhase2}>
+                Save Draft
+              </Button>
+              <Button
+                onClick={handleSubmitPhase2}
+                disabled={
+                  isSubmittingPhase2 ||
+                  isUploadingPhase2Files ||
+                  !caseDisposition.trim() ||
+                  !primaryDiagnosis.trim() ||
+                  !clinicalInterpretation.trim() ||
+                  !treatmentProtocol.trim() ||
+                  !monitoringPlan.trim() ||
+                  !clientExplanation.trim()
+                }
+                className="flex-1"
+                size="lg"
+              >
+                {isUploadingPhase2Files
+                  ? "Uploading Files..."
+                  : isSubmittingPhase2
+                    ? "Submitting..."
+                    : "SUBMIT FINAL REPORT"}
+              </Button>
+            </div>
           </div>
         </>
       )
