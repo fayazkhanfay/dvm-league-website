@@ -374,9 +374,9 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                   <SelectValue placeholder="Select case disposition..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="managed">✅ Managed In-House (Protocol provided)</SelectItem>
-                  <SelectItem value="referral">🏥 Referral Recommended (Patient needs physical surgery/MRI)</SelectItem>
-                  <SelectItem value="er_transfer">⚠️ Immediate ER Transfer (Patient unstable)</SelectItem>
+                  <SelectItem value="managed">Manage In-House (Medical Management)</SelectItem>
+                  <SelectItem value="referral">Referral Advised (Specialty Procedure)</SelectItem>
+                  <SelectItem value="er_transfer">Immediate ER Transfer (Critical)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
