@@ -344,14 +344,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       return (
         <>
           {splitMode && (
-            <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
-              <div>
+            <div className="sticky top-0 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80 border-b p-6 flex items-center justify-between z-10 shadow-sm">
+              <div className="flex-1">
                 <h2 className="text-xl font-semibold">Final Case Report</h2>
-                <p className="text-sm text-muted-foreground">
+                <p className="text-sm text-muted-foreground mt-1">
                   Complete the final report based on diagnostic results. Scroll the timeline to review findings.
                 </p>
               </div>
-              <Button variant="ghost" size="sm" onClick={() => onOpenChange(false)}>
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="flex-shrink-0 ml-4">
                 <X className="h-4 w-4" />
               </Button>
             </div>
@@ -366,7 +366,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </SheetHeader>
           )}
 
-          <div className={splitMode ? "p-6 space-y-6" : "mt-6 space-y-6"}>
+          <div className={splitMode ? "p-6 pt-8 space-y-6" : "mt-6 space-y-6"}>
             <div>
               <Label htmlFor="case-disposition">Case Disposition *</Label>
               <Select value={caseDisposition} onValueChange={setCaseDisposition}>
