@@ -6,6 +6,8 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from "
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { submitPhase1 } from "@/app/actions/submit-phase1"
 import { submitPhase2 } from "@/app/actions/submit-phase2"
@@ -19,9 +21,10 @@ interface ReportSheetProps {
   mode: "phase1" | "phase2" | "diagnostics"
   caseId: string
   currentUserId: string
+  splitMode?: boolean
 }
 
-export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }: ReportSheetProps) {
+export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, splitMode = false }: ReportSheetProps) {
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
@@ -33,10 +36,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
   const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
 
   // Phase 2 state
-  const [phase2Assessment, setPhase2Assessment] = useState("")
-  const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState("")
-  const [phase2Prognosis, setPhase2Prognosis] = useState("")
-  const [phase2ClientSummary, setPhase2ClientSummary] = useState("")
+  const [caseDisposition, setCaseDisposition] = useState("")
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState("")
+  const [treatmentProtocol, setTreatmentProtocol] = useState("")
+  const [monitoringPlan, setMonitoringPlan] = useState("")
+  const [clientExplanation, setClientExplanation] = useState("")
   const [phase2Files, setPhase2Files] = useState<File[]>([])
   const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
   const [isUploadingPhase2Files, setIsUploadingPhase2Files] = useState(false)
@@ -133,10 +138,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
 
   const handleSubmitPhase2 = async () => {
     if (
-      !phase2Assessment.trim() ||
-      !phase2TreatmentPlan.trim() ||
-      !phase2Prognosis.trim() ||
-      !phase2ClientSummary.trim()
+      !caseDisposition.trim() ||
+      !primaryDiagnosis.trim() ||
+      !clinicalInterpretation.trim() ||
+      !treatmentProtocol.trim() ||
+      !monitoringPlan.trim() ||
+      !clientExplanation.trim()
     ) {
       toast({
         title: "Missing information",
@@ -155,15 +162,15 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
       }
 
       const result = await submitPhase2(caseId, {
-        assessment: phase2Assessment,
-        treatmentPlan: phase2TreatmentPlan,
-        prognosis: phase2Prognosis,
-        clientSummary: phase2ClientSummary,
+        assessment: `Disposition: ${caseDisposition}\n\nPrimary Diagnosis: ${primaryDiagnosis}\n\nClinical Interpretation: ${clinicalInterpretation}`,
+        treatmentPlan: treatmentProtocol,
+        prognosis: monitoringPlan,
+        clientSummary: clientExplanation,
       })
 
       if (result.success) {
         toast({
-          title: "Phase 2 submitted",
+          title: "Final report submitted",
           description: "Your final report has been submitted successfully.",
         })
         onOpenChange(false)
@@ -171,14 +178,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
       } else {
         toast({
           title: "Submission failed",
-          description: result.error || "Failed to submit Phase 2 report.",
+          description: result.error || "Failed to submit final report.",
           variant: "destructive",
         })
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit Phase 2.",
+        description: error.message || "Failed to submit final report.",
         variant: "destructive",
       })
     } finally {
@@ -258,299 +265,360 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId }:
     }
   }
 
-  return (
-    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        {mode === "phase1" && (
-          <>
-            <SheetHeader>
-              <SheetTitle>Phase 1 Diagnostic Plan</SheetTitle>
-              <SheetDescription>
-                Provide your diagnostic plan based on the case history. You can scroll the timeline while typing.
-              </SheetDescription>
-            </SheetHeader>
+  const renderContent = () => {
+    if (mode === "phase1") {
+      return (
+        <>
+          <SheetHeader>
+            <SheetTitle>Phase 1 Diagnostic Plan</SheetTitle>
+            <SheetDescription>
+              Provide your diagnostic plan based on the case history. You can scroll the timeline while typing.
+            </SheetDescription>
+          </SheetHeader>
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <Label htmlFor="phase1-plan">Diagnostic Plan *</Label>
-                <Textarea
-                  id="phase1-plan"
-                  value={phase1Plan}
-                  onChange={(e) => setPhase1Plan(e.target.value)}
-                  placeholder="Detail the diagnostic tests and procedures you recommend..."
-                  rows={12}
-                  className="mt-2"
-                />
-              </div>
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="phase1-plan">Diagnostic Plan *</Label>
+              <Textarea
+                id="phase1-plan"
+                value={phase1Plan}
+                onChange={(e) => setPhase1Plan(e.target.value)}
+                placeholder="Detail the diagnostic tests and procedures you recommend..."
+                rows={12}
+                className="mt-2"
+              />
+            </div>
 
-              <div>
-                <Label>Supporting Files (Optional)</Label>
-                <label
-                  htmlFor="phase1-file-upload"
-                  className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-                >
-                  <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
-                  <input
-                    id="phase1-file-upload"
-                    type="file"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || [])
-                      setPhase1Files((prev) => [...prev, ...files])
-                    }}
-                    className="hidden"
-                  />
-                </label>
-
-                {phase1Files.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {phase1Files.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate text-sm">{file.name}</span>
-                        <button
-                          onClick={() => setPhase1Files((prev) => prev.filter((_, i) => i !== index))}
-                          className="flex-shrink-0 text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <Button
-                onClick={handleSubmitPhase1}
-                disabled={isSubmittingPhase1 || isUploadingPhase1Files || !phase1Plan.trim()}
-                className="w-full"
-                size="lg"
+            <div>
+              <Label>Supporting Files (Optional)</Label>
+              <label
+                htmlFor="phase1-file-upload"
+                className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
               >
-                {isUploadingPhase1Files
-                  ? "Uploading Files..."
-                  : isSubmittingPhase1
-                    ? "Submitting..."
-                    : "Submit Phase 1"}
+                <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
+                <input
+                  id="phase1-file-upload"
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setPhase1Files((prev) => [...prev, ...files])
+                  }}
+                  className="hidden"
+                />
+              </label>
+
+              {phase1Files.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {phase1Files.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 truncate text-sm">{file.name}</span>
+                      <button
+                        onClick={() => setPhase1Files((prev) => prev.filter((_, i) => i !== index))}
+                        className="flex-shrink-0 text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            <Button
+              onClick={handleSubmitPhase1}
+              disabled={isSubmittingPhase1 || isUploadingPhase1Files || !phase1Plan.trim()}
+              className="w-full"
+              size="lg"
+            >
+              {isUploadingPhase1Files ? "Uploading Files..." : isSubmittingPhase1 ? "Submitting..." : "Submit Phase 1"}
+            </Button>
+          </div>
+        </>
+      )
+    }
+
+    if (mode === "phase2") {
+      return (
+        <>
+          {splitMode && (
+            <div className="p-6 pb-4 border-b flex items-center justify-between">
+              <div className="flex-1">
+                <h2 className="text-xl font-semibold">Final Case Report</h2>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Complete the final report based on diagnostic results. Scroll the timeline to review findings.
+                </p>
+              </div>
+              <Button variant="ghost" size="icon" onClick={() => onOpenChange(false)} className="flex-shrink-0 ml-4">
+                <X className="h-4 w-4" />
               </Button>
             </div>
-          </>
-        )}
+          )}
 
-        {mode === "phase2" && (
-          <>
+          {!splitMode && (
             <SheetHeader>
-              <SheetTitle>Phase 2 Final Report</SheetTitle>
+              <SheetTitle>Final Case Report</SheetTitle>
               <SheetDescription>
                 Complete the final report based on diagnostic results. Scroll the timeline to review findings.
               </SheetDescription>
             </SheetHeader>
+          )}
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <Label htmlFor="phase2-assessment">Assessment *</Label>
-                <Textarea
-                  id="phase2-assessment"
-                  value={phase2Assessment}
-                  onChange={(e) => setPhase2Assessment(e.target.value)}
-                  placeholder="Provide your assessment..."
-                  rows={6}
-                  className="mt-2"
+          <div className={splitMode ? "p-6 space-y-6" : "mt-6 space-y-6"}>
+            <div>
+              <Label htmlFor="case-disposition">Case Disposition *</Label>
+              <Select value={caseDisposition} onValueChange={setCaseDisposition}>
+                <SelectTrigger id="case-disposition" className="mt-2">
+                  <SelectValue placeholder="Select case disposition..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="managed">Manage In-House (Medical Management)</SelectItem>
+                  <SelectItem value="referral">Referral Advised (Specialty Procedure)</SelectItem>
+                  <SelectItem value="er_transfer">Immediate ER Transfer (Critical)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div>
+              <Label htmlFor="primary-diagnosis">Primary Diagnosis & Confidence Level *</Label>
+              <Input
+                id="primary-diagnosis"
+                value={primaryDiagnosis}
+                onChange={(e) => setPrimaryDiagnosis(e.target.value)}
+                placeholder="e.g., ACVIM Stage C Mitral Valve Disease with acute pulmonary edema. (High Confidence)"
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="clinical-interpretation">Clinical Interpretation & Findings *</Label>
+              <Textarea
+                id="clinical-interpretation"
+                value={clinicalInterpretation}
+                onChange={(e) => setClinicalInterpretation(e.target.value)}
+                placeholder="Explain your reasoning. Reference specific findings in the uploaded labs or radiographs (e.g., 'The VHS is 11.8 and the alveolar pattern in the caudodorsal lung field confirms edema...')."
+                rows={8}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="treatment-protocol">Treatment Protocol (Drugs & Dosages) *</Label>
+              <p className="text-xs text-muted-foreground mt-1">Please include specific mg/kg dosages.</p>
+              <Textarea
+                id="treatment-protocol"
+                value={treatmentProtocol}
+                onChange={(e) => setTreatmentProtocol(e.target.value)}
+                placeholder={
+                  "List specific drugs, dosages, and frequencies. \n• Furosemide: 2mg/kg IV NOW, then...\n• Pimobendan: 0.25mg/kg PO BID...\n• Diet: Switch to Cardiac diet..."
+                }
+                rows={8}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="monitoring-plan">Monitoring & Recheck Plan *</Label>
+              <Textarea
+                id="monitoring-plan"
+                value={monitoringPlan}
+                onChange={(e) => setMonitoringPlan(e.target.value)}
+                placeholder="When should the GP recheck labs or imaging? What are the 'Red Flags' for the owner to watch for? (e.g., 'Recheck BUN/Creatinine in 3 days. If RR > 40 at rest, go to ER.')"
+                rows={6}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label htmlFor="client-explanation">Client-Friendly Explanation *</Label>
+              <Textarea
+                id="client-explanation"
+                value={clientExplanation}
+                onChange={(e) => setClientExplanation(e.target.value)}
+                placeholder="Write a simple paragraph the GP can copy/paste to the pet owner. Avoid jargon. (e.g., 'Charlie has a leaky heart valve which caused fluid in his lungs. The medications will help clear the fluid...')"
+                rows={6}
+                className="mt-2"
+              />
+            </div>
+
+            <div>
+              <Label>Supporting Files (Optional)</Label>
+              <label
+                htmlFor="phase2-file-upload"
+                className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
+              >
+                <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
+                <input
+                  id="phase2-file-upload"
+                  type="file"
+                  multiple
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setPhase2Files((prev) => [...prev, ...files])
+                  }}
+                  className="hidden"
                 />
-              </div>
+              </label>
 
-              <div>
-                <Label htmlFor="phase2-treatment">Treatment Plan *</Label>
-                <Textarea
-                  id="phase2-treatment"
-                  value={phase2TreatmentPlan}
-                  onChange={(e) => setPhase2TreatmentPlan(e.target.value)}
-                  placeholder="Detail your recommended treatment..."
-                  rows={6}
-                  className="mt-2"
-                />
-              </div>
+              {phase2Files.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  {phase2Files.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 truncate text-sm">{file.name}</span>
+                      <button
+                        onClick={() => setPhase2Files((prev) => prev.filter((_, i) => i !== index))}
+                        className="flex-shrink-0 text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
 
-              <div>
-                <Label htmlFor="phase2-prognosis">Prognosis *</Label>
-                <Textarea
-                  id="phase2-prognosis"
-                  value={phase2Prognosis}
-                  onChange={(e) => setPhase2Prognosis(e.target.value)}
-                  placeholder="Provide your prognosis..."
-                  rows={4}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="phase2-client-summary">Client-Friendly Summary *</Label>
-                <Textarea
-                  id="phase2-client-summary"
-                  value={phase2ClientSummary}
-                  onChange={(e) => setPhase2ClientSummary(e.target.value)}
-                  placeholder="Summary for the pet owner..."
-                  rows={6}
-                  className="mt-2"
-                />
-              </div>
-
-              <div>
-                <Label>Supporting Files (Optional)</Label>
-                <label
-                  htmlFor="phase2-file-upload"
-                  className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-                >
-                  <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
-                  <input
-                    id="phase2-file-upload"
-                    type="file"
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || [])
-                      setPhase2Files((prev) => [...prev, ...files])
-                    }}
-                    className="hidden"
-                  />
-                </label>
-
-                {phase2Files.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    {phase2Files.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate text-sm">{file.name}</span>
-                        <button
-                          onClick={() => setPhase2Files((prev) => prev.filter((_, i) => i !== index))}
-                          className="flex-shrink-0 text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
+            <div className="flex gap-3 pt-4">
+              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingPhase2}>
+                Save Draft
+              </Button>
               <Button
                 onClick={handleSubmitPhase2}
                 disabled={
                   isSubmittingPhase2 ||
                   isUploadingPhase2Files ||
-                  !phase2Assessment.trim() ||
-                  !phase2TreatmentPlan.trim() ||
-                  !phase2Prognosis.trim() ||
-                  !phase2ClientSummary.trim()
+                  !caseDisposition.trim() ||
+                  !primaryDiagnosis.trim() ||
+                  !clinicalInterpretation.trim() ||
+                  !treatmentProtocol.trim() ||
+                  !monitoringPlan.trim() ||
+                  !clientExplanation.trim()
                 }
-                className="w-full"
+                className="flex-1"
                 size="lg"
               >
                 {isUploadingPhase2Files
                   ? "Uploading Files..."
                   : isSubmittingPhase2
                     ? "Submitting..."
-                    : "Submit Phase 2"}
+                    : "SUBMIT FINAL REPORT"}
               </Button>
             </div>
-          </>
-        )}
+          </div>
+        </>
+      )
+    }
 
-        {mode === "diagnostics" && (
-          <>
-            <SheetHeader>
-              <SheetTitle>Upload Diagnostic Results</SheetTitle>
-              <SheetDescription>
-                Upload the diagnostic test results and any relevant notes for the specialist to review.
-              </SheetDescription>
-            </SheetHeader>
+    if (mode === "diagnostics") {
+      return (
+        <>
+          <SheetHeader>
+            <SheetTitle>Upload Diagnostic Results</SheetTitle>
+            <SheetDescription>
+              Upload the diagnostic test results and any relevant notes for the specialist to review.
+            </SheetDescription>
+          </SheetHeader>
 
-            <div className="mt-6 space-y-4">
-              <div>
-                <Label htmlFor="diagnostic-notes">Notes (Optional)</Label>
-                <Textarea
-                  id="diagnostic-notes"
-                  value={diagnosticNotes}
-                  onChange={(e) => setDiagnosticNotes(e.target.value)}
-                  placeholder="Add any notes about the diagnostic results..."
-                  rows={4}
-                  className="mt-2"
-                />
-              </div>
+          <div className="mt-6 space-y-4">
+            <div>
+              <Label htmlFor="diagnostic-notes">Notes (Optional)</Label>
+              <Textarea
+                id="diagnostic-notes"
+                value={diagnosticNotes}
+                onChange={(e) => setDiagnosticNotes(e.target.value)}
+                placeholder="Add any notes about the diagnostic results..."
+                rows={4}
+                className="mt-2"
+              />
+            </div>
 
-              <div>
-                <Label>Diagnostic Files *</Label>
-                <label
-                  htmlFor="diagnostic-upload"
-                  className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-                >
-                  <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-                  <p className="mt-2 text-sm text-muted-foreground">Click to upload diagnostic files</p>
-                  <p className="mt-1 text-xs text-muted-foreground">PDF, DICOM, JPG, PNG up to 50MB</p>
-                  <input
-                    id="diagnostic-upload"
-                    type="file"
-                    multiple
-                    accept=".pdf,.dcm,.jpg,.jpeg,.png"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || [])
-                      setDiagnosticFiles((prev) => [...prev, ...files])
-                    }}
-                    className="hidden"
-                  />
-                </label>
-
-                {diagnosticFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium">Selected Files:</p>
-                    {diagnosticFiles.map((file, index) => (
-                      <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                        <FileText className="h-4 w-4 flex-shrink-0" />
-                        <span className="flex-1 truncate text-sm">{file.name}</span>
-                        <button
-                          onClick={() => setDiagnosticFiles((prev) => prev.filter((_, i) => i !== index))}
-                          className="flex-shrink-0 text-destructive"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <Button
-                      onClick={handleUploadDiagnostics}
-                      disabled={isUploadingDiagnostics}
-                      className="w-full"
-                      variant="secondary"
-                    >
-                      {isUploadingDiagnostics ? "Uploading..." : "Upload Files"}
-                    </Button>
-                  </div>
-                )}
-
-                {uploadedDiagnosticFiles.length > 0 && (
-                  <div className="mt-4 space-y-2">
-                    <p className="text-sm font-medium text-green-600">Uploaded Files:</p>
-                    {uploadedDiagnosticFiles.map((file: any) => (
-                      <div key={file.id} className="flex items-center gap-2 rounded-md bg-green-50 p-3">
-                        <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
-                        <span className="flex-1 truncate text-sm">{file.file_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              <Button
-                onClick={handleSubmitDiagnostics}
-                disabled={isSubmittingDiagnostics || uploadedDiagnosticFiles.length === 0}
-                className="w-full"
-                size="lg"
+            <div>
+              <Label>Diagnostic Files *</Label>
+              <label
+                htmlFor="diagnostic-upload"
+                className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
               >
-                {isSubmittingDiagnostics ? "Submitting..." : "Submit Diagnostic Results"}
-              </Button>
+                <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
+                <p className="mt-2 text-sm text-muted-foreground">Click to upload diagnostic files</p>
+                <p className="mt-1 text-xs text-muted-foreground">PDF, DICOM, JPG, PNG up to 50MB</p>
+                <input
+                  id="diagnostic-upload"
+                  type="file"
+                  multiple
+                  accept=".pdf,.dcm,.jpg,.jpeg,.png"
+                  onChange={(e) => {
+                    const files = Array.from(e.target.files || [])
+                    setDiagnosticFiles((prev) => [...prev, ...files])
+                  }}
+                  className="hidden"
+                />
+              </label>
+
+              {diagnosticFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium">Selected Files:</p>
+                  {diagnosticFiles.map((file, index) => (
+                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 truncate text-sm">{file.name}</span>
+                      <button
+                        onClick={() => setDiagnosticFiles((prev) => prev.filter((_, i) => i !== index))}
+                        className="flex-shrink-0 text-destructive"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <Button
+                    onClick={handleUploadDiagnostics}
+                    disabled={isUploadingDiagnostics}
+                    className="w-full"
+                    variant="secondary"
+                  >
+                    {isUploadingDiagnostics ? "Uploading..." : "Upload Files"}
+                  </Button>
+                </div>
+              )}
+
+              {uploadedDiagnosticFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-sm font-medium text-green-600">Uploaded Files:</p>
+                  {uploadedDiagnosticFiles.map((file: any) => (
+                    <div key={file.id} className="flex items-center gap-2 rounded-md bg-green-50 p-3">
+                      <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
+                      <span className="flex-1 truncate text-sm">{file.file_name}</span>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-          </>
-        )}
-      </SheetContent>
+
+            <Button
+              onClick={handleSubmitDiagnostics}
+              disabled={isSubmittingDiagnostics || uploadedDiagnosticFiles.length === 0}
+              className="w-full"
+              size="lg"
+            >
+              {isSubmittingDiagnostics ? "Submitting..." : "Submit Diagnostic Results"}
+            </Button>
+          </div>
+        </>
+      )
+    }
+
+    return null
+  }
+
+  if (splitMode) {
+    return <div className="h-full">{renderContent()}</div>
+  }
+
+  return (
+    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">{renderContent()}</SheetContent>
     </Sheet>
   )
 }

@@ -37,6 +37,7 @@ export function UnifiedCaseView({
 }: UnifiedCaseViewProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState<"phase1" | "phase2" | "diagnostics">("phase1")
+  const [showFinalReportSplit, setShowFinalReportSplit] = useState(false)
 
   const {
     data: timelineData,
@@ -50,9 +51,9 @@ export function UnifiedCaseView({
     },
     {
       fallbackData: timelineResult.data || [],
-      refreshInterval: 60000, // Refresh every 60 seconds
-      revalidateOnFocus: true, // Refresh when tab becomes active
-      revalidateOnReconnect: true, // Refresh when internet reconnects
+      refreshInterval: 60000,
+      revalidateOnFocus: true,
+      revalidateOnReconnect: true,
     },
   )
 
@@ -68,7 +69,7 @@ export function UnifiedCaseView({
     },
     {
       fallbackData: filesResult.data || [],
-      refreshInterval: 60000, // Refresh every 60 seconds
+      refreshInterval: 60000,
       revalidateOnFocus: true,
       revalidateOnReconnect: true,
     },
@@ -111,24 +112,48 @@ export function UnifiedCaseView({
       userName={userProfile.full_name}
       isDemoUser={userProfile.is_demo}
     >
-      <div className="container mx-auto py-8 px-4 pb-32">
-        <div className="max-w-3xl mx-auto">
-          {/* Header - Pinned at top */}
-          <CaseHeader caseData={caseData} />
+      <div className={showFinalReportSplit ? "flex h-[calc(100vh-64px)] overflow-hidden" : ""}>
+        {/* Left side - Main case view */}
+        <div
+          className={`transition-all duration-300 ${
+            showFinalReportSplit ? "w-1/2 border-r overflow-y-auto" : "w-full"
+          }`}
+        >
+          <div className={`py-8 pb-32 ${showFinalReportSplit ? "px-8" : "container mx-auto px-4"}`}>
+            <div className={showFinalReportSplit ? "w-full" : "max-w-3xl mx-auto"}>
+              {/* Header - Pinned at top */}
+              <CaseHeader caseData={caseData} />
 
-          {/* Body - Full width timeline with clinical history and file batches */}
-          <div className="mt-6">
-            <CaseTimeline
-              events={timelineEvents}
-              caseId={caseId}
-              currentUserRole={viewerRole}
-              files={caseFiles}
-              caseData={caseData}
-              userId={userId}
-              isLoading={isLoadingTimeline || isLoadingFiles}
-            />
+              {/* Body - Full width timeline with clinical history and file batches */}
+              <div className="mt-6">
+                <CaseTimeline
+                  events={timelineEvents}
+                  caseId={caseId}
+                  currentUserRole={viewerRole}
+                  files={caseFiles}
+                  caseData={caseData}
+                  userId={userId}
+                  isLoading={isLoadingTimeline || isLoadingFiles}
+                />
+              </div>
+            </div>
           </div>
         </div>
+
+        {showFinalReportSplit && (
+          <div className="w-1/2 overflow-y-auto bg-white px-8 py-8">
+            <div className="w-full">
+              <ReportSheet
+                open={showFinalReportSplit}
+                onOpenChange={(open) => setShowFinalReportSplit(open)}
+                mode="phase2"
+                caseId={caseId}
+                currentUserId={userId}
+                splitMode={true}
+              />
+            </div>
+          </div>
+        )}
       </div>
 
       <CommandCenter
@@ -148,6 +173,9 @@ export function UnifiedCaseView({
           setSheetMode("diagnostics")
           setSheetOpen(true)
         }}
+        onOpenFinalReport={() => {
+          setShowFinalReportSplit(true)
+        }}
         onMessageSent={() => {
           mutateTimeline()
           mutateFiles()
@@ -160,6 +188,7 @@ export function UnifiedCaseView({
         mode={sheetMode}
         caseId={caseId}
         currentUserId={userId}
+        splitMode={false}
       />
     </AppLayout>
   )
