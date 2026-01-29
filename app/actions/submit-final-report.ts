@@ -10,6 +10,7 @@ export interface FinalReportData {
     treatmentPlan: string
     followUpInstructions: string
     clientSummary: string
+    finalReportPath?: string
 }
 
 export async function submitFinalReport(caseId: string, data: FinalReportData) {
@@ -25,6 +26,7 @@ export async function submitFinalReport(caseId: string, data: FinalReportData) {
                 treatment_plan: data.treatmentPlan,
                 follow_up_instructions: data.followUpInstructions,
                 client_summary: data.clientSummary,
+                final_report_path: data.finalReportPath || null,
                 status: "completed",
                 updated_at: new Date().toISOString(),
             })

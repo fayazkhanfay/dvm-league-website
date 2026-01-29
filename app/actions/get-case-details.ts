@@ -25,6 +25,7 @@ export interface CaseDetails {
   treatment_plan: string | null
   follow_up_instructions: string | null
   client_summary: string | null
+  final_report_path: string | null
 }
 
 export async function getCaseDetails(caseId: string) {
@@ -62,7 +63,8 @@ export async function getCaseDetails(caseId: string) {
       clinical_interpretation,
       treatment_plan,
       follow_up_instructions,
-      client_summary
+      client_summary,
+      final_report_path
     `,
     )
     .eq("id", caseId)
