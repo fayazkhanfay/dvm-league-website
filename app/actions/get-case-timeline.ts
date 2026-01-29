@@ -11,7 +11,7 @@ export type TimelineEvent =
     sender_name: string
     sender_role: "gp" | "specialist"
     content: string | null
-    message_type: "text" | "system" | "report_phase1" | "report_phase2"
+    message_type: "text" | "system" | "report_final"
     is_internal: boolean
     created_at: string
   }
