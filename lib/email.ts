@@ -167,7 +167,7 @@ export async function notifyMatchingSpecialists(
   }
 }
 
-export async function notifyGPOfPhaseUpdate(caseId: string, updateType: "phase1_complete" | "phase2_complete") {
+export async function notifyGPOfCaseCompletion(caseId: string) {
   try {
     const { createClient } = await import("@/lib/supabase/server")
     const supabase = await createClient()
@@ -203,16 +203,12 @@ export async function notifyGPOfPhaseUpdate(caseId: string, updateType: "phase1_
       from: "DVM League <notifications@mail.dvmleague.com>",
       to: gpEmail,
       replyTo: "khan@dvmleague.com",
-      subject:
-        updateType === "phase1_complete"
-          ? `Diagnostic Plan Ready - ${caseData.patient_name}`
-          : `Final Report Complete - ${caseData.patient_name}`,
+      subject: `Final Report Ready - ${caseData.patient_name}`,
       react: GPCaseUpdateEmail({
         gpName,
         patientName: caseData.patient_name,
         caseId,
         caseLink,
-        updateType,
         specialistName,
       }),
     })

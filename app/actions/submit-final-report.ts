@@ -41,6 +41,10 @@ export async function submitFinalReport(caseId: string, data: FinalReportData) {
         revalidatePath(`/specialist/case/${caseId}`)
         revalidatePath("/specialist-dashboard")
 
+        // Send email notification to GP
+        const { notifyGPOfCaseCompletion } = await import("@/lib/email")
+        await notifyGPOfCaseCompletion(caseId)
+
         return { success: true }
     } catch (error) {
         console.error("Unexpected error submitting final report:", error)

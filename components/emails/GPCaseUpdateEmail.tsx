@@ -5,7 +5,6 @@ interface GPCaseUpdateEmailProps {
   patientName: string
   caseId: string
   caseLink: string
-  updateType: "phase1_complete" | "phase2_complete"
   specialistName: string
 }
 
@@ -14,38 +13,22 @@ export default function GPCaseUpdateEmail({
   patientName,
   caseId,
   caseLink,
-  updateType,
   specialistName,
 }: GPCaseUpdateEmailProps) {
-  const getTitle = () => {
-    switch (updateType) {
-      case "phase1_complete":
-        return "Diagnostic Plan Received"
-      case "phase2_complete":
-        return "Final Report Available"
-    }
-  }
-
-  const getMessage = () => {
-    switch (updateType) {
-      case "phase1_complete":
-        return `Dr. ${specialistName} has submitted the diagnostic plan for ${patientName}. You can now review the recommendations and upload diagnostic results.`
-      case "phase2_complete":
-        return `Dr. ${specialistName} has completed the final assessment and treatment plan for ${patientName}. The full report is now available for your review.`
-    }
-  }
-
   return (
     <Html>
       <Head />
       <Body style={main}>
         <Container style={container}>
           <Section style={box}>
-            <Text style={heading}>{getTitle()}</Text>
+            <Text style={heading}>Final Report Available</Text>
 
             <Text style={paragraph}>Dear Dr. {gpName},</Text>
 
-            <Text style={paragraph}>{getMessage()}</Text>
+            <Text style={paragraph}>
+              Dr. {specialistName} has completed the final report for {patientName}. You can now view the full diagnosis,
+              treatment plan, and client summary on your dashboard.
+            </Text>
 
             <Section style={infoBox}>
               <Text style={infoLabel}>Patient:</Text>
@@ -60,7 +43,7 @@ export default function GPCaseUpdateEmail({
 
             <Section style={buttonContainer}>
               <Button style={button} href={caseLink}>
-                View Case Details
+                View Final Report
               </Button>
             </Section>
 
