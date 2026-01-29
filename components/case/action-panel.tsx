@@ -177,8 +177,6 @@ export function ActionPanel({
     }
   }
 
-  // Removed Phase 1 handlers
-
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
     setFinalReportFiles((prev) => [...prev, ...files])
@@ -311,7 +309,6 @@ export function ActionPanel({
     )
   }
 
-  // Phase 1 UI removed
   const isAwaitingReport = userRole === "specialist" && isAssignedToMe && status === "in_progress"
 
   if (userRole === "gp" && status === "in_progress") {
