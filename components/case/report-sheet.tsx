@@ -28,12 +28,6 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const { toast } = useToast()
   const supabase = createClient()
 
-  // Phase 1 state
-  const [phase1Plan, setPhase1Plan] = useState("")
-  const [phase1Files, setPhase1Files] = useState<File[]>([])
-  const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
-  const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
-
   // Phase 2 state
   const [caseDisposition, setCaseDisposition] = useState("")
   const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
@@ -88,11 +82,6 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
 
     return uploadedFileRecords
   }
-
-  /* 
-   * Phase 1 is deprecated.
-   */
-  // const handleSubmitPhase1 = async () => { ... } 
 
   const handleSubmitFinalReport = async () => {
     if (
@@ -226,79 +215,6 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   }
 
   const renderContent = () => {
-    if (mode === "phase1") {
-      return (
-        <>
-          <SheetHeader>
-            <SheetTitle>Phase 1 Diagnostic Plan</SheetTitle>
-            <SheetDescription>
-              Provide your diagnostic plan based on the case history. You can scroll the timeline while typing.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="phase1-plan">Diagnostic Plan *</Label>
-              <Textarea
-                id="phase1-plan"
-                value={phase1Plan}
-                onChange={(e) => setPhase1Plan(e.target.value)}
-                placeholder="Detail the diagnostic tests and procedures you recommend..."
-                rows={12}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label>Supporting Files (Optional)</Label>
-              <label
-                htmlFor="phase1-file-upload"
-                className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-              >
-                <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
-                <input
-                  id="phase1-file-upload"
-                  type="file"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || [])
-                    setPhase1Files((prev) => [...prev, ...files])
-                  }}
-                  className="hidden"
-                />
-              </label>
-
-              {phase1Files.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {phase1Files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                      <FileText className="h-4 w-4 flex-shrink-0" />
-                      <span className="flex-1 truncate text-sm">{file.name}</span>
-                      <button
-                        onClick={() => setPhase1Files((prev) => prev.filter((_, i) => i !== index))}
-                        className="flex-shrink-0 text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Button
-              disabled={true}
-              className="w-full"
-              size="lg"
-            >
-              Phase 1 is deprecated
-            </Button>
-          </div>
-        </>
-      )
-    }
-
     if (mode === "phase2") {
       return (
         <>

@@ -49,11 +49,6 @@ export function ActionPanel({
   const [isUploadingDiagnostics, setIsUploadingDiagnostics] = useState(false)
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
 
-  const [phase1Plan, setPhase1Plan] = useState("")
-  const [phase1Files, setPhase1Files] = useState<File[]>([])
-  const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
-  const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
-
   const [phase2Assessment, setPhase2Assessment] = useState("")
   const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState("")
   const [phase2Prognosis, setPhase2Prognosis] = useState("")
@@ -178,24 +173,7 @@ export function ActionPanel({
     }
   }
 
-  const handlePhase1FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || [])
-    setPhase1Files((prev) => [...prev, ...files])
-  }
-
-  const handleRemovePhase1File = (index: number) => {
-    setPhase1Files((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleSubmitPhase1 = async () => {
-    // Phase 1 is deprecated
-    toast({
-      title: "Deprecated",
-      description: "Phase 1 submission is no longer supported.",
-      variant: "destructive"
-    })
-    return
-  }
+  // Removed Phase 1 handlers
 
   const handlePhase2FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
@@ -206,7 +184,7 @@ export function ActionPanel({
     setPhase2Files((prev) => prev.filter((_, i) => i !== index))
   }
 
-  const handleSubmitPhase2 = async () => {
+  const handleSubmitFinalReport = async () => {
     if (
       !phase2Assessment.trim() ||
       !phase2TreatmentPlan.trim() ||
@@ -240,7 +218,7 @@ export function ActionPanel({
 
       if (result.success) {
         toast({
-          title: "Phase 2 submitted",
+          title: "Phase 2 submitted", // Updated Title
           description: "Your final report has been submitted successfully. The case is now complete.",
         })
         router.refresh()
@@ -316,76 +294,7 @@ export function ActionPanel({
     )
   }
 
-  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase1") {
-    return (
-      <Card className="border-blue-500 shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <FileText className="size-5 text-blue-600" />
-            Submit Phase 1 Diagnostic Plan
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="phase1-plan">Diagnostic Plan & Recommendations</Label>
-            <Textarea
-              id="phase1-plan"
-              value={phase1Plan}
-              onChange={(e) => setPhase1Plan(e.target.value)}
-              placeholder="Provide your diagnostic plan and recommendations..."
-              rows={10}
-              className="mt-2"
-            />
-          </div>
-
-          <div>
-            <Label>Supporting Files (Optional)</Label>
-            <label
-              htmlFor="phase1-file-upload"
-              className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-            >
-              <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Click to upload supporting files</p>
-              <input
-                id="phase1-file-upload"
-                type="file"
-                multiple
-                onChange={handlePhase1FileSelect}
-                className="hidden"
-                disabled={isUploadingPhase1Files}
-              />
-            </label>
-
-            {phase1Files.length > 0 && (
-              <div className="mt-4 space-y-2">
-                {phase1Files.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                    <FileText className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1 truncate text-sm">{file.name}</span>
-                    <button onClick={() => handleRemovePhase1File(index)} className="flex-shrink-0 text-destructive">
-                      <X className="h-4 w-4" />
-                    </button>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-
-          <Button
-            onClick={handleSubmitPhase1}
-            disabled={isSubmittingPhase1 || isUploadingPhase1Files || !phase1Plan.trim()}
-            className="w-full"
-          >
-            {isUploadingPhase1Files
-              ? "Uploading Files..."
-              : isSubmittingPhase1
-                ? "Submitting..."
-                : "Submit Phase 1 Plan"}
-          </Button>
-        </CardContent>
-      </Card>
-    )
-  }
+  // Phase 1 UI removed
 
   if (userRole === "gp" && status === "awaiting_diagnostics") {
     return (
@@ -572,7 +481,7 @@ export function ActionPanel({
           </div>
 
           <Button
-            onClick={handleSubmitPhase2}
+            onClick={handleSubmitFinalReport}
             disabled={
               isSubmittingPhase2 ||
               isUploadingPhase2Files ||
@@ -627,7 +536,6 @@ export function ActionPanel({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {status === "awaiting_phase1" && "Waiting for specialist to provide Phase 1 diagnostic plan"}
           {status === "awaiting_diagnostics" &&
             userRole === "specialist" &&
             "Waiting for GP to upload diagnostic results"}

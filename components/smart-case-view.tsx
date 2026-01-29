@@ -50,10 +50,7 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
   /*
    * Phase 1 is deprecated
    */
-  const handleSubmitPhase1 = async () => {
-    setError("Phase 1 submission is deprecated.")
-    return
-  }
+  // Removed deprecated handleSubmitPhase1
 
   const handleSubmitFinalReport = async () => {
     if (
@@ -362,49 +359,7 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
 
               {caseState === "accepted" && (
                 <>
-                  {/* Phase 1 Form */}
-                  {isAwaitingPhase1 && (
-                    <Card className="mb-6 border-2 border-brand-gold shadow-md">
-                      <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                        <CardTitle className="text-xl font-bold text-brand-navy">
-                          Submit Phase 1 Diagnostic Plan
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-6 p-6">
-                        <div>
-                          <Label htmlFor="phase1-plan" className="text-sm font-medium text-brand-navy">
-                            Diagnostic Plan & Recommendations
-                          </Label>
-                          <Textarea
-                            id="phase1-plan"
-                            value={phase1Plan}
-                            onChange={(e) => setPhase1Plan(e.target.value)}
-                            placeholder="Provide your diagnostic plan and recommendations..."
-                            rows={12}
-                            disabled={isSubmitting}
-                            className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                          />
-                        </div>
-
-                        {error && <div className="rounded-md bg-brand-red/10 p-3 text-sm text-brand-red">{error}</div>}
-
-                        <Button
-                          onClick={handleSubmitPhase1}
-                          disabled={isSubmitting}
-                          className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                          {isSubmitting ? (
-                            <>
-                              <Loader2 className="mr-2 h-5 w-5 animate-spin inline" />
-                              Submitting...
-                            </>
-                          ) : (
-                            "Submit Phase 1 Plan"
-                          )}
-                        </Button>
-                      </CardContent>
-                    </Card>
-                  )}
+                  {/* Phase 1 Form (Deprecated/Removed) */}
 
                   {/* Awaiting Diagnostics Message */}
                   {isAwaitingDiagnostics && (

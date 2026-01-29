@@ -184,16 +184,9 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   /*
    * Phase 1 is deprecated
    */
-  const handleSubmitPhase1 = async () => {
-    toast({
-      title: "Deprecated",
-      description: "Phase 1 submission is no longer supported.",
-      variant: "destructive"
-    })
-    return
-  }
+  // Removed deprecated handleSubmitPhase1
 
-  const handleSubmitPhase2 = async () => {
+  const handleSubmitFinalReport = async () => {
     if (
       !phase2Assessment.trim() ||
       !phase2TreatmentPlan.trim() ||
@@ -227,7 +220,7 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
 
       if (result.success) {
         toast({
-          title: "Phase 2 Submitted",
+          title: "Report Submitted", // Updated Title
           description: "Your final report has been submitted successfully. The case is now complete.",
         })
         router.push("/specialist-dashboard")
@@ -519,15 +512,10 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                   </div>
 
                   <Button
-                    onClick={handleSubmitPhase1}
-                    disabled={isSubmittingPhase1 || isUploadingFiles || !phase1Plan.trim()}
-                    className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
+                    disabled={true}
+                    className="w-full transform rounded-md bg-gray-300 px-8 py-4 text-lg font-bold text-gray-500 cursor-not-allowed"
                   >
-                    {isUploadingFiles
-                      ? "Uploading Files..."
-                      : isSubmittingPhase1
-                        ? "Submitting..."
-                        : "Submit Phase 1 Plan"}
+                    Phase 1 Submission Deprecated
                   </Button>
                 </CardContent>
               </Card>
@@ -700,7 +688,7 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     </div>
 
                     <Button
-                      onClick={handleSubmitPhase2}
+                      onClick={handleSubmitFinalReport}
                       disabled={
                         isSubmittingPhase2 ||
                         isUploadingFiles ||
