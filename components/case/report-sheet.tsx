@@ -28,16 +28,16 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const { toast } = useToast()
   const supabase = createClient()
 
-  // Phase 2 state
+  // Final Report state
   const [caseDisposition, setCaseDisposition] = useState("")
   const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
   const [clinicalInterpretation, setClinicalInterpretation] = useState("")
   const [treatmentProtocol, setTreatmentProtocol] = useState("")
   const [monitoringPlan, setMonitoringPlan] = useState("")
   const [clientExplanation, setClientExplanation] = useState("")
-  const [phase2Files, setPhase2Files] = useState<File[]>([])
-  const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
-  const [isUploadingPhase2Files, setIsUploadingPhase2Files] = useState(false)
+  const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
+  const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
+  const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
 
   // Diagnostics state
   const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
@@ -100,12 +100,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       return
     }
 
-    setIsSubmittingPhase2(true)
+    setIsSubmittingFinalReport(true)
 
     try {
-      if (phase2Files.length > 0) {
-        setIsUploadingPhase2Files(true)
-        await uploadFilesToStorage(phase2Files, "specialist_report")
+      if (finalReportFiles.length > 0) {
+        setIsUploadingFinalReportFiles(true)
+        await uploadFilesToStorage(finalReportFiles, "specialist_report")
       }
 
       const result = await submitFinalReport(caseId, {
@@ -138,8 +138,8 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         variant: "destructive",
       })
     } finally {
-      setIsSubmittingPhase2(false)
-      setIsUploadingPhase2Files(false)
+      setIsSubmittingFinalReport(false)
+      setIsUploadingFinalReportFiles(false)
     }
   }
 
@@ -321,31 +321,31 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             <div>
               <Label>Supporting Files (Optional)</Label>
               <label
-                htmlFor="phase2-file-upload"
+                htmlFor="final-report-upload"
                 className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
               >
                 <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
                 <input
-                  id="phase2-file-upload"
+                  id="final-report-upload"
                   type="file"
                   multiple
                   onChange={(e) => {
                     const files = Array.from(e.target.files || [])
-                    setPhase2Files((prev) => [...prev, ...files])
+                    setFinalReportFiles((prev) => [...prev, ...files])
                   }}
                   className="hidden"
                 />
               </label>
 
-              {phase2Files.length > 0 && (
+              {finalReportFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  {phase2Files.map((file, index) => (
+                  {finalReportFiles.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
                       <FileText className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate text-sm">{file.name}</span>
                       <button
-                        onClick={() => setPhase2Files((prev) => prev.filter((_, i) => i !== index))}
+                        onClick={() => setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))}
                         className="flex-shrink-0 text-destructive"
                       >
                         <X className="h-4 w-4" />
@@ -357,14 +357,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingPhase2}>
+              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingFinalReport}>
                 Save Draft
               </Button>
               <Button
                 onClick={handleSubmitFinalReport}
                 disabled={
-                  isSubmittingPhase2 ||
-                  isUploadingPhase2Files ||
+                  isSubmittingFinalReport ||
+                  isUploadingFinalReportFiles ||
                   !caseDisposition.trim() ||
                   !primaryDiagnosis.trim() ||
                   !clinicalInterpretation.trim() ||
@@ -375,9 +375,9 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 className="flex-1"
                 size="lg"
               >
-                {isUploadingPhase2Files
+                {isUploadingFinalReportFiles
                   ? "Uploading Files..."
-                  : isSubmittingPhase2
+                  : isSubmittingFinalReport
                     ? "Submitting..."
                     : "SUBMIT FINAL REPORT"}
               </Button>
