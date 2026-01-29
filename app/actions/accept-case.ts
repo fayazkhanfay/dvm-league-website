@@ -55,7 +55,7 @@ export async function acceptCase(caseId: string) {
     .from("cases")
     .update({
       specialist_id: user.id,
-      status: "awaiting_phase1",
+      status: "in_progress",
     })
     .eq("id", caseId)
     .is("specialist_id", null) // Extra safety: only update if still NULL

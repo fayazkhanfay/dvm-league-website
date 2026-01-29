@@ -8,18 +8,18 @@ interface CaseHeaderProps {
 
 const STATUS_LABELS: Record<string, string> = {
   pending_assignment: "Pending Assignment",
-  awaiting_phase1: "Awaiting Phase 1",
-  awaiting_diagnostics: "Awaiting Diagnostics",
-  awaiting_phase2: "Awaiting Phase 2",
+  in_progress: "Active Case",
   completed: "Completed",
+  cancelled: "Cancelled",
+  draft: "Draft",
 }
 
 const STATUS_VARIANTS: Record<string, "default" | "secondary" | "destructive" | "outline"> = {
   pending_assignment: "outline",
-  awaiting_phase1: "secondary",
-  awaiting_diagnostics: "secondary",
-  awaiting_phase2: "secondary",
+  in_progress: "default",
   completed: "default",
+  cancelled: "destructive",
+  draft: "secondary",
 }
 
 export function CaseHeader({ caseData }: CaseHeaderProps) {

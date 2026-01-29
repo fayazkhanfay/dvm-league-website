@@ -17,7 +17,7 @@ import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
 interface ReportSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  mode: "phase1" | "phase2" | "diagnostics"
+  mode: "final_report" | "diagnostics"
   caseId: string
   currentUserId: string
   splitMode?: boolean
@@ -215,7 +215,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   }
 
   const renderContent = () => {
-    if (mode === "phase2") {
+    if (mode === "final_report") {
       return (
         <>
           {splitMode && (

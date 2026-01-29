@@ -312,43 +312,35 @@ export function ActionPanel({
   }
 
   // Phase 1 UI removed
-  // Awaiting Phase 2 check updated to generic Specialist Report check
-  const isAwaitingReport = userRole === "specialist" && isAssignedToMe && status !== "completed" && status !== "pending_assignment"
+  const isAwaitingReport = userRole === "specialist" && isAssignedToMe && status === "in_progress"
 
-
-  if (userRole === "gp" && status === "awaiting_diagnostics") {
+  if (userRole === "gp" && status === "in_progress") {
     return (
-      <Card className="border-green-500 shadow-lg">
+      <Card className="border-blue-500 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
-            <Upload className="size-5 text-green-600" />
-            Upload Diagnostic Results
+            <Stethoscope className="size-5 text-blue-600" />
+            Specialist is Working on Your Case
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div>
-            <Label htmlFor="diagnostic-notes">Diagnostic Notes (Optional)</Label>
-            <Textarea
-              id="diagnostic-notes"
-              value={diagnosticNotes}
-              onChange={(e) => setDiagnosticNotes(e.target.value)}
-              placeholder="Add any notes, observations, or context about the diagnostic results..."
-              rows={4}
-              className="mt-2"
-            />
-          </div>
+          <p className="text-sm text-brand-navy">
+            Your case has been assigned to a specialist. They are currently reviewing the details and will provide a final report soon.
+          </p>
 
-          <div>
-            <Label>Upload Diagnostic Files</Label>
+          <div className="pt-4 border-t border-gray-100">
+            <h4 className="text-sm font-semibold mb-2 text-brand-navy">Upload Additional Files (Optional)</h4>
+            <p className="text-xs text-muted-foreground mb-3">If you have additional files or diagnostics to share, you can upload them here.</p>
+
+            <Label>Select Files</Label>
             <label
-              htmlFor="diagnostic-upload"
-              className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
+              htmlFor="diagnostic-upload-additional"
+              className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-4 text-center transition-colors hover:border-primary"
             >
-              <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-              <p className="mt-2 text-sm text-muted-foreground">Click to upload or drag and drop</p>
-              <p className="mt-1 text-xs text-muted-foreground">PDF, DICOM, JPG, PNG up to 50MB</p>
+              <UploadCloud className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-xs text-muted-foreground">Click to upload or drag and drop</p>
               <input
-                id="diagnostic-upload"
+                id="diagnostic-upload-additional"
                 type="file"
                 multiple
                 accept=".pdf,.dcm,.jpg,.jpeg,.png"
@@ -362,21 +354,22 @@ export function ActionPanel({
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium">Selected Files:</p>
                 {diagnosticFiles.map((file, index) => (
-                  <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                    <FileText className="h-4 w-4 flex-shrink-0" />
-                    <span className="flex-1 truncate text-sm">{file.name}</span>
+                  <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-2">
+                    <FileText className="h-3 w-3 flex-shrink-0" />
+                    <span className="flex-1 truncate text-xs">{file.name}</span>
                     <button
                       onClick={() => handleRemoveDiagnosticFile(index)}
                       className="flex-shrink-0 text-destructive"
                     >
-                      <X className="h-4 w-4" />
+                      <X className="h-3 w-3" />
                     </button>
                   </div>
                 ))}
                 <Button
                   onClick={handleUploadDiagnostics}
                   disabled={isUploadingDiagnostics}
-                  className="w-full"
+                  className="w-full mt-2"
+                  size="sm"
                   variant="secondary"
                 >
                   {isUploadingDiagnostics ? "Uploading..." : "Upload Files"}
@@ -388,22 +381,14 @@ export function ActionPanel({
               <div className="mt-4 space-y-2">
                 <p className="text-sm font-medium text-green-600">Uploaded Files:</p>
                 {uploadedDiagnosticFiles.map((file: any) => (
-                  <div key={file.id} className="flex items-center gap-2 rounded-md bg-green-50 p-3">
-                    <CheckCircle className="h-4 w-4 flex-shrink-0 text-green-600" />
-                    <span className="flex-1 truncate text-sm">{file.file_name}</span>
+                  <div key={file.id} className="flex items-center gap-2 rounded-md bg-green-50 p-2">
+                    <CheckCircle className="h-3 w-3 flex-shrink-0 text-green-600" />
+                    <span className="flex-1 truncate text-xs">{file.file_name}</span>
                   </div>
                 ))}
               </div>
             )}
           </div>
-
-          <Button
-            onClick={handleSubmitDiagnostics}
-            disabled={isLoading || uploadedDiagnosticFiles.length === 0}
-            className="w-full"
-          >
-            {isLoading ? "Submitting..." : "Confirm & Submit Diagnostic Results"}
-          </Button>
         </CardContent>
       </Card>
     )
@@ -584,16 +569,10 @@ export function ActionPanel({
       </CardHeader>
       <CardContent>
         <p className="text-sm text-muted-foreground">
-          {status === "awaiting_diagnostics" &&
-            userRole === "specialist" &&
-            "Waiting for GP to upload diagnostic results"}
-          {status === "awaiting_diagnostics" &&
-            userRole === "specialist" &&
-            "Waiting for GP to upload diagnostic results"}
-          {!["awaiting_diagnostics"].includes(status) && status !== "completed" &&
-            isAwaitingReport && "Action Required: Submit Final Report"}
-          {!isAwaitingReport && status !== "awaiting_diagnostics" &&
-            "No actions available at this time"}
+          {!["in_progress", "pending_assignment", "completed"].includes(status) &&
+            "Case status unknown or action not required"}
+          {status === "in_progress" && !isAwaitingReport && userRole === "specialist" && !isAssignedToMe &&
+            "Case is being handled by another specialist"}
         </p>
       </CardContent>
     </Card>
