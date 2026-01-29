@@ -49,13 +49,17 @@ export function ActionPanel({
   const [isUploadingDiagnostics, setIsUploadingDiagnostics] = useState(false)
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
 
-  const [phase2Assessment, setPhase2Assessment] = useState("")
-  const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState("")
-  const [phase2Prognosis, setPhase2Prognosis] = useState("")
-  const [phase2ClientSummary, setPhase2ClientSummary] = useState("")
-  const [phase2Files, setPhase2Files] = useState<File[]>([])
-  const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
-  const [isUploadingPhase2Files, setIsUploadingPhase2Files] = useState(false)
+  // Final Report State
+  const [caseDisposition, setCaseDisposition] = useState("")
+  const [finalDiagnosis, setFinalDiagnosis] = useState("")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState("")
+  const [treatmentPlan, setTreatmentPlan] = useState("")
+  const [followUpInstructions, setFollowUpInstructions] = useState("")
+  const [clientSummaryState, setClientSummaryState] = useState("")
+  const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
+
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
   const uploadFilesToStorage = async (files: File[], uploadPhase: "diagnostic_results" | "specialist_report") => {
     const uploadedFileRecords: any[] = []
@@ -175,69 +179,82 @@ export function ActionPanel({
 
   // Removed Phase 1 handlers
 
-  const handlePhase2FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = Array.from(e.target.files || [])
-    setPhase2Files((prev) => [...prev, ...files])
+    setFinalReportFiles((prev) => [...prev, ...files])
   }
 
-  const handleRemovePhase2File = (index: number) => {
-    setPhase2Files((prev) => prev.filter((_, i) => i !== index))
+  const handleRemoveFile = (index: number) => {
+    setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))
+  }
+
+  interface FinalReportPayload {
+    caseDisposition: string
+    finalDiagnosis: string
+    clinicalInterpretation: string
+    treatmentPlan: string
+    followUpInstructions: string
+    clientSummary: string
   }
 
   const handleSubmitFinalReport = async () => {
     if (
-      !phase2Assessment.trim() ||
-      !phase2TreatmentPlan.trim() ||
-      !phase2Prognosis.trim() ||
-      !phase2ClientSummary.trim()
+      !caseDisposition.trim() ||
+      !finalDiagnosis.trim() ||
+      !clinicalInterpretation.trim() ||
+      !treatmentPlan.trim() ||
+      !followUpInstructions.trim() ||
+      !clientSummaryState.trim()
     ) {
       toast({
         title: "Missing information",
-        description: "Please complete all fields before submitting the Phase 2 report",
+        description: "Please complete all fields before submitting the report",
         variant: "destructive",
       })
       return
     }
 
-    setIsSubmittingPhase2(true)
+    setIsSubmitting(true)
 
     try {
-      if (phase2Files.length > 0) {
-        setIsUploadingPhase2Files(true)
-        await uploadFilesToStorage(phase2Files, "specialist_report")
+      if (finalReportFiles.length > 0) {
+        setIsUploadingFiles(true)
+        await uploadFilesToStorage(finalReportFiles, "specialist_report")
       }
 
-      const result = await submitFinalReport(caseId, {
-        caseDisposition: "managed", // Default
-        finalDiagnosis: "See Assessment", // Default
-        clinicalInterpretation: phase2Assessment,
-        treatmentPlan: phase2TreatmentPlan,
-        followUpInstructions: phase2Prognosis,
-        clientSummary: phase2ClientSummary,
-      })
+      const reportData: FinalReportPayload = {
+        caseDisposition,
+        finalDiagnosis,
+        clinicalInterpretation,
+        treatmentPlan,
+        followUpInstructions,
+        clientSummary: clientSummaryState,
+      }
+
+      const result = await submitFinalReport(caseId, reportData)
 
       if (result.success) {
         toast({
-          title: "Phase 2 submitted", // Updated Title
+          title: "Report submitted",
           description: "Your final report has been submitted successfully. The case is now complete.",
         })
         router.refresh()
       } else {
         toast({
           title: "Submission failed",
-          description: result.error || "Failed to submit Phase 2 report. Please try again.",
+          description: result.error || "Failed to submit report. Please try again.",
           variant: "destructive",
         })
       }
     } catch (error: any) {
       toast({
         title: "Error",
-        description: error.message || "Failed to submit Phase 2. Please try again.",
+        description: error.message || "Failed to submit report. Please try again.",
         variant: "destructive",
       })
     } finally {
-      setIsSubmittingPhase2(false)
-      setIsUploadingPhase2Files(false)
+      setIsSubmitting(false)
+      setIsUploadingFiles(false)
     }
   }
 
@@ -295,6 +312,9 @@ export function ActionPanel({
   }
 
   // Phase 1 UI removed
+  // Awaiting Phase 2 check updated to generic Specialist Report check
+  const isAwaitingReport = userRole === "specialist" && isAssignedToMe && status !== "completed" && status !== "pending_assignment"
+
 
   if (userRole === "gp" && status === "awaiting_diagnostics") {
     return (
@@ -389,22 +409,50 @@ export function ActionPanel({
     )
   }
 
-  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase2") {
+  if (isAwaitingReport) {
     return (
       <Card className="border-purple-500 shadow-lg">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <FileText className="size-5 text-purple-600" />
-            Submit Phase 2 Final Report
+            Submit Final Report
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
+          {/* Case Disposition */}
           <div>
-            <Label htmlFor="phase2-assessment">Assessment</Label>
+            <Label htmlFor="case-disposition">Case Disposition</Label>
+            <select
+              id="case-disposition"
+              value={caseDisposition}
+              onChange={(e) => setCaseDisposition(e.target.value)}
+              className="mt-2 w-full rounded-md border border-input p-2 bg-background text-sm ring-offset-background placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <option value="">Select Disposition</option>
+              <option value="managed">Managed</option>
+              <option value="referred">Referred</option>
+            </select>
+          </div>
+
+          {/* Final Diagnosis */}
+          <div>
+            <Label htmlFor="final-diagnosis">Final Diagnosis</Label>
             <Textarea
-              id="phase2-assessment"
-              value={phase2Assessment}
-              onChange={(e) => setPhase2Assessment(e.target.value)}
+              id="final-diagnosis"
+              value={finalDiagnosis}
+              onChange={(e) => setFinalDiagnosis(e.target.value)}
+              placeholder="Enter the final diagnosis..."
+              rows={2}
+              className="mt-2"
+            />
+          </div>
+
+          <div>
+            <Label htmlFor="clinical-interpretation">Clinical Interpretation</Label>
+            <Textarea
+              id="clinical-interpretation"
+              value={clinicalInterpretation}
+              onChange={(e) => setClinicalInterpretation(e.target.value)}
               placeholder="Provide your assessment based on the diagnostic results..."
               rows={6}
               className="mt-2"
@@ -412,11 +460,11 @@ export function ActionPanel({
           </div>
 
           <div>
-            <Label htmlFor="phase2-treatment">Treatment Plan</Label>
+            <Label htmlFor="treatment-plan">Treatment Plan</Label>
             <Textarea
-              id="phase2-treatment"
-              value={phase2TreatmentPlan}
-              onChange={(e) => setPhase2TreatmentPlan(e.target.value)}
+              id="treatment-plan"
+              value={treatmentPlan}
+              onChange={(e) => setTreatmentPlan(e.target.value)}
               placeholder="Detail your recommended treatment plan..."
               rows={6}
               className="mt-2"
@@ -424,23 +472,23 @@ export function ActionPanel({
           </div>
 
           <div>
-            <Label htmlFor="phase2-prognosis">Prognosis</Label>
+            <Label htmlFor="follow-up-instructions">Follow-up Instructions</Label>
             <Textarea
-              id="phase2-prognosis"
-              value={phase2Prognosis}
-              onChange={(e) => setPhase2Prognosis(e.target.value)}
-              placeholder="Provide your prognosis..."
+              id="follow-up-instructions"
+              value={followUpInstructions}
+              onChange={(e) => setFollowUpInstructions(e.target.value)}
+              placeholder="Provide your prognosis and follow-up instructions..."
               rows={4}
               className="mt-2"
             />
           </div>
 
           <div>
-            <Label htmlFor="phase2-client-summary">Client-Friendly Summary</Label>
+            <Label htmlFor="client-summary">Client-Friendly Summary</Label>
             <Textarea
-              id="phase2-client-summary"
-              value={phase2ClientSummary}
-              onChange={(e) => setPhase2ClientSummary(e.target.value)}
+              id="client-summary"
+              value={clientSummaryState}
+              onChange={(e) => setClientSummaryState(e.target.value)}
               placeholder="Provide a client-friendly summary that the GP can share with the pet owner..."
               rows={6}
               className="mt-2"
@@ -450,28 +498,28 @@ export function ActionPanel({
           <div>
             <Label>Supporting Files (Optional)</Label>
             <label
-              htmlFor="phase2-file-upload"
+              htmlFor="final-report-file-upload"
               className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
             >
               <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
               <p className="mt-2 text-sm text-muted-foreground">Click to upload supporting files</p>
               <input
-                id="phase2-file-upload"
+                id="final-report-file-upload"
                 type="file"
                 multiple
-                onChange={handlePhase2FileSelect}
+                onChange={handleFileSelect}
                 className="hidden"
-                disabled={isUploadingPhase2Files}
+                disabled={isUploadingFiles}
               />
             </label>
 
-            {phase2Files.length > 0 && (
+            {finalReportFiles.length > 0 && (
               <div className="mt-4 space-y-2">
-                {phase2Files.map((file, index) => (
+                {finalReportFiles.map((file, index) => (
                   <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
                     <FileText className="h-4 w-4 flex-shrink-0" />
                     <span className="flex-1 truncate text-sm">{file.name}</span>
-                    <button onClick={() => handleRemovePhase2File(index)} className="flex-shrink-0 text-destructive">
+                    <button onClick={() => handleRemoveFile(index)} className="flex-shrink-0 text-destructive">
                       <X className="h-4 w-4" />
                     </button>
                   </div>
@@ -483,20 +531,20 @@ export function ActionPanel({
           <Button
             onClick={handleSubmitFinalReport}
             disabled={
-              isSubmittingPhase2 ||
-              isUploadingPhase2Files ||
-              !phase2Assessment.trim() ||
-              !phase2TreatmentPlan.trim() ||
-              !phase2Prognosis.trim() ||
-              !phase2ClientSummary.trim()
+              isSubmitting ||
+              isUploadingFiles ||
+              !clinicalInterpretation.trim() ||
+              !treatmentPlan.trim() ||
+              !followUpInstructions.trim() ||
+              !clientSummaryState.trim()
             }
             className="w-full"
           >
-            {isUploadingPhase2Files
+            {isUploadingFiles
               ? "Uploading Files..."
-              : isSubmittingPhase2
+              : isSubmitting
                 ? "Submitting..."
-                : "Submit Phase 2 Report"}
+                : "Submit Final Report"}
           </Button>
         </CardContent>
       </Card>
@@ -539,10 +587,12 @@ export function ActionPanel({
           {status === "awaiting_diagnostics" &&
             userRole === "specialist" &&
             "Waiting for GP to upload diagnostic results"}
-          {status === "awaiting_phase2" &&
-            userRole === "gp" &&
-            "Waiting for specialist to provide Phase 2 final report"}
-          {!["awaiting_phase1", "awaiting_diagnostics", "awaiting_phase2"].includes(status) &&
+          {status === "awaiting_diagnostics" &&
+            userRole === "specialist" &&
+            "Waiting for GP to upload diagnostic results"}
+          {!["awaiting_diagnostics"].includes(status) && status !== "completed" &&
+            isAwaitingReport && "Action Required: Submit Final Report"}
+          {!isAwaitingReport && status !== "awaiting_diagnostics" &&
             "No actions available at this time"}
         </p>
       </CardContent>

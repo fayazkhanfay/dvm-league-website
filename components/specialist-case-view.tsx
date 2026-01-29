@@ -27,17 +27,18 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
   const { toast } = useToast()
   const supabase = createClient()
   const [isAccepting, setIsAccepting] = useState(false)
-  const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
-  const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
-  const [phase1Plan, setPhase1Plan] = useState(caseData.phase1_plan || "")
-  const [phase2Assessment, setPhase2Assessment] = useState(caseData.phase2_assessment || "")
-  const [phase2TreatmentPlan, setPhase2TreatmentPlan] = useState(caseData.phase2_treatment_plan || "")
-  const [phase2Prognosis, setPhase2Prognosis] = useState(caseData.phase2_prognosis || "")
-  const [phase2ClientSummary, setPhase2ClientSummary] = useState(caseData.phase2_client_summary || "")
+  const [isSubmitting, setIsSubmitting] = useState(false)
+
+  // Final Report State
+  const [caseDisposition, setCaseDisposition] = useState(caseData.case_disposition || "")
+  const [finalDiagnosis, setFinalDiagnosis] = useState(caseData.final_diagnosis || "")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState(caseData.clinical_interpretation || "")
+  const [treatmentPlan, setTreatmentPlan] = useState(caseData.treatment_plan || "")
+  const [followUpInstructions, setFollowUpInstructions] = useState(caseData.follow_up_instructions || "")
+  const [clientSummary, setClientSummary] = useState(caseData.client_summary || "")
 
   const [fileUrls, setFileUrls] = useState<Record<string, string>>({})
-  const [phase1Files, setPhase1Files] = useState<File[]>([])
-  const [phase2Files, setPhase2Files] = useState<File[]>([])
+  const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
   const [isUploadingFiles, setIsUploadingFiles] = useState(false)
 
   const allCaseFiles = useMemo(() => caseData.case_files || [], [caseData.case_files])
@@ -93,26 +94,15 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
     document.body.removeChild(a)
   }
 
-  const handlePhase1FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const newFiles = Array.from(e.target.files)
-      setPhase1Files((prev) => [...prev, ...newFiles])
+      setFinalReportFiles((prev) => [...prev, ...newFiles])
     }
   }
 
-  const handlePhase2FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      const newFiles = Array.from(e.target.files)
-      setPhase2Files((prev) => [...prev, ...newFiles])
-    }
-  }
-
-  const handleRemovePhase1File = (index: number) => {
-    setPhase1Files((prev) => prev.filter((_, i) => i !== index))
-  }
-
-  const handleRemovePhase2File = (index: number) => {
-    setPhase2Files((prev) => prev.filter((_, i) => i !== index))
+  const handleRemoveFile = (index: number) => {
+    setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))
   }
 
   const uploadFiles = async (files: File[], uploadPhase: "specialist_report") => {
@@ -188,49 +178,51 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
 
   const handleSubmitFinalReport = async () => {
     if (
-      !phase2Assessment.trim() ||
-      !phase2TreatmentPlan.trim() ||
-      !phase2Prognosis.trim() ||
-      !phase2ClientSummary.trim()
+      !caseDisposition.trim() ||
+      !finalDiagnosis.trim() ||
+      !clinicalInterpretation.trim() ||
+      !treatmentPlan.trim() ||
+      !followUpInstructions.trim() ||
+      !clientSummary.trim()
     ) {
       toast({
         title: "Missing Information",
-        description: "Please complete all fields before submitting the Phase 2 report.",
+        description: "Please complete all fields before submitting the report.",
         variant: "destructive",
       })
       return
     }
 
-    setIsSubmittingPhase2(true)
+    setIsSubmitting(true)
 
     try {
-      if (phase2Files.length > 0) {
+      if (finalReportFiles.length > 0) {
         setIsUploadingFiles(true)
-        await uploadFiles(phase2Files, "specialist_report")
+        await uploadFiles(finalReportFiles, "specialist_report")
       }
 
       const result = await submitFinalReport(caseData.id, {
-        caseDisposition: "managed", // Default
-        finalDiagnosis: "See Assessment", // Default
-        clinicalInterpretation: phase2Assessment,
-        treatmentPlan: phase2TreatmentPlan,
-        followUpInstructions: phase2Prognosis,
-        clientSummary: phase2ClientSummary,
+        caseDisposition,
+        finalDiagnosis,
+        clinicalInterpretation,
+        treatmentPlan,
+        followUpInstructions,
+        clientSummary,
       })
 
       if (result.success) {
         toast({
-          title: "Report Submitted", // Updated Title
+          title: "Report Submitted",
           description: "Your final report has been submitted successfully. The case is now complete.",
         })
         router.push("/specialist-dashboard")
       } else {
         toast({
           title: "Submission Failed",
-          description: result.error || "Failed to submit Phase 2 report. Please try again.",
+          description: result.error || "Failed to submit report. Please try again.",
           variant: "destructive",
         })
-        setIsSubmittingPhase2(false)
+        setIsSubmitting(false)
       }
     } catch (error: any) {
       console.error("[v0] Error uploading files:", error)
@@ -239,7 +231,7 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
         description: error.message || "Failed to upload files. Please try again.",
         variant: "destructive",
       })
-      setIsSubmittingPhase2(false)
+      setIsSubmitting(false)
     } finally {
       setIsUploadingFiles(false)
     }
@@ -247,20 +239,6 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
 
   const getStatusBadge = (status: string) => {
     switch (status) {
-      case "awaiting_phase1":
-        return (
-          <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
-            Awaiting Phase 1 Report
-          </Badge>
-        )
-      case "awaiting_diagnostics":
-        return <Badge variant="secondary">Awaiting Diagnostics Upload</Badge>
-      case "awaiting_phase2":
-        return (
-          <Badge variant="default" className="bg-green-500 hover:bg-green-600">
-            Awaiting Phase 2 Report
-          </Badge>
-        )
       case "completed":
         return (
           <Badge variant="default" className="bg-brand-navy hover:bg-brand-navy/90">
@@ -270,16 +248,14 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
       case "pending_assignment":
         return <Badge variant="secondary">Pending Assignment</Badge>
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">In Progress</Badge>
     }
   }
 
-  const isAwaitingPhase1 = caseData.status === "awaiting_phase1"
-  const isAwaitingDiagnostics = caseData.status === "awaiting_diagnostics"
-  const isAwaitingPhase2 = caseData.status === "awaiting_phase2"
   const isCompleted = caseData.status === "completed"
   const isPendingAssignment = caseData.status === "pending_assignment"
   const isUnassigned = !caseData.specialist_id
+  const isAssignedToMe = caseData.specialist_id === userProfile.id
 
   const getFileUrl = (fileId: string) => {
     return fileUrls[fileId] || "#"
@@ -440,86 +416,9 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               <div className="mt-3">{getStatusBadge(caseData.status)}</div>
             </div>
 
-            {caseData.phase1_plan && !isAwaitingPhase1 && (
-              <Card className="mb-6 border-brand-stone shadow-sm">
-                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <p className="whitespace-pre-line text-brand-navy/80">{caseData.phase1_plan}</p>
-                </CardContent>
-              </Card>
-            )}
+            {/* Phase 1 Plan (Removed) */}
 
-            {/* Phase 1 Form */}
-            {isAwaitingPhase1 && (
-              <Card className="mb-6 border-2 border-brand-gold shadow-md">
-                <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Submit Phase 1 Diagnostic Plan</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-6 p-6">
-                  <div>
-                    <Label htmlFor="phase1-plan" className="text-sm font-medium text-brand-navy">
-                      Diagnostic Plan & Recommendations
-                    </Label>
-                    <Textarea
-                      id="phase1-plan"
-                      value={phase1Plan}
-                      onChange={(e) => setPhase1Plan(e.target.value)}
-                      placeholder="Provide your diagnostic plan and recommendations..."
-                      rows={12}
-                      className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
-                    />
-                  </div>
-
-                  <div>
-                    <Label className="text-sm font-medium text-brand-navy">Supporting Files (Optional)</Label>
-                    <label
-                      htmlFor="phase1-file-upload"
-                      className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-6 text-center transition-colors hover:border-brand-gold"
-                    >
-                      <UploadCloud className="mx-auto h-10 w-10 text-brand-navy/40" />
-                      <p className="mt-2 text-sm text-brand-navy/70">Click to upload supporting files</p>
-                      <p className="mt-1 text-xs text-brand-navy/50">PDF, images, or other relevant documents</p>
-                      <input
-                        id="phase1-file-upload"
-                        type="file"
-                        multiple
-                        onChange={handlePhase1FileSelect}
-                        className="hidden"
-                        disabled={isUploadingFiles}
-                      />
-                    </label>
-
-                    {phase1Files.length > 0 && (
-                      <div className="mt-4 space-y-2">
-                        <p className="text-sm font-medium text-brand-navy">Selected Files:</p>
-                        {phase1Files.map((file, index) => (
-                          <div key={index} className="flex items-center gap-2 rounded-md bg-white p-3 shadow-sm">
-                            <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
-                            <span className="flex-1 truncate text-sm text-brand-navy">{file.name}</span>
-                            <button
-                              onClick={() => handleRemovePhase1File(index)}
-                              className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
-                              title="Remove file"
-                            >
-                              <X className="h-4 w-4" />
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <Button
-                    disabled={true}
-                    className="w-full transform rounded-md bg-gray-300 px-8 py-4 text-lg font-bold text-gray-500 cursor-not-allowed"
-                  >
-                    Phase 1 Submission Deprecated
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
+            {/* Phase 1 Form (Removed) */}
 
             {isPendingAssignment && isUnassigned && (
               <Card className="mb-6 border-2 border-brand-gold bg-brand-gold/10 shadow-md">
@@ -541,29 +440,8 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               </Card>
             )}
 
-            {isAwaitingDiagnostics && (
-              <Card className="mb-6 border-brand-stone shadow-sm">
-                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                  <CardTitle className="text-xl font-bold text-brand-navy">Awaiting GP Diagnostic Results</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <p className="text-brand-navy/80">
-                    Your Phase 1 diagnostic plan has been submitted to the GP. You will be notified when the GP uploads
-                    the diagnostic results so you can proceed with Phase 2.
-                  </p>
-                  {caseData.phase1_plan && (
-                    <div className="mt-6">
-                      <h3 className="mb-2 font-semibold text-brand-navy">Your Phase 1 Plan:</h3>
-                      <div className="rounded-lg bg-brand-offwhite p-4">
-                        <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase1_plan}</p>
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-            )}
-
-            {caseData.diagnostics_performed && !isAwaitingPhase2 && (
+            {/* GP Diagnostics Display logic simplified */}
+            {caseData.diagnostics_performed && (
               <Card className="mb-6 border-brand-stone bg-blue-50 shadow-sm">
                 <CardHeader className="border-b border-blue-200 bg-blue-100">
                   <CardTitle className="text-xl font-bold text-brand-navy">GP Diagnostic Notes</CardTitle>
@@ -574,46 +452,65 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
               </Card>
             )}
 
-            {isAwaitingPhase2 && (
+            {isAssignedToMe && !isCompleted && (
               <>
-                {caseData.diagnostics_performed && (
-                  <Card className="mb-6 border-2 border-blue-500 bg-blue-50 shadow-md">
-                    <CardHeader className="border-b border-blue-500 bg-blue-100">
-                      <CardTitle className="text-xl font-bold text-brand-navy">GP Diagnostic Notes</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <p className="whitespace-pre-line text-brand-navy">{caseData.diagnostics_performed}</p>
-                    </CardContent>
-                  </Card>
-                )}
-
                 <Card className="mb-6 border-2 border-brand-gold shadow-md">
                   <CardHeader className="border-b border-brand-gold bg-brand-gold/10">
-                    <CardTitle className="text-xl font-bold text-brand-navy">Submit Phase 2 Final Report</CardTitle>
+                    <CardTitle className="text-xl font-bold text-brand-navy">Submit Final Report</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6 p-6">
+                    {/* Case Disposition */}
+                    <div className="space-y-2">
+                      <Label htmlFor="case-disposition" className="text-sm font-medium text-brand-navy">Case Disposition</Label>
+                      <select
+                        id="case-disposition"
+                        value={caseDisposition}
+                        onChange={(e) => setCaseDisposition(e.target.value)}
+                        className="w-full rounded-md border border-brand-stone p-2"
+                      >
+                        <option value="">Select Disposition</option>
+                        <option value="managed">Managed</option>
+                        <option value="referred">Referred</option>
+                      </select>
+                    </div>
+
+                    {/* Final Diagnosis */}
                     <div>
-                      <Label htmlFor="phase2-assessment" className="text-sm font-medium text-brand-navy">
-                        Assessment
+                      <Label htmlFor="final-diagnosis" className="text-sm font-medium text-brand-navy">
+                        Final Diagnosis
                       </Label>
                       <Textarea
-                        id="phase2-assessment"
-                        value={phase2Assessment}
-                        onChange={(e) => setPhase2Assessment(e.target.value)}
-                        placeholder="Provide your assessment based on the diagnostic results..."
+                        id="final-diagnosis"
+                        value={finalDiagnosis}
+                        onChange={(e) => setFinalDiagnosis(e.target.value)}
+                        placeholder="Enter the final diagnosis..."
+                        rows={2}
+                        className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
+                      />
+                    </div>
+
+                    <div>
+                      <Label htmlFor="clinical-interpretation" className="text-sm font-medium text-brand-navy">
+                        Clinical Interpretation
+                      </Label>
+                      <Textarea
+                        id="clinical-interpretation"
+                        value={clinicalInterpretation}
+                        onChange={(e) => setClinicalInterpretation(e.target.value)}
+                        placeholder="Provide your assessment and interpretation..."
                         rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="phase2-treatment" className="text-sm font-medium text-brand-navy">
+                      <Label htmlFor="treatment-plan" className="text-sm font-medium text-brand-navy">
                         Treatment Plan
                       </Label>
                       <Textarea
-                        id="phase2-treatment"
-                        value={phase2TreatmentPlan}
-                        onChange={(e) => setPhase2TreatmentPlan(e.target.value)}
+                        id="treatment-plan"
+                        value={treatmentPlan}
+                        onChange={(e) => setTreatmentPlan(e.target.value)}
                         placeholder="Detail your recommended treatment plan..."
                         rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -621,27 +518,27 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     </div>
 
                     <div>
-                      <Label htmlFor="phase2-prognosis" className="text-sm font-medium text-brand-navy">
-                        Prognosis
+                      <Label htmlFor="follow-up-instructions" className="text-sm font-medium text-brand-navy">
+                        Follow-up Instructions
                       </Label>
                       <Textarea
-                        id="phase2-prognosis"
-                        value={phase2Prognosis}
-                        onChange={(e) => setPhase2Prognosis(e.target.value)}
-                        placeholder="Provide your prognosis..."
+                        id="follow-up-instructions"
+                        value={followUpInstructions}
+                        onChange={(e) => setFollowUpInstructions(e.target.value)}
+                        placeholder="Provide follow-up instructions or prognosis..."
                         rows={4}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
                       />
                     </div>
 
                     <div>
-                      <Label htmlFor="phase2-client-summary" className="text-sm font-medium text-brand-navy">
+                      <Label htmlFor="client-summary" className="text-sm font-medium text-brand-navy">
                         Client-Friendly Summary
                       </Label>
                       <Textarea
-                        id="phase2-client-summary"
-                        value={phase2ClientSummary}
-                        onChange={(e) => setPhase2ClientSummary(e.target.value)}
+                        id="client-summary"
+                        value={clientSummary}
+                        onChange={(e) => setClientSummary(e.target.value)}
                         placeholder="Provide a client-friendly summary that the GP can share with the pet owner..."
                         rows={6}
                         className="mt-2 border-2 border-brand-stone px-4 py-3 shadow-sm transition-all focus:border-brand-gold focus:ring-2 focus:ring-brand-gold/20"
@@ -651,31 +548,31 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     <div>
                       <Label className="text-sm font-medium text-brand-navy">Supporting Files (Optional)</Label>
                       <label
-                        htmlFor="phase2-file-upload"
+                        htmlFor="final-report-file-upload"
                         className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed border-brand-stone bg-brand-offwhite p-6 text-center transition-colors hover:border-brand-gold"
                       >
                         <UploadCloud className="mx-auto h-10 w-10 text-brand-navy/40" />
                         <p className="mt-2 text-sm text-brand-navy/70">Click to upload supporting files</p>
                         <p className="mt-1 text-xs text-brand-navy/50">PDF, images, or other relevant documents</p>
                         <input
-                          id="phase2-file-upload"
+                          id="final-report-file-upload"
                           type="file"
                           multiple
-                          onChange={handlePhase2FileSelect}
+                          onChange={handleFileSelect}
                           className="hidden"
                           disabled={isUploadingFiles}
                         />
                       </label>
 
-                      {phase2Files.length > 0 && (
+                      {finalReportFiles.length > 0 && (
                         <div className="mt-4 space-y-2">
                           <p className="text-sm font-medium text-brand-navy">Selected Files:</p>
-                          {phase2Files.map((file, index) => (
+                          {finalReportFiles.map((file, index) => (
                             <div key={index} className="flex items-center gap-2 rounded-md bg-white p-3 shadow-sm">
                               <FileText className="h-4 w-4 flex-shrink-0 text-brand-navy/60" />
                               <span className="flex-1 truncate text-sm text-brand-navy">{file.name}</span>
                               <button
-                                onClick={() => handleRemovePhase2File(index)}
+                                onClick={() => handleRemoveFile(index)}
                                 className="flex-shrink-0 text-red-500 transition-colors hover:text-red-700"
                                 title="Remove file"
                               >
@@ -690,18 +587,18 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
                     <Button
                       onClick={handleSubmitFinalReport}
                       disabled={
-                        isSubmittingPhase2 ||
+                        isSubmitting ||
                         isUploadingFiles ||
-                        !phase2Assessment.trim() ||
-                        !phase2TreatmentPlan.trim() ||
-                        !phase2Prognosis.trim() ||
-                        !phase2ClientSummary.trim()
+                        !clinicalInterpretation.trim() ||
+                        !treatmentPlan.trim() ||
+                        !followUpInstructions.trim() ||
+                        !clientSummary.trim()
                       }
                       className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:hover:scale-100"
                     >
                       {isUploadingFiles
                         ? "Uploading Files..."
-                        : isSubmittingPhase2
+                        : isSubmitting
                           ? "Submitting..."
                           : "Submit Final Report"}
                     </Button>
@@ -711,60 +608,41 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
             )}
 
             {isCompleted && (
-              <>
-                {caseData.phase1_plan && (
-                  <Card className="mb-6 border-brand-stone shadow-sm">
-                    <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                      <CardTitle className="text-xl font-bold text-brand-navy">Phase 1: Diagnostic Plan</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <p className="whitespace-pre-line text-brand-navy/80">{caseData.phase1_plan}</p>
-                    </CardContent>
-                  </Card>
-                )}
+              <Card className="mb-6 border-brand-stone shadow-sm">
+                <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
+                  <CardTitle className="text-xl font-bold text-brand-navy">Final Specialist Report</CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-6 p-6">
+                  <div>
+                    <p className="text-sm font-medium text-brand-navy">Diagnosis</p>
+                    <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.final_diagnosis}</p>
+                  </div>
 
-                {caseData.diagnostics_performed && (
-                  <Card className="mb-6 border-brand-stone bg-blue-50 shadow-sm">
-                    <CardHeader className="border-b border-blue-200 bg-blue-100">
-                      <CardTitle className="text-xl font-bold text-brand-navy">GP Diagnostic Notes</CardTitle>
-                    </CardHeader>
-                    <CardContent className="p-6">
-                      <p className="whitespace-pre-line text-brand-navy">{caseData.diagnostics_performed}</p>
-                    </CardContent>
-                  </Card>
-                )}
+                  <div>
+                    <p className="text-sm font-medium text-brand-navy">Clinical Interpretation</p>
+                    <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.clinical_interpretation}</p>
+                  </div>
 
-                <Card className="mb-6 border-brand-stone shadow-sm">
-                  <CardHeader className="border-b border-brand-stone bg-brand-offwhite">
-                    <CardTitle className="text-xl font-bold text-brand-navy">Phase 2: Final Report</CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-6 p-6">
-                    <div>
-                      <p className="text-sm font-medium text-brand-navy">Assessment</p>
-                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_assessment}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-brand-navy">Treatment Plan</p>
+                    <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.treatment_plan}</p>
+                  </div>
 
-                    <div>
-                      <p className="text-sm font-medium text-brand-navy">Treatment Plan</p>
-                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_treatment_plan}</p>
-                    </div>
+                  <div>
+                    <p className="text-sm font-medium text-brand-navy">Follow-up Instructions</p>
+                    <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.follow_up_instructions}</p>
+                  </div>
 
-                    <div>
-                      <p className="text-sm font-medium text-brand-navy">Prognosis</p>
-                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_prognosis}</p>
-                    </div>
-
-                    <div>
-                      <p className="text-sm font-medium text-brand-navy">Client-Friendly Summary</p>
-                      <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.phase2_client_summary}</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </>
+                  <div>
+                    <p className="text-sm font-medium text-brand-navy">Client-Friendly Summary</p>
+                    <p className="whitespace-pre-line text-sm text-brand-navy/80">{caseData.client_summary}</p>
+                  </div>
+                </CardContent>
+              </Card>
             )}
           </div>
         </div>
       </main>
-    </AppLayout>
+    </AppLayout >
   )
 }
