@@ -11,8 +11,7 @@ import { Label } from "@/components/ui/label"
 import { FileText, Upload, Stethoscope, Clock, Copy, CheckCircle, X, UploadCloud } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
-import { submitPhase1 } from "@/app/actions/submit-phase1"
-import { submitPhase2 } from "@/app/actions/submit-phase2"
+import { submitFinalReport } from "@/app/actions/submit-final-report"
 import { useRouter } from "next/navigation"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
@@ -189,48 +188,13 @@ export function ActionPanel({
   }
 
   const handleSubmitPhase1 = async () => {
-    if (!phase1Plan.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a diagnostic plan before submitting",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSubmittingPhase1(true)
-
-    try {
-      if (phase1Files.length > 0) {
-        setIsUploadingPhase1Files(true)
-        await uploadFilesToStorage(phase1Files, "specialist_report")
-      }
-
-      const result = await submitPhase1(caseId, phase1Plan)
-
-      if (result.success) {
-        toast({
-          title: "Phase 1 submitted",
-          description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
-        })
-        router.refresh()
-      } else {
-        toast({
-          title: "Submission failed",
-          description: result.error || "Failed to submit Phase 1 plan. Please try again.",
-          variant: "destructive",
-        })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit Phase 1. Please try again.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmittingPhase1(false)
-      setIsUploadingPhase1Files(false)
-    }
+    // Phase 1 is deprecated
+    toast({
+      title: "Deprecated",
+      description: "Phase 1 submission is no longer supported.",
+      variant: "destructive"
+    })
+    return
   }
 
   const handlePhase2FileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -265,10 +229,12 @@ export function ActionPanel({
         await uploadFilesToStorage(phase2Files, "specialist_report")
       }
 
-      const result = await submitPhase2(caseId, {
-        assessment: phase2Assessment,
+      const result = await submitFinalReport(caseId, {
+        caseDisposition: "managed", // Default
+        finalDiagnosis: "See Assessment", // Default
+        clinicalInterpretation: phase2Assessment,
         treatmentPlan: phase2TreatmentPlan,
-        prognosis: phase2Prognosis,
+        followUpInstructions: phase2Prognosis,
         clientSummary: phase2ClientSummary,
       })
 

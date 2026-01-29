@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { submitPhase1 } from "@/app/actions/submit-phase1"
-import { submitPhase2 } from "@/app/actions/submit-phase2"
+import { submitFinalReport } from "@/app/actions/submit-final-report"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
 import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
@@ -90,53 +89,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     return uploadedFileRecords
   }
 
-  const handleSubmitPhase1 = async () => {
-    if (!phase1Plan.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a diagnostic plan before submitting",
-        variant: "destructive",
-      })
-      return
-    }
+  /* 
+   * Phase 1 is deprecated.
+   */
+  // const handleSubmitPhase1 = async () => { ... } 
 
-    setIsSubmittingPhase1(true)
-
-    try {
-      if (phase1Files.length > 0) {
-        setIsUploadingPhase1Files(true)
-        await uploadFilesToStorage(phase1Files, "specialist_report")
-      }
-
-      const result = await submitPhase1(caseId, phase1Plan)
-
-      if (result.success) {
-        toast({
-          title: "Phase 1 submitted",
-          description: "Your diagnostic plan has been submitted successfully.",
-        })
-        onOpenChange(false)
-        router.refresh()
-      } else {
-        toast({
-          title: "Submission failed",
-          description: result.error || "Failed to submit Phase 1 plan.",
-          variant: "destructive",
-        })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit Phase 1.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmittingPhase1(false)
-      setIsUploadingPhase1Files(false)
-    }
-  }
-
-  const handleSubmitPhase2 = async () => {
+  const handleSubmitFinalReport = async () => {
     if (
       !caseDisposition.trim() ||
       !primaryDiagnosis.trim() ||
@@ -161,10 +119,12 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         await uploadFilesToStorage(phase2Files, "specialist_report")
       }
 
-      const result = await submitPhase2(caseId, {
-        assessment: `Disposition: ${caseDisposition}\n\nPrimary Diagnosis: ${primaryDiagnosis}\n\nClinical Interpretation: ${clinicalInterpretation}`,
+      const result = await submitFinalReport(caseId, {
+        caseDisposition: caseDisposition,
+        finalDiagnosis: primaryDiagnosis,
+        clinicalInterpretation: clinicalInterpretation,
         treatmentPlan: treatmentProtocol,
-        prognosis: monitoringPlan,
+        followUpInstructions: monitoringPlan,
         clientSummary: clientExplanation,
       })
 
@@ -328,12 +288,11 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </div>
 
             <Button
-              onClick={handleSubmitPhase1}
-              disabled={isSubmittingPhase1 || isUploadingPhase1Files || !phase1Plan.trim()}
+              disabled={true}
               className="w-full"
               size="lg"
             >
-              {isUploadingPhase1Files ? "Uploading Files..." : isSubmittingPhase1 ? "Submitting..." : "Submit Phase 1"}
+              Phase 1 is deprecated
             </Button>
           </div>
         </>
@@ -486,7 +445,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 Save Draft
               </Button>
               <Button
-                onClick={handleSubmitPhase2}
+                onClick={handleSubmitFinalReport}
                 disabled={
                   isSubmittingPhase2 ||
                   isUploadingPhase2Files ||

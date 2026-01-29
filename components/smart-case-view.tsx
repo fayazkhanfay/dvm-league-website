@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, FileText, ImageIcon, Lock, Loader2 } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
-import { submitPhase1 } from "@/app/actions/submit-phase1"
-import { submitPhase2 } from "@/app/actions/submit-phase2"
+import { submitFinalReport } from "@/app/actions/submit-final-report"
+import { CheckCircle, Clock } from "lucide-react"
 
 interface SmartCaseViewProps {
   caseData: any
@@ -47,26 +47,15 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
     }
   }
 
+  /*
+   * Phase 1 is deprecated
+   */
   const handleSubmitPhase1 = async () => {
-    if (!phase1Plan.trim()) {
-      setError("Please provide a diagnostic plan")
-      return
-    }
-
-    setIsSubmitting(true)
-    setError("")
-
-    const result = await submitPhase1(caseData.id, phase1Plan)
-
-    if (result.success) {
-      router.push("/specialist-dashboard")
-    } else {
-      setError(result.error || "Failed to submit Phase 1 plan")
-      setIsSubmitting(false)
-    }
+    setError("Phase 1 submission is deprecated.")
+    return
   }
 
-  const handleSubmitPhase2 = async () => {
+  const handleSubmitFinalReport = async () => {
     if (
       !phase2Assessment.trim() ||
       !phase2TreatmentPlan.trim() ||
@@ -80,10 +69,12 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
     setIsSubmitting(true)
     setError("")
 
-    const result = await submitPhase2(caseData.id, {
-      assessment: phase2Assessment,
+    const result = await submitFinalReport(caseData.id, {
+      caseDisposition: "managed", // Defaulting as this view might not have the selector yet
+      finalDiagnosis: "See Assessment", // Initial mapping
+      clinicalInterpretation: phase2Assessment,
       treatmentPlan: phase2TreatmentPlan,
-      prognosis: phase2Prognosis,
+      followUpInstructions: phase2Prognosis,
       clientSummary: phase2ClientSummary,
     })
 
@@ -521,7 +512,7 @@ export default function SmartCaseView({ caseData, userProfile, caseState }: Smar
                           )}
 
                           <Button
-                            onClick={handleSubmitPhase2}
+                            onClick={handleSubmitFinalReport}
                             disabled={isSubmitting}
                             className="w-full transform rounded-md bg-brand-gold px-8 py-4 text-lg font-bold text-brand-navy shadow-lg transition-all duration-300 hover:scale-105 hover:bg-brand-navy hover:text-white disabled:opacity-50 disabled:cursor-not-allowed"
                           >

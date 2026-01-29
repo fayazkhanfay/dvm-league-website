@@ -16,9 +16,15 @@ export interface CaseDetails {
   gp_id: string
   specialist_id: string | null
   gp_questions: string
-  phase2_client_summary: string | null
   specialty_requested: string | null
   financial_constraints: string | null
+  // New Final Report Columns
+  case_disposition: string | null
+  final_diagnosis: string | null
+  clinical_interpretation: string | null
+  treatment_plan: string | null
+  follow_up_instructions: string | null
+  client_summary: string | null
 }
 
 export async function getCaseDetails(caseId: string) {
@@ -49,15 +55,21 @@ export async function getCaseDetails(caseId: string) {
       gp_id,
       specialist_id,
       gp_questions,
-      phase2_client_summary,
       specialty_requested,
-      financial_constraints
+      financial_constraints,
+      case_disposition,
+      final_diagnosis,
+      clinical_interpretation,
+      treatment_plan,
+      follow_up_instructions,
+      client_summary
     `,
     )
     .eq("id", caseId)
     .single()
 
   if (error || !caseData) {
+    console.error("Error fetching case details:", error)
     return { error: "Case not found" }
   }
 

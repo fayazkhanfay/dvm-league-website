@@ -11,8 +11,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { ArrowLeft, FileText, ImageIcon, Download, UploadCloud, X } from "lucide-react"
 import { acceptCase } from "@/app/actions/accept-case"
-import { submitPhase1 } from "@/app/actions/submit-phase1"
-import { submitPhase2 } from "@/app/actions/submit-phase2"
+import { submitFinalReport } from "@/app/actions/submit-final-report"
+import { CheckCircle, Clock } from "lucide-react"
 import { useToast } from "@/hooks/use-toast"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
@@ -181,51 +181,16 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
     }
   }
 
+  /*
+   * Phase 1 is deprecated
+   */
   const handleSubmitPhase1 = async () => {
-    if (!phase1Plan.trim()) {
-      toast({
-        title: "Missing Information",
-        description: "Please provide a diagnostic plan before submitting.",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSubmittingPhase1(true)
-
-    try {
-      if (phase1Files.length > 0) {
-        setIsUploadingFiles(true)
-        await uploadFiles(phase1Files, "specialist_report")
-      }
-
-      const result = await submitPhase1(caseData.id, phase1Plan)
-
-      if (result.success) {
-        toast({
-          title: "Phase 1 Submitted",
-          description: "Your diagnostic plan has been submitted successfully. The GP will be notified.",
-        })
-        router.refresh()
-      } else {
-        toast({
-          title: "Submission Failed",
-          description: result.error || "Failed to submit Phase 1 plan. Please try again.",
-          variant: "destructive",
-        })
-        setIsSubmittingPhase1(false)
-      }
-    } catch (error: any) {
-      console.error("[v0] Error uploading files:", error)
-      toast({
-        title: "Upload Failed",
-        description: error.message || "Failed to upload files. Please try again.",
-        variant: "destructive",
-      })
-      setIsSubmittingPhase1(false)
-    } finally {
-      setIsUploadingFiles(false)
-    }
+    toast({
+      title: "Deprecated",
+      description: "Phase 1 submission is no longer supported.",
+      variant: "destructive"
+    })
+    return
   }
 
   const handleSubmitPhase2 = async () => {
@@ -251,10 +216,12 @@ export default function SpecialistCaseView({ caseData, userProfile }: Specialist
         await uploadFiles(phase2Files, "specialist_report")
       }
 
-      const result = await submitPhase2(caseData.id, {
-        assessment: phase2Assessment,
+      const result = await submitFinalReport(caseData.id, {
+        caseDisposition: "managed", // Default
+        finalDiagnosis: "See Assessment", // Default
+        clinicalInterpretation: phase2Assessment,
         treatmentPlan: phase2TreatmentPlan,
-        prognosis: phase2Prognosis,
+        followUpInstructions: phase2Prognosis,
         clientSummary: phase2ClientSummary,
       })
 
