@@ -10,8 +10,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { submitFinalReport } from "@/app/actions/submit-final-report"
+import { saveReportDraft } from "@/app/actions/save-report-draft"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
+import { CaseDetails } from "@/app/actions/get-case-details"
 import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
 
 interface ReportSheetProps {
@@ -21,22 +23,24 @@ interface ReportSheetProps {
   caseId: string
   currentUserId: string
   splitMode?: boolean
+  initialData?: CaseDetails
 }
 
-export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, splitMode = false }: ReportSheetProps) {
+export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, splitMode = false, initialData }: ReportSheetProps) {
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
 
   // Final Report state
-  const [caseDisposition, setCaseDisposition] = useState("")
-  const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
-  const [clinicalInterpretation, setClinicalInterpretation] = useState("")
-  const [treatmentProtocol, setTreatmentProtocol] = useState("")
-  const [monitoringPlan, setMonitoringPlan] = useState("")
-  const [clientExplanation, setClientExplanation] = useState("")
+  const [caseDisposition, setCaseDisposition] = useState(initialData?.case_disposition || "")
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState(initialData?.final_diagnosis || "")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState(initialData?.clinical_interpretation || "")
+  const [treatmentProtocol, setTreatmentProtocol] = useState(initialData?.treatment_plan || "")
+  const [monitoringPlan, setMonitoringPlan] = useState(initialData?.follow_up_instructions || "")
+  const [clientExplanation, setClientExplanation] = useState(initialData?.client_summary || "")
   const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
   const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
 
   // Diagnostics state
@@ -81,6 +85,49 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     }
 
     return uploadedFileRecords
+  }
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true)
+
+    try {
+      if (finalReportFiles.length > 0) {
+        setIsUploadingFinalReportFiles(true)
+        await uploadFilesToStorage(finalReportFiles, "specialist_report")
+      }
+
+      const result = await saveReportDraft(caseId, {
+        caseDisposition: caseDisposition,
+        finalDiagnosis: primaryDiagnosis,
+        clinicalInterpretation: clinicalInterpretation,
+        treatmentPlan: treatmentProtocol,
+        followUpInstructions: monitoringPlan,
+        clientSummary: clientExplanation,
+      })
+
+      if (result.success) {
+        toast({
+          title: "Draft saved",
+          description: "Your report draft has been saved successfully.",
+        })
+        router.refresh()
+      } else {
+        toast({
+          title: "Save failed",
+          description: result.error || "Failed to save draft.",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save draft.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingDraft(false)
+      setIsUploadingFinalReportFiles(false)
+    }
   }
 
   const handleSubmitFinalReport = async () => {
@@ -357,8 +404,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingFinalReport}>
-                Save Draft
+              <Button
+                variant="ghost"
+                className="flex-1"
+                size="lg"
+                disabled={isSubmittingFinalReport || isSavingDraft || isUploadingFinalReportFiles}
+                onClick={handleSaveDraft}
+              >
+                {isSavingDraft ? "Saving..." : "Save Draft"}
               </Button>
               <Button
                 onClick={handleSubmitFinalReport}
