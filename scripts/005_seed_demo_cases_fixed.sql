@@ -49,7 +49,7 @@ BEGIN
   ) VALUES (
     '10000000-0000-0000-0000-000000000001',
     '2025-01-15 10:00:00+00',
-    'awaiting_phase1',
+    'in_progress',
     v_gp_id,
     v_specialist_id,
     'Cardiology',
@@ -122,7 +122,7 @@ BEGIN
   ) VALUES (
     '10000000-0000-0000-0000-000000000003',
     '2025-01-20 09:15:00+00',
-    'awaiting_diagnostics',
+    'in_progress',
     v_gp_id,
     v_specialist_id,
     'Internal Medicine',

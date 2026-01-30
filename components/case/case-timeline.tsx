@@ -300,36 +300,17 @@ export function CaseTimeline({
   }
 
   const renderMessage = (event: Extract<TimelineEvent, { type: "message" }>) => {
-    if (event.message_type === "report_phase1") {
-      return (
-        <div key={event.id} className="flex justify-center mb-4">
-          <div className="max-w-md w-full border-2 border-amber-500 rounded-lg p-4 bg-amber-50">
-            <div className="flex items-center gap-2 mb-2">
-              <Stethoscope className="h-5 w-5 text-amber-600" />
-              <h4 className="font-semibold text-amber-900">Phase 1 Diagnostic Plan</h4>
-            </div>
-            <p className="text-sm text-amber-800 mb-3">{event.content || "Diagnostic plan submitted"}</p>
-            <Button
-              variant="outline"
-              size="sm"
-              className="w-full border-amber-600 text-amber-700 hover:bg-amber-100 bg-transparent"
-            >
-              View Report
-            </Button>
-          </div>
-        </div>
-      )
-    }
 
-    if (event.message_type === "report_phase2") {
+
+    if (event.message_type === "report_final") {
       return (
         <div key={event.id} className="flex justify-center mb-4">
           <div className="max-w-md w-full border-2 border-green-500 rounded-lg p-4 bg-green-50">
             <div className="flex items-center gap-2 mb-2">
               <FileText className="h-5 w-5 text-green-600" />
-              <h4 className="font-semibold text-green-900">Phase 2 Final Report</h4>
+              <h4 className="font-semibold text-green-900">Final Case Report</h4>
             </div>
-            <p className="text-sm text-green-800 mb-3">{event.content || "Final report submitted"}</p>
+            <p className="text-sm text-green-800 mb-3">The specialist has submitted the final report.</p>
             <Button
               variant="outline"
               size="sm"

@@ -21,7 +21,7 @@ export async function submitDiagnostics(caseId: string, diagnosticNotes?: string
     return { success: false, error: "Unauthorized or case not found" }
   }
 
-  const updateData: any = { status: "awaiting_phase2" }
+  const updateData: any = {}
   if (diagnosticNotes) {
     updateData.diagnostics_performed = diagnosticNotes
   }

@@ -1,6 +1,6 @@
 -- Create custom enum types
 CREATE TYPE user_role AS ENUM ('gp', 'specialist');
-CREATE TYPE case_status AS ENUM ('pending_assignment', 'awaiting_phase1', 'awaiting_diagnostics', 'awaiting_phase2', 'completed');
+CREATE TYPE case_status AS ENUM ('draft', 'pending_assignment', 'in_progress', 'completed', 'cancelled');
 CREATE TYPE upload_phase AS ENUM ('initial_submission', 'diagnostic_results', 'specialist_report');
 
 -- Create profiles table

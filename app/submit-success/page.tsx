@@ -246,7 +246,7 @@ export default async function SubmitSuccessPage({
                 <div>
                   <h3 className="font-semibold text-brand-navy">Specialist Assignment</h3>
                   <p className="mt-1 text-sm text-brand-navy/70">
-                    Your case will be assigned to a dedicated specialist who will begin review immediately.
+                    Your case will be claimed by a Board-Certified Specialist who matches your patient's needs.
                   </p>
                 </div>
               </div>
@@ -256,10 +256,9 @@ export default async function SubmitSuccessPage({
                   2
                 </div>
                 <div>
-                  <h3 className="font-semibold text-brand-navy">Phase 1: Diagnostic Plan</h3>
+                  <h3 className="font-semibold text-brand-navy">Review & Collaboration</h3>
                   <p className="mt-1 text-sm text-brand-navy/70">
-                    You will receive an email notification when the Phase 1 Diagnostic Plan is ready for review (within
-                    1-2 business days).
+                    The specialist will review your files immediately. If they have clarification questions, they will message you directly in the secure chat.
                   </p>
                 </div>
               </div>
@@ -269,10 +268,9 @@ export default async function SubmitSuccessPage({
                   3
                 </div>
                 <div>
-                  <h3 className="font-semibold text-brand-navy">Phase 2: Treatment Plan</h3>
+                  <h3 className="font-semibold text-brand-navy">The Final Report</h3>
                   <p className="mt-1 text-sm text-brand-navy/70">
-                    After you perform the diagnostics and upload the results, your specialist will deliver the Phase 2
-                    Complete Treatment Plan (by 9:00 AM ET the next business day).
+                    You will receive a notification when your comprehensive Final Report—including diagnosis, treatment plan, and client summary—is ready.
                   </p>
                 </div>
               </div>

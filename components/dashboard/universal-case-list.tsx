@@ -43,22 +43,10 @@ export function UniversalCaseList({ cases, role }: UniversalCaseListProps) {
                         Pending Assignment
                     </Badge>
                 )
-            case "awaiting_phase1":
+            case "in_progress":
                 return (
-                    <Badge variant="default" className="bg-amber-500 hover:bg-amber-600">
-                        Awaiting Phase 1 Report
-                    </Badge>
-                )
-            case "awaiting_diagnostics":
-                return (
-                    <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-                        Awaiting Diagnostics
-                    </Badge>
-                )
-            case "awaiting_phase2":
-                return (
-                    <Badge variant="default" className="bg-brand-blue/80 text-white hover:bg-brand-blue">
-                        Phase 2 Plan Ready
+                    <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+                        Active Case
                     </Badge>
                 )
             case "completed":
@@ -67,8 +55,10 @@ export function UniversalCaseList({ cases, role }: UniversalCaseListProps) {
                         Completed
                     </Badge>
                 )
+            case "cancelled":
+                return <Badge variant="destructive">Cancelled</Badge>
             default:
-                return <Badge variant="secondary">{status}</Badge>
+                return <Badge variant="secondary">{status.replace("_", " ")}</Badge>
         }
     }
 

@@ -28,8 +28,8 @@ export default function SpecialistCaseUpdateEmail({
             <Text style={paragraph}>Dear Dr. {specialistName},</Text>
 
             <Text style={paragraph}>
-              Dr. {gpName} has uploaded diagnostic results for {patientName}. The case is now ready for your Phase 2
-              assessment and treatment recommendations.
+              Dr. {gpName} has uploaded additional files for {patientName}. Please review the new information and update
+              your Final Report if necessary.
             </Text>
 
             <Section style={infoBox}>

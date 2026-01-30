@@ -27,8 +27,6 @@ interface CommandCenterProps {
   userRole: "gp" | "specialist"
   caseId: string
   isAssignedToMe: boolean
-  onOpenPhase1: () => void
-  onOpenPhase2: () => void
   onOpenFileUpload: () => void
   onOpenFinalReport?: () => void
   onMessageSent?: () => void
@@ -146,8 +144,6 @@ export function CommandCenter({
   userRole,
   caseId,
   isAssignedToMe,
-  onOpenPhase1,
-  onOpenPhase2,
   onOpenFileUpload,
   onOpenFinalReport,
   onMessageSent,
@@ -296,43 +292,7 @@ export function CommandCenter({
     )
   }
 
-  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase1") {
-    return (
-      <ChatBar
-        message={message}
-        setMessage={setMessage}
-        stagedFiles={stagedFiles}
-        handleSendMessage={handleSendMessage}
-        handleFileSelect={handleFileSelect}
-        removeFile={removeFile}
-        isSendingMessage={isSendingMessage}
-        fileInputRef={fileInputRef}
-        showActionButton
-        actionLabel="Write Phase 1 Diagnostic Plan"
-        onAction={onOpenPhase1}
-      />
-    )
-  }
-
-  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_phase2") {
-    return (
-      <ChatBar
-        message={message}
-        setMessage={setMessage}
-        stagedFiles={stagedFiles}
-        handleSendMessage={handleSendMessage}
-        handleFileSelect={handleFileSelect}
-        removeFile={removeFile}
-        isSendingMessage={isSendingMessage}
-        fileInputRef={fileInputRef}
-        showActionButton
-        actionLabel="Write Final Report"
-        onAction={onOpenFinalReport}
-      />
-    )
-  }
-
-  if (userRole === "specialist" && isAssignedToMe && status === "awaiting_diagnostics") {
+  if (userRole === "specialist" && isAssignedToMe && status === "in_progress") {
     return (
       <ChatBar
         message={message}
@@ -352,10 +312,7 @@ export function CommandCenter({
 
   if (
     userRole === "gp" &&
-    (status === "pending_assignment" ||
-      status === "awaiting_phase1" ||
-      status === "awaiting_diagnostics" ||
-      status === "awaiting_phase2")
+    (status === "pending_assignment" || status === "in_progress")
   ) {
     return (
       <ChatBar

@@ -36,7 +36,7 @@ export function UnifiedCaseView({
   filesResult,
 }: UnifiedCaseViewProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
-  const [sheetMode, setSheetMode] = useState<"phase1" | "phase2" | "diagnostics">("phase1")
+  const [sheetMode, setSheetMode] = useState<"final_report" | "diagnostics">("final_report")
   const [showFinalReportSplit, setShowFinalReportSplit] = useState(false)
 
   const {
@@ -115,9 +115,8 @@ export function UnifiedCaseView({
       <div className={showFinalReportSplit ? "flex h-[calc(100vh-64px)] overflow-hidden" : ""}>
         {/* Left side - Main case view */}
         <div
-          className={`transition-all duration-300 ${
-            showFinalReportSplit ? "w-1/2 border-r overflow-y-auto" : "w-full"
-          }`}
+          className={`transition-all duration-300 ${showFinalReportSplit ? "w-1/2 border-r overflow-y-auto" : "w-full"
+            }`}
         >
           <div className={`py-8 pb-32 ${showFinalReportSplit ? "px-8" : "container mx-auto px-4"}`}>
             <div className={showFinalReportSplit ? "w-full" : "max-w-3xl mx-auto"}>
@@ -146,7 +145,7 @@ export function UnifiedCaseView({
               <ReportSheet
                 open={showFinalReportSplit}
                 onOpenChange={(open) => setShowFinalReportSplit(open)}
-                mode="phase2"
+                mode="final_report"
                 caseId={caseId}
                 currentUserId={userId}
                 splitMode={true}
@@ -161,14 +160,6 @@ export function UnifiedCaseView({
         userRole={viewerRole}
         caseId={caseId}
         isAssignedToMe={isAssignedToMe}
-        onOpenPhase1={() => {
-          setSheetMode("phase1")
-          setSheetOpen(true)
-        }}
-        onOpenPhase2={() => {
-          setSheetMode("phase2")
-          setSheetOpen(true)
-        }}
         onOpenFileUpload={() => {
           setSheetMode("diagnostics")
           setSheetOpen(true)

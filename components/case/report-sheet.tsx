@@ -9,8 +9,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
-import { submitPhase1 } from "@/app/actions/submit-phase1"
-import { submitPhase2 } from "@/app/actions/submit-phase2"
+import { submitFinalReport } from "@/app/actions/submit-final-report"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
 import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
@@ -18,7 +17,7 @@ import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
 interface ReportSheetProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  mode: "phase1" | "phase2" | "diagnostics"
+  mode: "final_report" | "diagnostics"
   caseId: string
   currentUserId: string
   splitMode?: boolean
@@ -29,22 +28,16 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const { toast } = useToast()
   const supabase = createClient()
 
-  // Phase 1 state
-  const [phase1Plan, setPhase1Plan] = useState("")
-  const [phase1Files, setPhase1Files] = useState<File[]>([])
-  const [isSubmittingPhase1, setIsSubmittingPhase1] = useState(false)
-  const [isUploadingPhase1Files, setIsUploadingPhase1Files] = useState(false)
-
-  // Phase 2 state
+  // Final Report state
   const [caseDisposition, setCaseDisposition] = useState("")
   const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
   const [clinicalInterpretation, setClinicalInterpretation] = useState("")
   const [treatmentProtocol, setTreatmentProtocol] = useState("")
   const [monitoringPlan, setMonitoringPlan] = useState("")
   const [clientExplanation, setClientExplanation] = useState("")
-  const [phase2Files, setPhase2Files] = useState<File[]>([])
-  const [isSubmittingPhase2, setIsSubmittingPhase2] = useState(false)
-  const [isUploadingPhase2Files, setIsUploadingPhase2Files] = useState(false)
+  const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
+  const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
+  const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
 
   // Diagnostics state
   const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
@@ -90,53 +83,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     return uploadedFileRecords
   }
 
-  const handleSubmitPhase1 = async () => {
-    if (!phase1Plan.trim()) {
-      toast({
-        title: "Missing information",
-        description: "Please provide a diagnostic plan before submitting",
-        variant: "destructive",
-      })
-      return
-    }
-
-    setIsSubmittingPhase1(true)
-
-    try {
-      if (phase1Files.length > 0) {
-        setIsUploadingPhase1Files(true)
-        await uploadFilesToStorage(phase1Files, "specialist_report")
-      }
-
-      const result = await submitPhase1(caseId, phase1Plan)
-
-      if (result.success) {
-        toast({
-          title: "Phase 1 submitted",
-          description: "Your diagnostic plan has been submitted successfully.",
-        })
-        onOpenChange(false)
-        router.refresh()
-      } else {
-        toast({
-          title: "Submission failed",
-          description: result.error || "Failed to submit Phase 1 plan.",
-          variant: "destructive",
-        })
-      }
-    } catch (error: any) {
-      toast({
-        title: "Error",
-        description: error.message || "Failed to submit Phase 1.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsSubmittingPhase1(false)
-      setIsUploadingPhase1Files(false)
-    }
-  }
-
-  const handleSubmitPhase2 = async () => {
+  const handleSubmitFinalReport = async () => {
     if (
       !caseDisposition.trim() ||
       !primaryDiagnosis.trim() ||
@@ -153,18 +100,20 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       return
     }
 
-    setIsSubmittingPhase2(true)
+    setIsSubmittingFinalReport(true)
 
     try {
-      if (phase2Files.length > 0) {
-        setIsUploadingPhase2Files(true)
-        await uploadFilesToStorage(phase2Files, "specialist_report")
+      if (finalReportFiles.length > 0) {
+        setIsUploadingFinalReportFiles(true)
+        await uploadFilesToStorage(finalReportFiles, "specialist_report")
       }
 
-      const result = await submitPhase2(caseId, {
-        assessment: `Disposition: ${caseDisposition}\n\nPrimary Diagnosis: ${primaryDiagnosis}\n\nClinical Interpretation: ${clinicalInterpretation}`,
+      const result = await submitFinalReport(caseId, {
+        caseDisposition: caseDisposition,
+        finalDiagnosis: primaryDiagnosis,
+        clinicalInterpretation: clinicalInterpretation,
         treatmentPlan: treatmentProtocol,
-        prognosis: monitoringPlan,
+        followUpInstructions: monitoringPlan,
         clientSummary: clientExplanation,
       })
 
@@ -189,8 +138,8 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         variant: "destructive",
       })
     } finally {
-      setIsSubmittingPhase2(false)
-      setIsUploadingPhase2Files(false)
+      setIsSubmittingFinalReport(false)
+      setIsUploadingFinalReportFiles(false)
     }
   }
 
@@ -266,81 +215,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   }
 
   const renderContent = () => {
-    if (mode === "phase1") {
-      return (
-        <>
-          <SheetHeader>
-            <SheetTitle>Phase 1 Diagnostic Plan</SheetTitle>
-            <SheetDescription>
-              Provide your diagnostic plan based on the case history. You can scroll the timeline while typing.
-            </SheetDescription>
-          </SheetHeader>
-
-          <div className="mt-6 space-y-4">
-            <div>
-              <Label htmlFor="phase1-plan">Diagnostic Plan *</Label>
-              <Textarea
-                id="phase1-plan"
-                value={phase1Plan}
-                onChange={(e) => setPhase1Plan(e.target.value)}
-                placeholder="Detail the diagnostic tests and procedures you recommend..."
-                rows={12}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label>Supporting Files (Optional)</Label>
-              <label
-                htmlFor="phase1-file-upload"
-                className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
-              >
-                <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
-                <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
-                <input
-                  id="phase1-file-upload"
-                  type="file"
-                  multiple
-                  onChange={(e) => {
-                    const files = Array.from(e.target.files || [])
-                    setPhase1Files((prev) => [...prev, ...files])
-                  }}
-                  className="hidden"
-                />
-              </label>
-
-              {phase1Files.length > 0 && (
-                <div className="mt-4 space-y-2">
-                  {phase1Files.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
-                      <FileText className="h-4 w-4 flex-shrink-0" />
-                      <span className="flex-1 truncate text-sm">{file.name}</span>
-                      <button
-                        onClick={() => setPhase1Files((prev) => prev.filter((_, i) => i !== index))}
-                        className="flex-shrink-0 text-destructive"
-                      >
-                        <X className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            <Button
-              onClick={handleSubmitPhase1}
-              disabled={isSubmittingPhase1 || isUploadingPhase1Files || !phase1Plan.trim()}
-              className="w-full"
-              size="lg"
-            >
-              {isUploadingPhase1Files ? "Uploading Files..." : isSubmittingPhase1 ? "Submitting..." : "Submit Phase 1"}
-            </Button>
-          </div>
-        </>
-      )
-    }
-
-    if (mode === "phase2") {
+    if (mode === "final_report") {
       return (
         <>
           {splitMode && (
@@ -446,31 +321,31 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             <div>
               <Label>Supporting Files (Optional)</Label>
               <label
-                htmlFor="phase2-file-upload"
+                htmlFor="final-report-upload"
                 className="mt-2 block cursor-pointer rounded-lg border-2 border-dashed p-6 text-center transition-colors hover:border-primary"
               >
                 <UploadCloud className="mx-auto h-10 w-10 text-muted-foreground" />
                 <p className="mt-2 text-sm text-muted-foreground">Click to upload files</p>
                 <input
-                  id="phase2-file-upload"
+                  id="final-report-upload"
                   type="file"
                   multiple
                   onChange={(e) => {
                     const files = Array.from(e.target.files || [])
-                    setPhase2Files((prev) => [...prev, ...files])
+                    setFinalReportFiles((prev) => [...prev, ...files])
                   }}
                   className="hidden"
                 />
               </label>
 
-              {phase2Files.length > 0 && (
+              {finalReportFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
-                  {phase2Files.map((file, index) => (
+                  {finalReportFiles.map((file, index) => (
                     <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
                       <FileText className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate text-sm">{file.name}</span>
                       <button
-                        onClick={() => setPhase2Files((prev) => prev.filter((_, i) => i !== index))}
+                        onClick={() => setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))}
                         className="flex-shrink-0 text-destructive"
                       >
                         <X className="h-4 w-4" />
@@ -482,14 +357,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingPhase2}>
+              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingFinalReport}>
                 Save Draft
               </Button>
               <Button
-                onClick={handleSubmitPhase2}
+                onClick={handleSubmitFinalReport}
                 disabled={
-                  isSubmittingPhase2 ||
-                  isUploadingPhase2Files ||
+                  isSubmittingFinalReport ||
+                  isUploadingFinalReportFiles ||
                   !caseDisposition.trim() ||
                   !primaryDiagnosis.trim() ||
                   !clinicalInterpretation.trim() ||
@@ -500,9 +375,9 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 className="flex-1"
                 size="lg"
               >
-                {isUploadingPhase2Files
+                {isUploadingFinalReportFiles
                   ? "Uploading Files..."
-                  : isSubmittingPhase2
+                  : isSubmittingFinalReport
                     ? "Submitting..."
                     : "SUBMIT FINAL REPORT"}
               </Button>

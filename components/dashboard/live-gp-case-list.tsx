@@ -36,9 +36,7 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
     allCases?.filter(
       (c) =>
         c.status === "pending_assignment" ||
-        c.status === "awaiting_phase1" ||
-        c.status === "awaiting_diagnostics" ||
-        c.status === "awaiting_phase2",
+        c.status === "in_progress"
     ) || []
   const completedCases = allCases?.filter((c) => c.status === "completed") || []
 
@@ -56,22 +54,10 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
             Pending Assignment
           </Badge>
         )
-      case "awaiting_phase1":
+      case "in_progress":
         return (
-          <Badge variant="default" className="bg-blue-100 text-blue-800 hover:bg-blue-100">
-            Preparing Phase 1
-          </Badge>
-        )
-      case "awaiting_diagnostics":
-        return (
-          <Badge variant="secondary" className="bg-amber-100 text-amber-800 hover:bg-amber-100">
-            Awaiting Diagnostics
-          </Badge>
-        )
-      case "awaiting_phase2":
-        return (
-          <Badge variant="default" className="bg-green-100 text-green-800 hover:bg-green-100">
-            Phase 2 Plan Ready
+          <Badge variant="default" className="bg-blue-600 hover:bg-blue-700">
+            Active Case
           </Badge>
         )
       case "completed":
@@ -80,8 +66,10 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
             Completed
           </Badge>
         )
+      case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>
       default:
-        return <Badge variant="secondary">{status}</Badge>
+        return <Badge variant="secondary">{status.replace("_", " ")}</Badge>
     }
   }
 
