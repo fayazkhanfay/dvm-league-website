@@ -14,7 +14,9 @@ import { saveReportDraft } from "@/app/actions/save-report-draft"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
 import { CaseDetails } from "@/app/actions/get-case-details"
-import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
+import { UploadCloud, FileText, X, CheckCircle, Trash2 } from "lucide-react"
+import { deleteCaseFile } from "@/app/actions/delete-case-file"
+import { Badge } from "@/components/ui/badge"
 
 interface ReportSheetProps {
   open: boolean
@@ -42,6 +44,11 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
+
+  // Initialize from initialData, filtering for specialist report files
+  const [uploadedReportFiles, setUploadedReportFiles] = useState<any[]>(
+    (initialData as any)?.case_files?.filter((f: any) => f.upload_phase === 'specialist_report') || []
+  )
 
   // Diagnostics state
   const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
@@ -87,13 +94,35 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     return uploadedFileRecords
   }
 
+  const handleDeleteFile = async (fileId: string, storagePath: string) => {
+    // Optimistic update
+    const previousFiles = uploadedReportFiles
+    setUploadedReportFiles((prev) => prev.filter((f) => f.id !== fileId))
+
+    try {
+      const result = await deleteCaseFile(fileId, storagePath)
+      if (!result.success) {
+        throw new Error(result.error)
+      }
+    } catch (error) {
+      // Revert
+      setUploadedReportFiles(previousFiles)
+      toast({
+        title: "Error deleting file",
+        description: "Failed to delete file. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
   const handleSaveDraft = async () => {
     setIsSavingDraft(true)
 
     try {
+      let newUploadedFiles: any[] = []
       if (finalReportFiles.length > 0) {
         setIsUploadingFinalReportFiles(true)
-        await uploadFilesToStorage(finalReportFiles, "specialist_report")
+        newUploadedFiles = await uploadFilesToStorage(finalReportFiles, "specialist_report")
       }
 
       const result = await saveReportDraft(caseId, {
@@ -106,6 +135,9 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       })
 
       if (result.success) {
+        setUploadedReportFiles((prev) => [...prev, ...newUploadedFiles])
+        setFinalReportFiles([])
+
         toast({
           title: "Draft saved",
           description: "Your report draft has been saved successfully.",
@@ -385,17 +417,45 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 />
               </label>
 
+              {/* New Files (Pending Upload) */}
               {finalReportFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    New Files (Unsaved)
+                  </p>
                   {finalReportFiles.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
+                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-dashed border-muted-foreground/30">
                       <FileText className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate text-sm">{file.name}</span>
+                      <Badge variant="outline" className="text-xs">Pending</Badge>
                       <button
                         onClick={() => setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))}
-                        className="flex-shrink-0 text-destructive"
+                        className="flex-shrink-0 text-destructive hover:bg-destructive/10 p-1 rounded"
+                        title="Remove from list"
                       >
                         <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Already Uploaded Files */}
+              {uploadedReportFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Saved Files
+                  </p>
+                  {uploadedReportFiles.map((file) => (
+                    <div key={file.id} className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-transparent">
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 truncate text-sm">{file.file_name}</span>
+                      <button
+                        onClick={() => handleDeleteFile(file.id, file.storage_object_path)}
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
+                        title="Delete permanently"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
