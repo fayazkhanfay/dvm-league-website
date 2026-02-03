@@ -32,9 +32,22 @@ export async function submitFinalReport(caseId: string, data: FinalReportData) {
             })
             .eq("id", caseId)
 
+
         if (error) {
             console.error("Error submitting final report:", error)
             return { success: false, error: "Failed to submit final report" }
+        }
+
+        // Publish the files
+        const { error: fileError } = await supabase.from("case_files")
+            .update({ is_draft: false })
+            .eq("case_id", caseId)
+            .eq("upload_phase", "specialist_report")
+            .eq("is_draft", true)
+
+        if (fileError) {
+            console.error("Error publishing case files:", fileError)
+            // We don't return failure here as the report itself is updated, but we log it.
         }
 
         revalidatePath(`/gp/case/${caseId}`)

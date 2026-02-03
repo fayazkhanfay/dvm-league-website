@@ -57,6 +57,7 @@ export async function getCaseFiles(caseId: string) {
     `,
     )
     .eq("case_id", caseId)
+    .eq("is_draft", false)
     .order("uploaded_at", { ascending: true })
 
   if (filesError) {

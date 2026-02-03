@@ -57,7 +57,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
   const [isSubmittingDiagnostics, setIsSubmittingDiagnostics] = useState(false)
 
-  const uploadFilesToStorage = async (files: File[], uploadPhase: "diagnostic_results" | "specialist_report") => {
+  const uploadFilesToStorage = async (files: File[], uploadPhase: "diagnostic_results" | "specialist_report", isDraft: boolean) => {
     const uploadedFileRecords: any[] = []
 
     for (const file of files) {
@@ -80,6 +80,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
           file_type: file.type,
           storage_object_path: uploadData.path,
           upload_phase: uploadPhase,
+          is_draft: isDraft,
         })
         .select()
         .single()
@@ -122,7 +123,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       let newUploadedFiles: any[] = []
       if (finalReportFiles.length > 0) {
         setIsUploadingFinalReportFiles(true)
-        newUploadedFiles = await uploadFilesToStorage(finalReportFiles, "specialist_report")
+        newUploadedFiles = await uploadFilesToStorage(finalReportFiles, "specialist_report", true)
       }
 
       const result = await saveReportDraft(caseId, {
@@ -184,7 +185,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     try {
       if (finalReportFiles.length > 0) {
         setIsUploadingFinalReportFiles(true)
-        await uploadFilesToStorage(finalReportFiles, "specialist_report")
+        await uploadFilesToStorage(finalReportFiles, "specialist_report", false)
       }
 
       const result = await submitFinalReport(caseId, {
@@ -235,7 +236,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     setIsUploadingDiagnostics(true)
 
     try {
-      const uploadedFiles = await uploadFilesToStorage(diagnosticFiles, "diagnostic_results")
+      const uploadedFiles = await uploadFilesToStorage(diagnosticFiles, "diagnostic_results", false)
       setUploadedDiagnosticFiles((prev) => [...prev, ...uploadedFiles])
       setDiagnosticFiles([])
       toast({
