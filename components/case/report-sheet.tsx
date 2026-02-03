@@ -15,7 +15,7 @@ import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
 import { CaseDetails } from "@/app/actions/get-case-details"
 import { UploadCloud, FileText, X, CheckCircle, Trash2 } from "lucide-react"
-import { deleteCaseFile } from "@/app/actions/delete-case-file"
+
 import { Badge } from "@/components/ui/badge"
 
 interface ReportSheetProps {
@@ -96,21 +96,39 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   }
 
   const handleDeleteFile = async (fileId: string, storagePath: string) => {
-    // Optimistic update
-    const previousFiles = uploadedReportFiles
-    setUploadedReportFiles((prev) => prev.filter((f) => f.id !== fileId))
-
     try {
-      const result = await deleteCaseFile(fileId, storagePath)
-      if (!result.success) {
-        throw new Error(result.error)
+      // 1. Delete from Storage first (Clean Code principle)
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("case-bucket")
+          .remove([storagePath])
+
+        if (storageError) {
+          console.error("Error removing file from storage:", storageError)
+          // We continue to DB deletion even if storage fails to avoid "zombie" records
+        }
       }
-    } catch (error) {
-      // Revert
-      setUploadedReportFiles(previousFiles)
+
+      // 2. Delete from Database (Matches case-submission-form.tsx pattern)
+      const { error: dbError } = await supabase
+        .from("case_files")
+        .delete()
+        .eq("id", fileId)
+
+      if (dbError) throw dbError
+
+      // 3. Update State (Post-action update, no optimistic revert needed)
+      setUploadedReportFiles((prev) => prev.filter((f) => f.id !== fileId))
+
+      toast({
+        title: "File removed",
+        description: "The draft file has been deleted.",
+      })
+    } catch (err) {
+      console.error("Error deleting file:", err)
       toast({
         title: "Error deleting file",
-        description: "Failed to delete file. Please try again.",
+        description: "Failed to remove the file. Please try again.",
         variant: "destructive",
       })
     }
@@ -441,17 +459,23 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 </div>
               )}
 
-              {/* Already Uploaded Files */}
+              {/* Already Uploaded Files (Drafts from DB) */}
               {uploadedReportFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
                   <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                    Saved Files
+                    Saved Draft Files
                   </p>
                   {uploadedReportFiles.map((file) => (
-                    <div key={file.id} className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-transparent">
+                    <div
+                      key={file.id}
+                      className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-transparent"
+                    >
                       <FileText className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate text-sm">{file.file_name}</span>
+
+                      {/* Delete Button */}
                       <button
+                        type="button" // Explicit type to prevent form submission
                         onClick={() => handleDeleteFile(file.id, file.storage_object_path)}
                         className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
                         title="Delete permanently"
