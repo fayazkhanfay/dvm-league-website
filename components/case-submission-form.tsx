@@ -117,8 +117,21 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
     setFiles(files.filter((_, i) => i !== index))
   }
 
-  const removeExistingFile = async (fileId: string) => {
+  const removeExistingFile = async (fileId: string, storagePath: string) => { // Updated signature
     try {
+      // 1. Delete from Storage (The Missing Step)
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("case-bucket")
+          .remove([storagePath])
+
+        if (storageError) {
+          console.error("Error removing file from storage:", storageError)
+          // Continue to DB delete to avoid UI mismatch
+        }
+      }
+
+      // 2. Delete from Database
       const { error } = await supabase.from("case_files").delete().eq("id", fileId)
 
       if (error) throw error
@@ -126,7 +139,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
       setExistingFiles(existingFiles.filter((f) => f.id !== fileId))
       toast.success("File removed successfully")
     } catch (err) {
-      console.error("[v0] Error removing file:", err)
+      console.error("Error removing file:", err)
       toast.error("Failed to remove file")
     }
   }
@@ -717,7 +730,7 @@ export function CaseSubmissionForm({ userProfile, initialData, isDemoUser = fals
                           type="button"
                           variant="ghost"
                           size="sm"
-                          onClick={() => removeExistingFile(file.id)}
+                          onClick={() => removeExistingFile(file.id, file.storage_object_path)}
                           className="h-6 w-6 p-0 text-red-600 hover:text-red-700"
                         >
                           <X className="h-4 w-4" />
