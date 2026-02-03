@@ -10,9 +10,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Input } from "@/components/ui/input"
 import { useToast } from "@/hooks/use-toast"
 import { submitFinalReport } from "@/app/actions/submit-final-report"
+import { saveReportDraft } from "@/app/actions/save-report-draft"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
-import { UploadCloud, FileText, X, CheckCircle } from "lucide-react"
+import { CaseDetails } from "@/app/actions/get-case-details"
+import { UploadCloud, FileText, X, CheckCircle, Trash2 } from "lucide-react"
+
+import { Badge } from "@/components/ui/badge"
 
 interface ReportSheetProps {
   open: boolean
@@ -21,23 +25,30 @@ interface ReportSheetProps {
   caseId: string
   currentUserId: string
   splitMode?: boolean
+  initialData?: CaseDetails
 }
 
-export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, splitMode = false }: ReportSheetProps) {
+export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, splitMode = false, initialData }: ReportSheetProps) {
   const router = useRouter()
   const { toast } = useToast()
   const supabase = createClient()
 
   // Final Report state
-  const [caseDisposition, setCaseDisposition] = useState("")
-  const [primaryDiagnosis, setPrimaryDiagnosis] = useState("")
-  const [clinicalInterpretation, setClinicalInterpretation] = useState("")
-  const [treatmentProtocol, setTreatmentProtocol] = useState("")
-  const [monitoringPlan, setMonitoringPlan] = useState("")
-  const [clientExplanation, setClientExplanation] = useState("")
+  const [caseDisposition, setCaseDisposition] = useState(initialData?.case_disposition || "")
+  const [primaryDiagnosis, setPrimaryDiagnosis] = useState(initialData?.final_diagnosis || "")
+  const [clinicalInterpretation, setClinicalInterpretation] = useState(initialData?.clinical_interpretation || "")
+  const [treatmentProtocol, setTreatmentProtocol] = useState(initialData?.treatment_plan || "")
+  const [monitoringPlan, setMonitoringPlan] = useState(initialData?.follow_up_instructions || "")
+  const [clientExplanation, setClientExplanation] = useState(initialData?.client_summary || "")
   const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
   const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
+  const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
+
+  // Initialize from initialData, filtering for specialist report files
+  const [uploadedReportFiles, setUploadedReportFiles] = useState<any[]>(
+    (initialData as any)?.case_files?.filter((f: any) => f.upload_phase === 'specialist_report') || []
+  )
 
   // Diagnostics state
   const [diagnosticFiles, setDiagnosticFiles] = useState<File[]>([])
@@ -46,7 +57,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [uploadedDiagnosticFiles, setUploadedDiagnosticFiles] = useState<any[]>([])
   const [isSubmittingDiagnostics, setIsSubmittingDiagnostics] = useState(false)
 
-  const uploadFilesToStorage = async (files: File[], uploadPhase: "diagnostic_results" | "specialist_report") => {
+  const uploadFilesToStorage = async (files: File[], uploadPhase: "diagnostic_results" | "specialist_report", isDraft: boolean) => {
     const uploadedFileRecords: any[] = []
 
     for (const file of files) {
@@ -69,6 +80,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
           file_type: file.type,
           storage_object_path: uploadData.path,
           upload_phase: uploadPhase,
+          is_draft: isDraft,
         })
         .select()
         .single()
@@ -81,6 +93,92 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     }
 
     return uploadedFileRecords
+  }
+
+  const handleDeleteFile = async (fileId: string, storagePath: string) => {
+    try {
+      // 1. Delete from Storage first (Clean Code principle)
+      if (storagePath) {
+        const { error: storageError } = await supabase.storage
+          .from("case-bucket")
+          .remove([storagePath])
+
+        if (storageError) {
+          console.error("Error removing file from storage:", storageError)
+          // We continue to DB deletion even if storage fails to avoid "zombie" records
+        }
+      }
+
+      // 2. Delete from Database (Matches case-submission-form.tsx pattern)
+      const { error: dbError } = await supabase
+        .from("case_files")
+        .delete()
+        .eq("id", fileId)
+
+      if (dbError) throw dbError
+
+      // 3. Update State (Post-action update, no optimistic revert needed)
+      setUploadedReportFiles((prev) => prev.filter((f) => f.id !== fileId))
+
+      toast({
+        title: "File removed",
+        description: "The draft file has been deleted.",
+      })
+    } catch (err) {
+      console.error("Error deleting file:", err)
+      toast({
+        title: "Error deleting file",
+        description: "Failed to remove the file. Please try again.",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSaveDraft = async () => {
+    setIsSavingDraft(true)
+
+    try {
+      let newUploadedFiles: any[] = []
+      if (finalReportFiles.length > 0) {
+        setIsUploadingFinalReportFiles(true)
+        newUploadedFiles = await uploadFilesToStorage(finalReportFiles, "specialist_report", true)
+      }
+
+      const result = await saveReportDraft(caseId, {
+        caseDisposition: caseDisposition,
+        finalDiagnosis: primaryDiagnosis,
+        clinicalInterpretation: clinicalInterpretation,
+        treatmentPlan: treatmentProtocol,
+        followUpInstructions: monitoringPlan,
+        clientSummary: clientExplanation,
+      })
+
+      if (result.success) {
+        setUploadedReportFiles((prev) => [...prev, ...newUploadedFiles])
+        setFinalReportFiles([])
+
+        toast({
+          title: "Draft saved",
+          description: "Your report draft has been saved successfully.",
+        })
+        router.refresh()
+      } else {
+        toast({
+          title: "Save failed",
+          description: result.error || "Failed to save draft.",
+          variant: "destructive",
+        })
+      }
+    } catch (error: any) {
+      toast({
+        title: "Error",
+        description: error.message || "Failed to save draft.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSavingDraft(false)
+      setIsUploadingFinalReportFiles(false)
+    }
   }
 
   const handleSubmitFinalReport = async () => {
@@ -105,7 +203,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     try {
       if (finalReportFiles.length > 0) {
         setIsUploadingFinalReportFiles(true)
-        await uploadFilesToStorage(finalReportFiles, "specialist_report")
+        await uploadFilesToStorage(finalReportFiles, "specialist_report", false)
       }
 
       const result = await submitFinalReport(caseId, {
@@ -156,7 +254,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     setIsUploadingDiagnostics(true)
 
     try {
-      const uploadedFiles = await uploadFilesToStorage(diagnosticFiles, "diagnostic_results")
+      const uploadedFiles = await uploadFilesToStorage(diagnosticFiles, "diagnostic_results", false)
       setUploadedDiagnosticFiles((prev) => [...prev, ...uploadedFiles])
       setDiagnosticFiles([])
       toast({
@@ -338,17 +436,51 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 />
               </label>
 
+              {/* New Files (Pending Upload) */}
               {finalReportFiles.length > 0 && (
                 <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    New Files (Unsaved)
+                  </p>
                   {finalReportFiles.map((file, index) => (
-                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3">
+                    <div key={index} className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-dashed border-muted-foreground/30">
                       <FileText className="h-4 w-4 flex-shrink-0" />
                       <span className="flex-1 truncate text-sm">{file.name}</span>
+                      <Badge variant="outline" className="text-xs">Pending</Badge>
                       <button
                         onClick={() => setFinalReportFiles((prev) => prev.filter((_, i) => i !== index))}
-                        className="flex-shrink-0 text-destructive"
+                        className="flex-shrink-0 text-destructive hover:bg-destructive/10 p-1 rounded"
+                        title="Remove from list"
                       >
                         <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Already Uploaded Files (Drafts from DB) */}
+              {uploadedReportFiles.length > 0 && (
+                <div className="mt-4 space-y-2">
+                  <p className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                    Saved Draft Files
+                  </p>
+                  {uploadedReportFiles.map((file) => (
+                    <div
+                      key={file.id}
+                      className="flex items-center gap-2 rounded-md bg-secondary p-3 border border-transparent"
+                    >
+                      <FileText className="h-4 w-4 flex-shrink-0" />
+                      <span className="flex-1 truncate text-sm">{file.file_name}</span>
+
+                      {/* Delete Button */}
+                      <button
+                        type="button" // Explicit type to prevent form submission
+                        onClick={() => handleDeleteFile(file.id, file.storage_object_path)}
+                        className="flex-shrink-0 text-muted-foreground hover:text-destructive transition-colors p-1 rounded"
+                        title="Delete permanently"
+                      >
+                        <Trash2 className="h-4 w-4" />
                       </button>
                     </div>
                   ))}
@@ -357,8 +489,14 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
             </div>
 
             <div className="flex gap-3 pt-4">
-              <Button variant="ghost" className="flex-1" size="lg" disabled={isSubmittingFinalReport}>
-                Save Draft
+              <Button
+                variant="ghost"
+                className="flex-1"
+                size="lg"
+                disabled={isSubmittingFinalReport || isSavingDraft || isUploadingFinalReportFiles}
+                onClick={handleSaveDraft}
+              >
+                {isSavingDraft ? "Saving..." : "Save Draft"}
               </Button>
               <Button
                 onClick={handleSubmitFinalReport}

@@ -26,6 +26,7 @@ export interface CaseDetails {
   follow_up_instructions: string | null
   client_summary: string | null
   final_report_path: string | null
+  case_files: any[]
 }
 
 export async function getCaseDetails(caseId: string) {
@@ -64,7 +65,9 @@ export async function getCaseDetails(caseId: string) {
       treatment_plan,
       follow_up_instructions,
       client_summary,
-      final_report_path
+      client_summary,
+      final_report_path,
+      case_files(*)
     `,
     )
     .eq("id", caseId)
@@ -75,5 +78,16 @@ export async function getCaseDetails(caseId: string) {
     return { error: "Case not found" }
   }
 
-  return { data: caseData as CaseDetails }
+  // Transform the data to match the CaseDetails interface which expects case_files
+  // Since we are doing a single query with a join which might return it differently depending on how supabase-js types it,
+  // we might need to cast or ensure the structure.
+  // However, simpler is to let it be. But if we want to sort, we might need a separate query or an order command in the select.
+  // The user prompt just says "includes case_files(*)".
+
+  // Note: The simple select `case_files(*)` usually returns it as a property on the object.
+  // We need to order them by creation if possible, but the prompt didn't specify order, just presence.
+
+  // For better typing, we might want to define CaseFile type properly or reuse it, but `any[]` is what the user seems to expect from `report-sheet.tsx` usage (it casts to any).
+
+  return { data: caseData as unknown as CaseDetails }
 }

@@ -149,6 +149,7 @@ export function UnifiedCaseView({
                 caseId={caseId}
                 currentUserId={userId}
                 splitMode={true}
+                initialData={caseData}
               />
             </div>
           </div>
@@ -180,6 +181,7 @@ export function UnifiedCaseView({
         caseId={caseId}
         currentUserId={userId}
         splitMode={false}
+        initialData={caseData}
       />
     </AppLayout>
   )
