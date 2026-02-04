@@ -17,6 +17,8 @@ import { CaseDetails } from "@/app/actions/get-case-details"
 import { UploadCloud, FileText, X, CheckCircle, Trash2 } from "lucide-react"
 
 import { Badge } from "@/components/ui/badge"
+// import { pdf } from '@react-pdf/renderer'
+// import { FinalReportPDF } from '@/components/pdf/FinalReportPDF'
 
 interface ReportSheetProps {
   open: boolean
@@ -44,6 +46,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
+
 
   // Initialize from initialData, filtering for specialist report files
   const [uploadedReportFiles, setUploadedReportFiles] = useState<any[]>(
@@ -181,7 +184,42 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     }
   }
 
-  const handleSubmitFinalReport = async () => {
+  const getReportData = () => ({
+    patientName: initialData?.patient_name || 'Unknown Patient',
+    caseId: caseId,
+    specialistName: 'DVM League Specialist', // TODO: Pass specialist profile or name
+    date: new Date().toLocaleDateString(),
+    finalDiagnosis: primaryDiagnosis,
+    clinicalInterpretation: clinicalInterpretation,
+    treatmentPlan: treatmentProtocol,
+    followUp: monitoringPlan,
+    clientSummary: clientExplanation
+  })
+
+  const handlePreview = async () => {
+    try {
+      // Dynamic import to avoid SSR/Initial load issues
+      const { pdf } = await import('@react-pdf/renderer')
+      const { FinalReportPDF } = await import('@/components/pdf/FinalReportPDF')
+
+      // Client-side generation (No server cost)
+      const blob = await pdf(<FinalReportPDF data={getReportData()} />).toBlob()
+
+      const url = URL.createObjectURL(blob)
+
+      // Open in new tab
+      window.open(url, '_blank')
+    } catch (error: any) {
+      console.error("PDF Generation failed:", error)
+      toast({
+        title: "Preview Failed",
+        description: `Could not generate PDF: ${error.message}`,
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleFinalSubmit = async () => {
     if (
       !caseDisposition.trim() ||
       !primaryDiagnosis.trim() ||
@@ -198,9 +236,36 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       return
     }
 
+    if (!confirm("Are you sure you want to submit the Final Report? This cannot be undone.")) return;
+
     setIsSubmittingFinalReport(true)
 
     try {
+      // 1. Generate PDF
+      const { pdf } = await import('@react-pdf/renderer')
+      const { FinalReportPDF } = await import('@/components/pdf/FinalReportPDF')
+
+      const blob = await pdf(<FinalReportPDF data={getReportData()} />).toBlob()
+      const fileName = `${caseId}_FINAL.pdf`
+
+      // 2. Upload to Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase
+        .storage
+        .from('final_reports')
+        .upload(fileName, blob, {
+          contentType: 'application/pdf',
+          upsert: true
+        })
+
+      if (uploadError) throw uploadError
+
+      // 3. Get Public URL
+      const { data: { publicUrl } } = supabase
+        .storage
+        .from('final_reports')
+        .getPublicUrl(fileName)
+
+      // 4. Update Database
       if (finalReportFiles.length > 0) {
         setIsUploadingFinalReportFiles(true)
         await uploadFilesToStorage(finalReportFiles, "specialist_report", false)
@@ -213,15 +278,16 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         treatmentPlan: treatmentProtocol,
         followUpInstructions: monitoringPlan,
         clientSummary: clientExplanation,
+        finalReportPath: publicUrl
       })
 
       if (result.success) {
         toast({
-          title: "Final report submitted",
-          description: "Your final report has been submitted successfully.",
+          title: "Final Report submitted",
+          description: "Your report has been generated and submitted successfully.",
         })
         onOpenChange(false)
-        router.refresh()
+        router.push('/specialist-dashboard')
       } else {
         toast({
           title: "Submission failed",
@@ -230,9 +296,10 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         })
       }
     } catch (error: any) {
+      console.error(error)
       toast({
         title: "Error",
-        description: error.message || "Failed to submit final report.",
+        description: "Failed to generate or upload report",
         variant: "destructive",
       })
     } finally {
@@ -499,7 +566,18 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 {isSavingDraft ? "Saving..." : "Save Draft"}
               </Button>
               <Button
-                onClick={handleSubmitFinalReport}
+                variant="outline"
+                onClick={handlePreview}
+                disabled={isSubmittingFinalReport}
+                type="button"
+                className="gap-2"
+              >
+                <FileText className="h-4 w-4" />
+                Preview PDF
+              </Button>
+
+              <Button
+                onClick={handleFinalSubmit}
                 disabled={
                   isSubmittingFinalReport ||
                   isUploadingFinalReportFiles ||
@@ -510,7 +588,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                   !monitoringPlan.trim() ||
                   !clientExplanation.trim()
                 }
-                className="flex-1"
+                className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 size="lg"
               >
                 {isUploadingFinalReportFiles
@@ -626,12 +704,18 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   }
 
   if (splitMode) {
-    return <div className="h-full">{renderContent()}</div>
+    return (
+      <div className="h-full">
+        {renderContent()}
+      </div>
+    )
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">{renderContent()}</SheetContent>
+      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+        {renderContent()}
+      </SheetContent>
     </Sheet>
   )
 }

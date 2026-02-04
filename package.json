@@ -39,6 +39,7 @@
     "@radix-ui/react-tooltip": "1.1.6",
     "@react-email/components": "latest",
     "@react-email/render": "latest",
+    "@react-pdf/renderer": "^4.3.2",
     "@supabase/ssr": "latest",
     "@supabase/supabase-js": "latest",
     "@vercel/analytics": "latest",
