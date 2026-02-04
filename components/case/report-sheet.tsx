@@ -243,22 +243,32 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
       const blob = await pdf(<FinalReportPDF data={getReportData()} />).toBlob()
       const fileName = `${caseId}_FINAL.pdf`
 
-      // 2. Upload to Supabase Storage
+      // 2. Upload to Supabase Storage (Private)
       const { data: uploadData, error: uploadError } = await supabase
         .storage
         .from('final_reports')
         .upload(fileName, blob, {
           contentType: 'application/pdf',
-          upsert: true
+          upsert: false // Prevent overwrite (Immutable Record)
         })
 
-      if (uploadError) throw uploadError
+      if (uploadError) {
+        if (uploadError.message.includes('already exists') || uploadError.message.includes('Duplicate')) {
+          // Use a toast or alert to inform them nicely
+          toast({
+            title: "Report already submitted",
+            description: "A report has already been submitted for this case.",
+            variant: "destructive"
+          });
+          setIsSubmittingFinalReport(false);
+          return;
+        }
+        throw uploadError;
+      }
 
-      // 3. Get Public URL
-      const { data: { publicUrl } } = supabase
-        .storage
-        .from('final_reports')
-        .getPublicUrl(fileName)
+      // 3. CRITICAL CHANGE: Use the internal 'path', NOT the public URL.
+      // We are saving the reference key (e.g. "final_reports/case-123_FINAL.pdf")
+      const filePath = uploadData.path
 
       // 4. Update Database
       if (finalReportFiles.length > 0) {
@@ -273,7 +283,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
         treatmentPlan: treatmentProtocol,
         followUpInstructions: monitoringPlan,
         clientSummary: clientExplanation,
-        finalReportPath: publicUrl
+        finalReportPath: filePath // Storing the private key
       })
 
       if (result.success) {
