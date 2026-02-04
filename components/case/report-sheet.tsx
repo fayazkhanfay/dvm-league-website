@@ -14,7 +14,15 @@ import { saveReportDraft } from "@/app/actions/save-report-draft"
 import { submitDiagnostics } from "@/app/actions/submit-diagnostics"
 import { createClient } from "@/lib/supabase/client"
 import { CaseDetails } from "@/app/actions/get-case-details"
-import { UploadCloud, FileText, X, CheckCircle, Trash2 } from "lucide-react"
+import { UploadCloud, FileText, X, CheckCircle, Trash2, Loader2, AlertTriangle } from "lucide-react"
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter
+} from "@/components/ui/dialog"
 
 import { Badge } from "@/components/ui/badge"
 // import { pdf } from '@react-pdf/renderer'
@@ -43,6 +51,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
   const [monitoringPlan, setMonitoringPlan] = useState(initialData?.follow_up_instructions || "")
   const [clientExplanation, setClientExplanation] = useState(initialData?.client_summary || "")
   const [finalReportFiles, setFinalReportFiles] = useState<File[]>([])
+  const [showConfirmModal, setShowConfirmModal] = useState(false)
   const [isSubmittingFinalReport, setIsSubmittingFinalReport] = useState(false)
   const [isSavingDraft, setIsSavingDraft] = useState(false)
   const [isUploadingFinalReportFiles, setIsUploadingFinalReportFiles] = useState(false)
@@ -219,24 +228,10 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     }
   }
 
-  const handleFinalSubmit = async () => {
-    if (
-      !caseDisposition.trim() ||
-      !primaryDiagnosis.trim() ||
-      !clinicalInterpretation.trim() ||
-      !treatmentProtocol.trim() ||
-      !monitoringPlan.trim() ||
-      !clientExplanation.trim()
-    ) {
-      toast({
-        title: "Missing information",
-        description: "Please complete all fields before submitting",
-        variant: "destructive",
-      })
-      return
-    }
-
-    if (!confirm("Are you sure you want to submit the Final Report? This cannot be undone.")) return;
+  const executeFinalSubmission = async () => {
+    // Validation is now done before opening the modal, or we can keep it here as a safeguard
+    // but the main button usually does the validation check before opening the modal.
+    // However, keeping it here is safe.
 
     setIsSubmittingFinalReport(true)
 
@@ -286,6 +281,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
           title: "Final Report submitted",
           description: "Your report has been generated and submitted successfully.",
         })
+        setShowConfirmModal(false) // Close the confirmation modal
         onOpenChange(false)
         router.push('/specialist-dashboard')
       } else {
@@ -577,7 +573,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
               </Button>
 
               <Button
-                onClick={handleFinalSubmit}
+                onClick={() => setShowConfirmModal(true)}
                 disabled={
                   isSubmittingFinalReport ||
                   isUploadingFinalReportFiles ||
@@ -591,11 +587,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 size="lg"
               >
-                {isUploadingFinalReportFiles
-                  ? "Uploading Files..."
-                  : isSubmittingFinalReport
-                    ? "Submitting..."
-                    : "SUBMIT FINAL REPORT"}
+                Sign & Submit Final Report
               </Button>
             </div>
           </div>
@@ -707,15 +699,205 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
     return (
       <div className="h-full">
         {renderContent()}
+        {/* Confirmation Modal for Split Mode */}
+        {/* We need to render this here as well because in splitMode the component returns early */}
+        <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+          <DialogContent className="sm:max-w-md border-2 border-brand-navy">
+            <DialogHeader>
+              <DialogTitle className="text-xl font-bold text-brand-navy flex items-center gap-2">
+                <FileText className="h-5 w-5" />
+                Confirm Final Report
+              </DialogTitle>
+              <DialogDescription className="text-sm text-brand-navy/70">
+                You are about to submit the official medical record for this case.
+              </DialogDescription>
+            </DialogHeader>
+
+            <div className="space-y-4 py-4">
+              <div className="space-y-2 text-sm">
+
+                <div className="flex justify-between border-b pb-2">
+                  <span className="font-semibold text-brand-navy">Patient:</span>
+                  <span className="text-brand-navy/80">
+                    {initialData?.patient_name || 'Unknown Patient'}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1">
+                  <span className="font-semibold text-brand-navy">Diagnosis:</span>
+                  <span className={primaryDiagnosis ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                    {primaryDiagnosis ? "Included" : "Missing"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1">
+                  <span className="font-semibold text-brand-navy">Treatment Plan:</span>
+                  <span className={treatmentProtocol ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                    {treatmentProtocol ? "Included" : "Missing"}
+                  </span>
+                </div>
+
+                <div className="flex justify-between py-1">
+                  <span className="font-semibold text-brand-navy">Client Summary:</span>
+                  <span className={clientExplanation ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                    {clientExplanation ? "Included" : "Missing"}
+                  </span>
+                </div>
+
+                {/* The Warning Box */}
+                <div className="mt-4 rounded-md border-l-4 border-red-500 bg-red-50 p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                    <div className="space-y-1">
+                      <p className="font-bold text-red-900 text-xs uppercase tracking-wide">
+                        Irreversible Action
+                      </p>
+                      <p className="text-xs text-red-800">
+                        Once submitted, this PDF becomes the permanent legal record. It cannot be edited or deleted without administrative override.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <DialogFooter className="gap-2 sm:gap-0">
+              <Button
+                type="button"
+                variant="outline"
+                onClick={() => setShowConfirmModal(false)}
+                className="border-2 border-brand-stone bg-transparent text-brand-navy hover:bg-brand-stone"
+              >
+                Go Back & Edit
+              </Button>
+              <Button
+                type="button"
+                onClick={executeFinalSubmission}
+                disabled={isSubmittingFinalReport}
+                className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+              >
+                {isSubmittingFinalReport ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Signing...
+                  </>
+                ) : (
+                  "Confirm & Submit Record"
+                )}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     )
   }
 
   return (
-    <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
-        {renderContent()}
-      </SheetContent>
-    </Sheet>
+    <div className="h-full">
+      <Sheet open={open} onOpenChange={onOpenChange} modal={false}>
+        {!splitMode && (
+          <SheetContent className="w-full overflow-y-auto sm:max-w-lg">
+            {renderContent()}
+          </SheetContent>
+        )}
+        {/* Render content directly if split mode is handled by parent, 
+            but here it seems splitMode just changes specific internal rendering.
+            Wait, looking at the code, if splitMode is true, it returns early with just renderContent().
+            So I should place the Dialog OUTSIDE that return or ensure it's included.
+            The best place is probably inside renderContent or wrapping the return.
+            However, Dialog needs to be at the root of the component or portaled correctly. 
+            Since Radix Dialog uses Portal, placement isn't super critical for layout, but needs to be rendered.
+         */}
+      </Sheet>
+
+      {/* Confirmation Modal */}
+      <Dialog open={showConfirmModal} onOpenChange={setShowConfirmModal}>
+        <DialogContent className="sm:max-w-md border-2 border-brand-navy">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold text-brand-navy flex items-center gap-2">
+              <FileText className="h-5 w-5" />
+              Confirm Final Report
+            </DialogTitle>
+            <DialogDescription className="text-sm text-brand-navy/70">
+              You are about to submit the official medical record for this case.
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="space-y-2 text-sm">
+
+              <div className="flex justify-between border-b pb-2">
+                <span className="font-semibold text-brand-navy">Patient:</span>
+                <span className="text-brand-navy/80">
+                  {initialData?.patient_name || 'Unknown Patient'}
+                </span>
+              </div>
+
+              <div className="flex justify-between py-1">
+                <span className="font-semibold text-brand-navy">Diagnosis:</span>
+                <span className={primaryDiagnosis ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                  {primaryDiagnosis ? "Included" : "Missing"}
+                </span>
+              </div>
+
+              <div className="flex justify-between py-1">
+                <span className="font-semibold text-brand-navy">Treatment Plan:</span>
+                <span className={treatmentProtocol ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                  {treatmentProtocol ? "Included" : "Missing"}
+                </span>
+              </div>
+
+              <div className="flex justify-between py-1">
+                <span className="font-semibold text-brand-navy">Client Summary:</span>
+                <span className={clientExplanation ? "text-green-600 font-bold" : "text-red-500 font-bold"}>
+                  {clientExplanation ? "Included" : "Missing"}
+                </span>
+              </div>
+
+              {/* The Warning Box */}
+              <div className="mt-4 rounded-md border-l-4 border-red-500 bg-red-50 p-4">
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className="h-5 w-5 text-red-600 mt-0.5" />
+                  <div className="space-y-1">
+                    <p className="font-bold text-red-900 text-xs uppercase tracking-wide">
+                      Irreversible Action
+                    </p>
+                    <p className="text-xs text-red-800">
+                      Once submitted, this PDF becomes the permanent legal record. It cannot be edited or deleted without administrative override.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <DialogFooter className="gap-2 sm:gap-0">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowConfirmModal(false)}
+              className="border-2 border-brand-stone bg-transparent text-brand-navy hover:bg-brand-stone"
+            >
+              Go Back & Edit
+            </Button>
+            <Button
+              type="button"
+              onClick={executeFinalSubmission}
+              disabled={isSubmittingFinalReport}
+              className="bg-brand-gold font-bold text-brand-navy hover:bg-brand-navy hover:text-white"
+            >
+              {isSubmittingFinalReport ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Signing...
+                </>
+              ) : (
+                "Confirm & Submit Record"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </div>
   )
 }
