@@ -587,7 +587,7 @@ export function ReportSheet({ open, onOpenChange, mode, caseId, currentUserId, s
                 className="flex-1 bg-green-600 hover:bg-green-700 text-white"
                 size="lg"
               >
-                Sign & Submit Final Report
+                Submit Final Report
               </Button>
             </div>
           </div>
