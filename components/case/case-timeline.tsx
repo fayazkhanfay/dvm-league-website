@@ -13,6 +13,7 @@ import { ImageLightbox } from "./image-lightbox"
 import { DownloadAllButton } from "./download-all-button"
 import { getSignedFileUrl } from "@/app/actions/storage"
 import { getSignedUrlsBatch } from "@/app/actions/get-signed-urls-batch"
+import { FinalReportCard } from "./final-report-card"
 import { useToast } from "@/hooks/use-toast"
 
 type CaseFile = {
@@ -34,6 +35,9 @@ interface CaseTimelineProps {
   caseData: CaseDetails
   userId: string
   isLoading?: boolean
+  finalReportUrl?: string | null
+  specialistName?: string
+  submittedAt?: string
 }
 
 type FileBatch = {
@@ -56,6 +60,9 @@ export function CaseTimeline({
   caseData,
   userId,
   isLoading,
+  finalReportUrl,
+  specialistName,
+  submittedAt
 }: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
@@ -409,7 +416,15 @@ export function CaseTimeline({
       />
 
       <div className="space-y-6">
-        {!isLoading && mergedTimeline.length === 0 ? (
+        {finalReportUrl && (
+          <FinalReportCard
+            reportUrl={finalReportUrl}
+            specialistName={specialistName || "Specialist"}
+            submittedAt={submittedAt ? formatTimestamp(submittedAt) : "Recently"}
+          />
+        )}
+
+        {!isLoading && mergedTimeline.length === 0 && !finalReportUrl ? (
           <div className="flex flex-col items-center justify-center h-full text-center text-muted-foreground py-12">
             <MessageSquare className="h-12 w-12 mb-2 opacity-50" />
             <p>No activity yet</p>

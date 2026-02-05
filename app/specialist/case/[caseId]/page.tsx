@@ -5,6 +5,8 @@ import { getCaseDetails } from "@/app/actions/get-case-details"
 import { getCaseTimeline } from "@/app/actions/get-case-timeline"
 import { getCaseFiles } from "@/app/actions/get-case-files"
 
+import { getReportMetadata } from "@/app/actions/get-report-metadata"
+
 export default async function SpecialistCaseViewPage({
   params,
 }: {
@@ -60,6 +62,17 @@ export default async function SpecialistCaseViewPage({
     getCaseFiles(caseId),
   ])
 
+  let finalReportUrl = null
+  let specialistName = "You"
+  let submittedAt = undefined
+
+  if (caseDetailsResult.data) {
+    const metadata = await getReportMetadata(caseDetailsResult.data)
+    finalReportUrl = metadata.finalReportUrl
+    if (metadata.specialistName) specialistName = metadata.specialistName
+    submittedAt = metadata.submittedAt
+  }
+
   return (
     <UnifiedCaseView
       caseId={caseId}
@@ -72,6 +85,9 @@ export default async function SpecialistCaseViewPage({
       caseDetailsResult={caseDetailsResult}
       timelineResult={timelineResult}
       filesResult={filesResult}
+      finalReportUrl={finalReportUrl}
+      specialistName={specialistName}
+      submittedAt={submittedAt}
     />
   )
 }

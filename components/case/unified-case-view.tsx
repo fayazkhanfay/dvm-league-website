@@ -24,6 +24,9 @@ interface UnifiedCaseViewProps {
   caseDetailsResult: Awaited<ReturnType<typeof getCaseDetails>>
   timelineResult: Awaited<ReturnType<typeof getCaseTimeline>>
   filesResult: Awaited<ReturnType<typeof getCaseFiles>>
+  finalReportUrl?: string | null
+  specialistName?: string
+  submittedAt?: string
 }
 
 export function UnifiedCaseView({
@@ -34,6 +37,9 @@ export function UnifiedCaseView({
   caseDetailsResult,
   timelineResult,
   filesResult,
+  finalReportUrl,
+  specialistName,
+  submittedAt
 }: UnifiedCaseViewProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState<"final_report" | "diagnostics">("final_report")
@@ -133,6 +139,9 @@ export function UnifiedCaseView({
                   caseData={caseData}
                   userId={userId}
                   isLoading={isLoadingTimeline || isLoadingFiles}
+                  finalReportUrl={finalReportUrl}
+                  specialistName={specialistName}
+                  submittedAt={submittedAt}
                 />
               </div>
             </div>

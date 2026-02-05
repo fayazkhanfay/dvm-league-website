@@ -27,6 +27,7 @@ export interface CaseDetails {
   client_summary: string | null
   final_report_path: string | null
   case_files: any[]
+  updated_at: string
 }
 
 export async function getCaseDetails(caseId: string) {
@@ -67,6 +68,7 @@ export async function getCaseDetails(caseId: string) {
       client_summary,
       client_summary,
       final_report_path,
+      updated_at,
       case_files(*)
     `,
     )

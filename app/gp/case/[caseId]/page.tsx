@@ -5,6 +5,8 @@ import { getCaseDetails } from "@/app/actions/get-case-details"
 import { getCaseTimeline } from "@/app/actions/get-case-timeline"
 import { getCaseFiles } from "@/app/actions/get-case-files"
 
+import { getReportMetadata } from "@/app/actions/get-report-metadata"
+
 export default async function GPCaseViewPage({ params }: { params: Promise<{ caseId: string }> }) {
   const { caseId } = await params
   const supabase = await createClient()
@@ -40,6 +42,17 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
     getCaseFiles(caseId),
   ])
 
+  let finalReportUrl = null
+  let specialistName = "Specialist"
+  let submittedAt = undefined
+
+  if (caseDetailsResult.data) {
+    const metadata = await getReportMetadata(caseDetailsResult.data)
+    finalReportUrl = metadata.finalReportUrl
+    if (metadata.specialistName) specialistName = metadata.specialistName
+    submittedAt = metadata.submittedAt
+  }
+
   return (
     <UnifiedCaseView
       caseId={caseId}
@@ -52,6 +65,9 @@ export default async function GPCaseViewPage({ params }: { params: Promise<{ cas
       caseDetailsResult={caseDetailsResult}
       timelineResult={timelineResult}
       filesResult={filesResult}
+      finalReportUrl={finalReportUrl}
+      specialistName={specialistName}
+      submittedAt={submittedAt}
     />
   )
 }
