@@ -184,6 +184,7 @@ export function UnifiedCaseView({
           mutateTimeline()
           mutateFiles()
         }}
+        completedAt={submittedAt}
       />
 
       <ReportSheet

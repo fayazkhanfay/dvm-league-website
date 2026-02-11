@@ -30,6 +30,7 @@ interface CommandCenterProps {
   onOpenFileUpload: () => void
   onOpenFinalReport?: () => void
   onMessageSent?: () => void
+  completedAt?: string
 }
 
 interface ChatBarProps {
@@ -44,6 +45,7 @@ interface ChatBarProps {
   showActionButton?: boolean
   actionLabel?: string
   onAction?: () => void
+  helperText?: React.ReactNode
 }
 
 function ChatBar({
@@ -58,6 +60,7 @@ function ChatBar({
   showActionButton,
   actionLabel,
   onAction,
+  helperText,
 }: ChatBarProps) {
   const isImageFile = (file: File) => {
     return file.type.startsWith("image/")
@@ -134,6 +137,7 @@ function ChatBar({
             </Button>
           )}
         </form>
+        {helperText && <div className="border-t bg-gray-50 px-4 py-2">{helperText}</div>}
       </div>
     </div>
   )
@@ -147,6 +151,7 @@ export function CommandCenter({
   onOpenFileUpload,
   onOpenFinalReport,
   onMessageSent,
+  completedAt,
 }: CommandCenterProps) {
   const router = useRouter()
   const { toast } = useToast()
@@ -292,40 +297,90 @@ export function CommandCenter({
     )
   }
 
-  if (userRole === "specialist" && isAssignedToMe && status === "in_progress") {
-    return (
-      <ChatBar
-        message={message}
-        setMessage={setMessage}
-        stagedFiles={stagedFiles}
-        handleSendMessage={handleSendMessage}
-        handleFileSelect={handleFileSelect}
-        removeFile={removeFile}
-        isSendingMessage={isSendingMessage}
-        fileInputRef={fileInputRef}
-        showActionButton
-        actionLabel="Write Final Report"
-        onAction={onOpenFinalReport}
-      />
-    )
+  // Determine if chat should be active for completed cases (14-day window)
+  const isCompletedWithinWindow = () => {
+    if (status !== "completed" || !completedAt) return false
+    const completionDate = new Date(completedAt)
+    const windowEndDate = new Date(completionDate)
+    windowEndDate.setDate(windowEndDate.getDate() + 14)
+    return new Date() <= windowEndDate
   }
 
-  if (
-    userRole === "gp" &&
-    (status === "pending_assignment" || status === "in_progress")
-  ) {
-    return (
-      <ChatBar
-        message={message}
-        setMessage={setMessage}
-        stagedFiles={stagedFiles}
-        handleSendMessage={handleSendMessage}
-        handleFileSelect={handleFileSelect}
-        removeFile={removeFile}
-        isSendingMessage={isSendingMessage}
-        fileInputRef={fileInputRef}
-      />
-    )
+  const showChatForCompleted = isCompletedWithinWindow()
+
+  const completedHelperText = (
+    <div className="mt-2 text-center text-xs text-muted-foreground italic">
+      Chat remains open for 14 days for clarification on this report. New medical conditions require a new consult.
+    </div>
+  )
+
+  if (userRole === "specialist" && isAssignedToMe) {
+    if (status === "in_progress") {
+      return (
+        <ChatBar
+          message={message}
+          setMessage={setMessage}
+          stagedFiles={stagedFiles}
+          handleSendMessage={handleSendMessage}
+          handleFileSelect={handleFileSelect}
+          removeFile={removeFile}
+          isSendingMessage={isSendingMessage}
+          fileInputRef={fileInputRef}
+          showActionButton
+          actionLabel="Write Final Report"
+          onAction={onOpenFinalReport}
+        />
+      )
+    }
+
+    if (status === "completed" && showChatForCompleted) {
+      return (
+        <ChatBar
+          message={message}
+          setMessage={setMessage}
+          stagedFiles={stagedFiles}
+          handleSendMessage={handleSendMessage}
+          handleFileSelect={handleFileSelect}
+          removeFile={removeFile}
+          isSendingMessage={isSendingMessage}
+          fileInputRef={fileInputRef}
+          helperText={completedHelperText}
+        />
+      )
+    }
+  }
+
+  if (userRole === "gp") {
+    if (status === "pending_assignment" || status === "in_progress") {
+      return (
+        <ChatBar
+          message={message}
+          setMessage={setMessage}
+          stagedFiles={stagedFiles}
+          handleSendMessage={handleSendMessage}
+          handleFileSelect={handleFileSelect}
+          removeFile={removeFile}
+          isSendingMessage={isSendingMessage}
+          fileInputRef={fileInputRef}
+        />
+      )
+    }
+
+    if (status === "completed" && showChatForCompleted) {
+      return (
+        <ChatBar
+          message={message}
+          setMessage={setMessage}
+          stagedFiles={stagedFiles}
+          handleSendMessage={handleSendMessage}
+          handleFileSelect={handleFileSelect}
+          removeFile={removeFile}
+          isSendingMessage={isSendingMessage}
+          fileInputRef={fileInputRef}
+          helperText={completedHelperText}
+        />
+      )
+    }
   }
 
   return null

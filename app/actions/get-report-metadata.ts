@@ -41,10 +41,9 @@ export async function getReportMetadata(
         }
     }
 
-    // 3. Use updated_at as submission time if status is completed
-    // We prioritize the updated_at from the case details
+    // 3. Use completed_at as submission time if status is completed
     if (caseDetails.status === "completed") {
-        submittedAt = caseDetails.updated_at
+        submittedAt = caseDetails.completed_at || caseDetails.updated_at
     }
 
     return {
