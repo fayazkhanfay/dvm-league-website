@@ -171,6 +171,7 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                 <TableHead className="font-semibold text-brand-navy">Case ID</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Specialty</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Submitted Date</TableHead>
+                <TableHead className="font-semibold text-brand-navy">Completed Date</TableHead>
                 <TableHead className="font-semibold text-brand-navy">Status</TableHead>
               </TableRow>
             </TableHeader>
@@ -185,13 +186,18 @@ export function LiveGPCaseList({ userId, initialCases, onDeleteDraft }: LiveGPCa
                   <TableCell>{caseItem.id.slice(0, 8).toUpperCase()}</TableCell>
                   <TableCell>{caseItem.specialty_requested}</TableCell>
                   <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
+                  <TableCell>
+                    {caseItem.completed_at
+                      ? new Date(caseItem.completed_at).toLocaleDateString()
+                      : new Date(caseItem.updated_at).toLocaleDateString()}
+                  </TableCell>
                   <TableCell>{getStatusBadge(caseItem.status)}</TableCell>
                   {/* Action column removed */}
                 </TableRow>
               ))}
               {completedCases.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={5} className="text-center text-brand-navy/60">
+                  <TableCell colSpan={6} className="text-center text-brand-navy/60">
                     No completed cases
                   </TableCell>
                 </TableRow>

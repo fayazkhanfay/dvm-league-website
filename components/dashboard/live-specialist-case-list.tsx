@@ -136,7 +136,11 @@ export function LiveSpecialistCaseList({
                       <TableCell>{caseItem.gp?.clinic_name || "N/A"}</TableCell>
                       <TableCell>{formatSignalment(caseItem)}</TableCell>
                       <TableCell>{caseItem.specialty_requested}</TableCell>
-                      <TableCell>{new Date(caseItem.created_at).toLocaleDateString()}</TableCell>
+                      <TableCell>
+                        {caseItem.completed_at
+                          ? new Date(caseItem.completed_at).toLocaleDateString()
+                          : new Date(caseItem.updated_at).toLocaleDateString()}
+                      </TableCell>
                     </TableRow>
                   ))}
                   {completedCases.length === 0 && (

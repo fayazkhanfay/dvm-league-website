@@ -29,6 +29,7 @@ export async function submitFinalReport(caseId: string, data: FinalReportData) {
                 final_report_path: data.finalReportPath || null,
                 status: "completed",
                 updated_at: new Date().toISOString(),
+                completed_at: new Date().toISOString(),
             })
             .eq("id", caseId)
 
