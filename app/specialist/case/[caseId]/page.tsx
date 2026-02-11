@@ -73,6 +73,21 @@ export default async function SpecialistCaseViewPage({
     submittedAt = metadata.submittedAt
   }
 
+  // Fetch files for Final Report (Specialist Parity)
+  const { data: rawFiles } = await supabase
+    .from("case_files")
+    .select("*")
+    .eq("case_id", caseId)
+    .eq("upload_phase", "specialist_report")
+
+  // Prepare Signed Links for Attachments via parallel requests
+  const reportAttachments = await Promise.all(
+    (rawFiles || []).map(async (file) => {
+      const { data } = await supabase.storage.from("case-bucket").createSignedUrl(file.storage_object_path, 3600)
+      return { ...file, url: data?.signedUrl }
+    }),
+  )
+
   return (
     <UnifiedCaseView
       caseId={caseId}
@@ -88,6 +103,7 @@ export default async function SpecialistCaseViewPage({
       finalReportUrl={finalReportUrl}
       specialistName={specialistName}
       submittedAt={submittedAt}
+      finalReportFiles={reportAttachments}
     />
   )
 }

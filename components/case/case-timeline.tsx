@@ -38,6 +38,7 @@ interface CaseTimelineProps {
   finalReportUrl?: string | null
   specialistName?: string
   submittedAt?: string
+  finalReportFiles?: any[]
 }
 
 type FileBatch = {
@@ -62,7 +63,8 @@ export function CaseTimeline({
   isLoading,
   finalReportUrl,
   specialistName,
-  submittedAt
+  submittedAt,
+  finalReportFiles
 }: CaseTimelineProps) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [selectedImage, setSelectedImage] = useState<{ src: string; alt: string } | null>(null)
@@ -421,6 +423,7 @@ export function CaseTimeline({
             reportUrl={finalReportUrl}
             specialistName={specialistName || "Specialist"}
             submittedAt={submittedAt ? formatTimestamp(submittedAt) : "Recently"}
+            attachments={finalReportFiles}
           />
         )}
 

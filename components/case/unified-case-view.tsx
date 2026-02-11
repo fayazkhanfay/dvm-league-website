@@ -27,6 +27,7 @@ interface UnifiedCaseViewProps {
   finalReportUrl?: string | null
   specialistName?: string
   submittedAt?: string
+  finalReportFiles?: any[]
 }
 
 export function UnifiedCaseView({
@@ -39,7 +40,8 @@ export function UnifiedCaseView({
   filesResult,
   finalReportUrl,
   specialistName,
-  submittedAt
+  submittedAt,
+  finalReportFiles
 }: UnifiedCaseViewProps) {
   const [sheetOpen, setSheetOpen] = useState(false)
   const [sheetMode, setSheetMode] = useState<"final_report" | "diagnostics">("final_report")
@@ -142,6 +144,7 @@ export function UnifiedCaseView({
                   finalReportUrl={finalReportUrl}
                   specialistName={specialistName}
                   submittedAt={submittedAt}
+                  finalReportFiles={finalReportFiles}
                 />
               </div>
             </div>

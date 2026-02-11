@@ -43,7 +43,6 @@ export async function submitFinalReport(caseId: string, data: FinalReportData) {
             .update({ is_draft: false })
             .eq("case_id", caseId)
             .eq("upload_phase", "specialist_report")
-            .eq("is_draft", true)
 
         if (fileError) {
             console.error("Error publishing case files:", fileError)
